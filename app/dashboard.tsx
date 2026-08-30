@@ -10,6 +10,7 @@ import {
 } from 'react';
 import {
   Activity,
+  Camera,
   Check,
   CircleAlert,
   ClipboardCheck,
@@ -20,6 +21,7 @@ import {
   ScanLine,
   ShieldCheck,
   Utensils,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,12 +36,14 @@ import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import type {
   FoodAnalysis,
+  FoodExtractionProposal,
   HealthFocus,
   MealCreateRequest,
   Measurement,
   MeasurementCreateRequest,
   OnboardingDraft,
   SensitiveNotes,
+  UploadRecord,
   WorkoutReadiness,
   WorkoutReadinessRequest,
   WorkoutPlanResponse,
@@ -141,7 +145,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
   const [sensitiveNotesAvailable, setSensitiveNotesAvailable] = useState(true);
   const [draft, setDraft] = useState('');
   const [captureMode, setCaptureMode] = useState<
-    'text' | 'barcode' | 'vietnam_database' | 'usda'
+    'text' | 'barcode' | 'vietnam_database' | 'usda' | 'photo'
   >('text');
   const [vietnamCatalog, setVietnamCatalog] = useState<'ingredient' | 'dish'>(
     'dish',
@@ -2426,9 +2430,9 @@ function Capture({
   onConfirm,
   locale,
 }: {
-  captureMode: 'text' | 'barcode' | 'vietnam_database' | 'usda';
+  captureMode: 'text' | 'barcode' | 'vietnam_database' | 'usda' | 'photo';
   setCaptureMode: (
-    mode: 'text' | 'barcode' | 'vietnam_database' | 'usda',
+    mode: 'text' | 'barcode' | 'vietnam_database' | 'usda' | 'photo',
   ) => void;
   vietnamCatalog: 'ingredient' | 'dish';
   setVietnamCatalog: (catalog: 'ingredient' | 'dish') => void;
@@ -2451,12 +2455,24 @@ function Capture({
   locale: Locale;
 }) {
   const c = getCopy(locale);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoKind, setPhotoKind] = useState<'meal_photo' | 'nutrition_label'>(
+    'meal_photo',
+  );
+  const [uploadedPhoto, setUploadedPhoto] = useState<UploadRecord | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [extractingPhoto, setExtractingPhoto] = useState(false);
+  const [extractionProposal, setExtractionProposal] =
+    useState<FoodExtractionProposal | null>(null);
+  const [photoError, setPhotoError] = useState('');
   const isValid =
     captureMode === 'barcode'
       ? /^\d{8,14}$/.test(draft.trim())
       : captureMode === 'vietnam_database' || captureMode === 'usda'
         ? draft.trim().length >= 2
-        : draft.trim().length >= 3;
+        : captureMode === 'photo'
+          ? Boolean(photoFile)
+          : draft.trim().length >= 3;
   const providerNote =
     captureMode === 'text'
       ? c.mealCapture.typedProviderNote
@@ -2464,7 +2480,73 @@ function Capture({
         ? c.mealCapture.barcodeProviderNote
         : captureMode === 'vietnam_database'
           ? c.mealCapture.vietnamProviderNote
-          : c.mealCapture.usdaProviderNote;
+          : captureMode === 'photo'
+            ? c.mealCapture.photoProviderNote
+            : c.mealCapture.usdaProviderNote;
+  async function uploadPhoto(event: SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!photoFile) return;
+    setUploadingPhoto(true);
+    setPhotoError('');
+    try {
+      const form = new FormData();
+      form.set('file', photoFile);
+      form.set('kind', photoKind);
+      const response = await fetch('/api/uploads', { method: 'POST', body: form });
+      const body = (await response.json()) as { error?: string } & Partial<UploadRecord>;
+      if (!response.ok || !body.id || !body.expiresAt)
+        throw new Error(body.error || 'The photo could not be stored privately.');
+      setUploadedPhoto(body as UploadRecord);
+      setExtractionProposal(null);
+    } catch (uploadError) {
+      setPhotoError(uploadError instanceof Error ? uploadError.message : 'The photo could not be stored privately.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+  async function removeUploadedPhoto() {
+    if (!uploadedPhoto) return;
+    setPhotoError('');
+    const response = await fetch(`/api/uploads/${uploadedPhoto.id}`, { method: 'DELETE' });
+    if (!response.ok) {
+      setPhotoError('The private upload could not be deleted. Please try again.');
+      return;
+    }
+    setUploadedPhoto(null);
+    setPhotoFile(null);
+    setExtractionProposal(null);
+  }
+  async function extractUploadedPhoto() {
+    if (!uploadedPhoto) return;
+    setExtractingPhoto(true);
+    setPhotoError('');
+    try {
+      const response = await fetch('/api/meals/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uploadId: uploadedPhoto.id }),
+      });
+      const body = (await response.json()) as {
+        error?: string;
+        proposal?: FoodExtractionProposal;
+      };
+      if (!response.ok || !body.proposal)
+        throw new Error(body.error || 'The image could not be extracted.');
+      setExtractionProposal(body.proposal);
+    } catch (extractionError) {
+      setPhotoError(
+        extractionError instanceof Error
+          ? extractionError.message
+          : 'The image could not be extracted.',
+      );
+    } finally {
+      setExtractingPhoto(false);
+    }
+  }
+  function selectExtractedFood(name: string) {
+    setDraft(name);
+    setCaptureMode('text');
+  }
   return (
     <section>
       <div>
@@ -2482,7 +2564,7 @@ function Capture({
             <CardDescription>{c.mealCapture.description}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 sm:grid-cols-5">
               <Button
                 type="button"
                 size="sm"
@@ -2529,8 +2611,19 @@ function Capture({
               >
                 USDA
               </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={captureMode === 'photo' ? 'secondary' : 'ghost'}
+                onClick={() => {
+                  setCaptureMode('photo');
+                  setDraft('');
+                }}
+              >
+                <Camera /> {c.mealCapture.photo}
+              </Button>
             </div>
-            <form onSubmit={onAnalyse} className="mt-5">
+            <form onSubmit={captureMode === 'photo' ? uploadPhoto : onAnalyse} className="mt-5">
               {captureMode === 'text' ? (
                 <Textarea
                   value={draft}
@@ -2585,31 +2678,49 @@ function Capture({
                     aria-label={c.mealCapture.vietnamSearchLabel}
                   />
                 </>
-              ) : (
+              ) : captureMode === 'usda' ? (
                 <Input
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
                   placeholder={c.mealCapture.usdaPlaceholder}
                   aria-label={c.mealCapture.usdaSearchLabel}
                 />
+              ) : (
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium">
+                    {c.mealCapture.photoType}
+                    <select value={photoKind} onChange={(event) => setPhotoKind(event.target.value as 'meal_photo' | 'nutrition_label')} className="mt-2 flex h-10 w-full rounded-md border border-input bg-white px-3 text-sm">
+                      <option value="meal_photo">{c.mealCapture.mealPhoto}</option>
+                      <option value="nutrition_label">{c.mealCapture.labelPhoto}</option>
+                    </select>
+                  </label>
+                  <label className="block text-sm font-medium">
+                    {c.mealCapture.selectPhoto}
+                    <Input className="mt-2 bg-white" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={(event) => setPhotoFile(event.target.files?.[0] ?? null)} />
+                  </label>
+                  {uploadedPhoto ? <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-950"><p className="font-semibold">{c.mealCapture.photoStored}</p><p className="mt-1">{c.mealCapture.photoExtractionPending}</p><div className="mt-3 flex flex-wrap gap-2"><Button type="button" size="sm" onClick={() => void extractUploadedPhoto()} disabled={extractingPhoto}>{extractingPhoto ? <><LoaderCircle className="animate-spin" /> {c.mealCapture.extractingPhoto}</> : <><Camera /> {c.mealCapture.extractPhoto}</>}</Button><Button type="button" variant="outline" size="sm" onClick={() => void removeUploadedPhoto()}><Trash2 /> {c.mealCapture.deletePhoto}</Button></div></div> : null}
+                  {photoError ? <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-900">{photoError}</p> : null}
+                </div>
               )}
               <p className="mt-3 text-xs leading-5 text-slate-500">
                 {providerNote}
               </p>
               <Button
                 type="submit"
-                disabled={analysing || !isValid}
+                disabled={captureMode === 'photo' ? uploadingPhoto || !isValid || Boolean(uploadedPhoto) : analysing || !isValid}
                 className="mt-5 w-full bg-emerald-800 hover:bg-emerald-900"
               >
-                {analysing ? (
+                {captureMode === 'photo' && uploadingPhoto ? (
+                  <>
+                    <LoaderCircle className="animate-spin" /> {c.mealCapture.uploadingPhoto}
+                  </>
+                ) : analysing ? (
                   <>
                     <LoaderCircle className="animate-spin" />{' '}
                     {c.mealCapture.analysing}
                   </>
                 ) : (
-                  <>
-                    <ClipboardCheck /> {c.mealCapture.analyse}
-                  </>
+                  captureMode === 'photo' ? <><Camera /> {c.mealCapture.storePhoto}</> : <><ClipboardCheck /> {c.mealCapture.analyse}</>
                 )}
               </Button>
             </form>
@@ -2623,7 +2734,16 @@ function Capture({
                 {analysis ? analysis.name : c.mealCapture.reviewPlaceholder}
               </CardTitle>
             </div>
-            {analysis ? (
+            {captureMode === 'photo' ? (
+              <div className="grid min-h-80 place-items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
+                <div>
+                  <Camera className="mx-auto size-8 text-slate-300" />
+                  <p className="mt-3 font-semibold text-slate-600">{c.mealCapture.photoReviewTitle}</p>
+                  <p className="mt-1 text-sm leading-5 text-slate-500">{uploadedPhoto ? c.mealCapture.photoExtractionPending : c.mealCapture.photoReviewDescription}</p>
+                  {extractionProposal ? <div className="mt-4 space-y-2 text-left"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{c.mealCapture.detectedFoods}</p>{extractionProposal.items.map((item, index) => <button key={`${item.name}-${index}`} type="button" onClick={() => selectExtractedFood(item.name)} className="w-full rounded-lg border border-emerald-200 bg-white p-3 text-left text-sm hover:bg-emerald-50"><span className="font-semibold">{item.name}</span><span className="block text-slate-500">{item.nameVi} · {item.servingDescription} · {item.confidence}%</span></button>)}<p className="text-xs leading-5 text-slate-500">{c.mealCapture.extractionReviewNote}</p></div> : null}
+                </div>
+              </div>
+            ) : analysis ? (
               <span
                 className={`rounded-full px-2 py-1 text-xs font-semibold ${analysis.confidence < 70 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}
               >

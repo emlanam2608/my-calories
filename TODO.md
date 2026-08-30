@@ -67,10 +67,9 @@ This file tracks the gap between the current interactive prototype and the plann
 ## P1 - Nutrition vertical slice
 
 - [ ] Define and test the strict `FoodAnalysis`, `NutritionSnapshot`, and `HealthFinding` schemas.
-- [ ] Add text and image extraction through the OpenAI Responses API with storage disabled and identity excluded.
-- [ ] Make the routine extraction model configurable, defaulting to `gpt-5.6-luna`.
+- [x] Add a strict, private OpenAI Responses image-extraction adapter with `store: false`, identity-free image/text inputs, a configurable `OPENAI_EXTRACTION_MODEL` defaulting to `gpt-5.6-luna`, schema validation, bounded timeout, manual-review failures, redacted execution metadata, and a bilingual handoff into the existing editable meal review.
 - [ ] Upload meal and label photos to private R2 with authorization, expiry, deletion, and redacted logs.
-- [x] Add authenticated private R2 upload APIs with random keys, D1 ownership/expiry metadata, JPEG/PNG/WebP header and dimension validation, owner-only fetch, and explicit deletion. Capture UI, extraction linkage, automatic post-confirmation deletion, and scheduled expiry cleanup remain pending.
+- [x] Add authenticated private R2 upload APIs with random keys, D1 ownership/expiry metadata, JPEG/PNG/WebP header and dimension validation, owner-only fetch, explicit deletion, and a bilingual Capture UI for meal/label photos. Extraction linkage, automatic post-confirmation deletion, and scheduled expiry cleanup remain pending.
 - [ ] Add a real barcode scanner/capture path.
 - [ ] Resolve confirmed user recipes and foods before external providers.
 - [x] Integrate Open Food Facts for packaged-food barcode lookup, ingredient text, and available label nutrition; missing records remain manual-review entries.

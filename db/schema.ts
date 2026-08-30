@@ -76,6 +76,26 @@ export const uploads = sqliteTable(
     index('idx_uploads_expiry').on(table.status, table.expiresAt),
   ],
 );
+export const aiExecutions = sqliteTable(
+  'ai_executions',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id').notNull(),
+    uploadId: text('upload_id'),
+    feature: text('feature').notNull(),
+    model: text('model').notNull(),
+    promptVersion: text('prompt_version').notNull(),
+    schemaVersion: text('schema_version').notNull(),
+    status: text('status').notNull(),
+    latencyMs: integer('latency_ms').notNull(),
+    failureCode: text('failure_code'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    index('idx_ai_executions_owner_created').on(table.ownerId, table.createdAt),
+    index('idx_ai_executions_upload').on(table.uploadId, table.createdAt),
+  ],
+);
 export const healthFocuses = sqliteTable(
   'health_focuses',
   {

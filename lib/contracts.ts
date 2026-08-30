@@ -129,6 +129,37 @@ export const analyseFoodRequestSchema = z.discriminatedUnion('mode', [
     query: z.string().trim().min(2).max(160),
   }),
 ]);
+export const foodExtractionItemSchema = z
+  .object({
+    name: z.string().trim().min(1).max(160),
+    nameVi: z.string().trim().min(1).max(160),
+    grams: z.number().finite().min(1).max(5_000).nullable(),
+    servingDescription: z.string().trim().min(1).max(160),
+    preparation: z.string().trim().min(1).max(160).nullable(),
+    ingredients: z.array(z.string().trim().min(1).max(120)).max(24),
+    barcode: z.string().regex(/^\d{8,14}$/).nullable(),
+    confidence: z.number().int().min(0).max(100),
+  })
+  .strict();
+export const foodExtractionProposalSchema = z
+  .object({
+    items: z.array(foodExtractionItemSchema).min(1).max(12),
+    confidence: z.number().int().min(0).max(100),
+    unresolvedQuestions: z.array(z.string().trim().min(1).max(180)).max(4),
+    manualReviewRequired: z.boolean(),
+  })
+  .strict();
+export const extractFoodRequestSchema = z
+  .object({ uploadId: z.string().uuid() })
+  .strict();
+export const foodExtractionResponseSchema = z
+  .object({
+    proposal: foodExtractionProposalSchema,
+    model: z.string().trim().min(1).max(100),
+    promptVersion: z.string().trim().min(1).max(40),
+    schemaVersion: z.string().trim().min(1).max(40),
+  })
+  .strict();
 export const createMealRequestSchema = z.object({
   idempotencyKey: z.string().uuid(),
   name: z.string().trim().min(1).max(160),
@@ -448,6 +479,7 @@ export const workoutLogsResponseSchema = z.object({ logs: z.array(workoutLogSche
 export const workoutCheckinRequestSchema = z.object({ idempotencyKey: z.string().uuid(), planId: z.string().uuid() });
 export const workoutCheckinSchema = z.object({ id: z.string().uuid(), planId: z.string().uuid(), action: z.enum(['hold_for_review', 'repeat', 'maintain']), plannedSessions: z.number().int().min(1), completedSessions: z.number().int().min(0), safetyFlag: z.boolean(), createdAt: z.string().datetime({ offset: true }) });
 export type FoodAnalysis = z.infer<typeof foodAnalysisSchema>;
+export type FoodExtractionProposal = z.infer<typeof foodExtractionProposalSchema>;
 export type HealthFinding = z.infer<typeof healthFindingSchema>;
 export type HealthFocus = z.infer<typeof healthFocusSchema>;
 export type MealCreateRequest = z.infer<typeof createMealRequestSchema>;
