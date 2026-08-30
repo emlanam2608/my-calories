@@ -200,6 +200,19 @@ export const onboardingDraftSchema = z.object({
 });
 export const updateOnboardingRequestSchema = z.object({ idempotencyKey: z.string().uuid(), draft: onboardingDraftSchema });
 export const onboardingResponseSchema = z.object({ draft: onboardingDraftSchema, status: z.enum(['in_progress', 'complete']), updatedAt: z.string().datetime({ offset: true }).nullable() });
+export const sensitiveNotesSchema = z.object({
+  medicationNote: z.string().trim().max(2_000).default(''),
+  clinicianNote: z.string().trim().max(2_000).default(''),
+  symptomNote: z.string().trim().max(2_000).default(''),
+});
+export const updateSensitiveNotesRequestSchema = z.object({
+  idempotencyKey: z.string().uuid(),
+  notes: sensitiveNotesSchema,
+});
+export const sensitiveNotesResponseSchema = z.object({
+  notes: sensitiveNotesSchema,
+  updatedAt: z.string().datetime({ offset: true }).nullable(),
+});
 export const updateProfileLocaleRequestSchema = z.object({
   idempotencyKey: z.string().uuid(),
   locale: profileLocaleSchema,
@@ -394,6 +407,7 @@ export type HealthFinding = z.infer<typeof healthFindingSchema>;
 export type HealthFocus = z.infer<typeof healthFocusSchema>;
 export type MealCreateRequest = z.infer<typeof createMealRequestSchema>;
 export type OnboardingDraft = z.infer<typeof onboardingDraftSchema>;
+export type SensitiveNotes = z.infer<typeof sensitiveNotesSchema>;
 export type ProfileTargetsUpdateRequest = z.infer<
   typeof updateProfileTargetsRequestSchema
 >;

@@ -43,6 +43,18 @@ export const profileOnboarding = sqliteTable(
   },
   (table) => [uniqueIndex('idx_profile_onboarding_owner').on(table.ownerId)],
 );
+export const profileSensitiveNotes = sqliteTable(
+  'profile_sensitive_notes',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id').notNull(),
+    ciphertext: text('ciphertext', { mode: 'json' }).notNull(),
+    keyVersion: text('key_version').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [uniqueIndex('idx_profile_sensitive_notes_owner').on(table.ownerId)],
+);
 export const healthFocuses = sqliteTable(
   'health_focuses',
   {
