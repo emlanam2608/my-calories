@@ -342,6 +342,34 @@ export function Dashboard({ displayName }: { displayName: string }) {
     });
   }
 
+  function updateAnalysisDetails(
+    servingDescription: string,
+    ingredientsText: string,
+  ) {
+    const ingredients = ingredientsText
+      .split(',')
+      .map((ingredient) => ingredient.trim())
+      .filter(Boolean)
+      .slice(0, 24);
+    setAnalysis((current) => {
+      if (!current) return current;
+      const snapshot = {
+        ...current.snapshot,
+        servingDescription,
+        ingredients,
+      };
+      return {
+        ...current,
+        snapshot,
+        healthFindings: evaluateMealHealthFindings(
+          snapshot.totals,
+          healthFocuses,
+          ingredients,
+        ),
+      };
+    });
+  }
+
   async function confirmMeal() {
     if (!analysis) return;
     setSaving(true);
@@ -798,6 +826,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
             saving={saving}
             onAnalyse={analyseMeal}
             onNutrientChange={updateAnalysis}
+            onReviewDetailsChange={updateAnalysisDetails}
             onDiscard={() => setAnalysis(null)}
             onConfirm={confirmMeal}
             locale={locale}
@@ -2391,6 +2420,7 @@ function Capture({
   saving,
   onAnalyse,
   onNutrientChange,
+  onReviewDetailsChange,
   onDiscard,
   onConfirm,
   locale,
@@ -2410,6 +2440,10 @@ function Capture({
   onNutrientChange: (
     field: keyof FoodAnalysis['snapshot']['totals'],
     value: string,
+  ) => void;
+  onReviewDetailsChange: (
+    servingDescription: string,
+    ingredientsText: string,
   ) => void;
   onDiscard: () => void;
   onConfirm: () => void;
@@ -2601,6 +2635,7 @@ function Capture({
               <Review
                 analysis={analysis}
                 onNutrientChange={onNutrientChange}
+                onReviewDetailsChange={onReviewDetailsChange}
                 onDiscard={onDiscard}
                 onConfirm={onConfirm}
                 saving={saving}
@@ -2629,6 +2664,7 @@ function Capture({
 function Review({
   analysis,
   onNutrientChange,
+  onReviewDetailsChange,
   onDiscard,
   onConfirm,
   saving,
@@ -2638,6 +2674,10 @@ function Review({
   onNutrientChange: (
     field: keyof FoodAnalysis['snapshot']['totals'],
     value: string,
+  ) => void;
+  onReviewDetailsChange: (
+    servingDescription: string,
+    ingredientsText: string,
   ) => void;
   onDiscard: () => void;
   onConfirm: () => void;
@@ -2675,22 +2715,38 @@ function Review({
         ))}
       </div>
       <div className="mt-5">
-        <p className="text-sm font-semibold">
+        <label className="block text-sm font-semibold">
+          {c.mealCapture.servingAssumption}
+          <Input
+            className="mt-2 bg-white font-normal"
+            maxLength={160}
+            value={analysis.snapshot.servingDescription}
+            onChange={(event) =>
+              onReviewDetailsChange(
+                event.target.value,
+                analysis.snapshot.ingredients.join(', '),
+              )
+            }
+          />
+        </label>
+        <label className="mt-4 block text-sm font-semibold">
           {c.mealCapture.detectedIngredients}
-        </p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {analysis.snapshot.ingredients.map((ingredient) => (
-            <span
-              className="rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-700"
-              key={ingredient}
-            >
-              {ingredient}
-            </span>
-          ))}
-        </div>
-        <p className="mt-2 text-xs text-slate-500">
-          {c.mealCapture.serving}: {analysis.snapshot.servingDescription}
-        </p>
+          <Textarea
+            className="mt-2 min-h-20 bg-white font-normal"
+            maxLength={2_000}
+            value={analysis.snapshot.ingredients.join(', ')}
+            onChange={(event) =>
+              onReviewDetailsChange(
+                analysis.snapshot.servingDescription,
+                event.target.value,
+              )
+            }
+            placeholder={c.mealCapture.ingredientsPlaceholder}
+          />
+          <span className="mt-1 block text-xs font-normal text-slate-500">
+            {c.mealCapture.ingredientsHelp}
+          </span>
+        </label>
       </div>
       <div
         className={`mt-5 rounded-xl p-4 text-sm leading-6 ${analysis.finding.severity === 'attention' ? 'bg-amber-50 text-amber-950' : 'bg-emerald-50 text-emerald-950'}`}

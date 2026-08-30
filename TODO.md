@@ -11,7 +11,7 @@ This file tracks the gap between the current interactive prototype and the plann
 - [x] Scaffold the TypeScript Sites application with shadcn, ChatGPT authentication capability, D1, and R2 bindings.
 - [x] Build responsive Today, Capture, Measurements, Workouts, and Settings surfaces.
 - [x] Add a mobile navigation flow and initial English/Vietnamese navigation labels.
-- [x] Add editable meal-review UI with confidence and source labels.
+- [x] Add editable meal-review UI with confidence/source labels plus per-review nutrient, serving-assumption, and ingredient correction before confirmation.
 - [x] Add initial D1 schema and migration for profiles, targets, meals, measurements, workout sessions, and reminders.
 - [x] Add safe-language UI disclaimers and visible stop-training warnings.
 - [x] Pass TypeScript validation with `npx tsc --noEmit --incremental false`.
