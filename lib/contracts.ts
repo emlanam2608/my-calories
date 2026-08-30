@@ -164,6 +164,33 @@ export const updateHealthFocusesRequestSchema = z
 export const profileLocaleResponseSchema = z.object({
   locale: profileLocaleSchema,
 });
+export const onboardingGoalSchema = z.enum(['weight_loss', 'maintain_weight', 'muscle_gain', 'fitness', 'health_tracking']);
+export const onboardingDraftSchema = z.object({
+  goal: onboardingGoalSchema.optional(),
+  heightCm: z.number().int().min(80).max(250).optional(),
+  weightKg: z.number().finite().positive().max(500).optional(),
+  ageYears: z.number().int().min(18).max(120).optional(),
+  sexForMetabolicCalculation: z.enum(['female', 'male', 'not_specified']).optional(),
+  activityLevel: z.enum(['sedentary', 'light', 'moderate', 'active', 'very_active']).optional(),
+  foodPreferences: z.array(z.enum(['omnivore', 'vegetarian', 'vegan', 'pescatarian', 'halal', 'low_sodium', 'low_purine'])).max(7).optional(),
+  allergies: z.array(z.enum(['milk', 'egg', 'fish', 'shellfish', 'peanut', 'tree_nut', 'soy', 'wheat', 'sesame'])).max(9).optional(),
+  reportedContexts: z.array(z.enum(['blood_pressure', 'cholesterol', 'blood_glucose', 'uric_acid'])).max(4).optional(),
+  injuryFlags: z.array(z.enum(['back_pain', 'joint_pain', 'balance_concern'])).max(3).optional(),
+  symptomFlags: z.array(z.enum(['none', 'chest_discomfort', 'dizziness', 'shortness_of_breath'])).max(4).optional(),
+  sleepHours: z.number().finite().min(0).max(24).optional(),
+  trainingHistory: z.enum(['new_to_exercise', 'beginner', 'regular']).optional(),
+  availableDays: z.array(z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])).min(1).max(7).optional(),
+  equipment: z.array(z.enum(['bodyweight', 'chair', 'exercise_mat', 'bicycle', 'mini_treadmill', 'resistance_band', 'dumbbells', 'gym'])).min(1).max(8).optional(),
+  environments: z.array(z.enum(['home', 'outdoors', 'gym'])).min(1).max(3).optional(),
+  clinicianRestrictionFlags: z.array(z.enum(['avoid_high_intensity', 'avoid_resistance', 'avoid_impact', 'monitor_glucose'])).max(4).optional(),
+}).superRefine((value, context) => {
+  for (const key of ['foodPreferences', 'allergies', 'reportedContexts', 'injuryFlags', 'symptomFlags', 'availableDays', 'equipment', 'environments', 'clinicianRestrictionFlags'] as const) {
+    const items = value[key];
+    if (items && new Set(items).size !== items.length) context.addIssue({ code: z.ZodIssueCode.custom, path: [key], message: 'Each choice can only be selected once.' });
+  }
+});
+export const updateOnboardingRequestSchema = z.object({ idempotencyKey: z.string().uuid(), draft: onboardingDraftSchema });
+export const onboardingResponseSchema = z.object({ draft: onboardingDraftSchema, status: z.enum(['in_progress', 'complete']), updatedAt: z.string().datetime({ offset: true }).nullable() });
 export const updateProfileLocaleRequestSchema = z.object({
   idempotencyKey: z.string().uuid(),
   locale: profileLocaleSchema,
@@ -357,6 +384,7 @@ export type FoodAnalysis = z.infer<typeof foodAnalysisSchema>;
 export type HealthFinding = z.infer<typeof healthFindingSchema>;
 export type HealthFocus = z.infer<typeof healthFocusSchema>;
 export type MealCreateRequest = z.infer<typeof createMealRequestSchema>;
+export type OnboardingDraft = z.infer<typeof onboardingDraftSchema>;
 export type ProfileTargetsUpdateRequest = z.infer<
   typeof updateProfileTargetsRequestSchema
 >;

@@ -31,6 +31,18 @@ export const healthTargets = sqliteTable(
     index('idx_health_targets_owner_metric').on(table.ownerId, table.metric),
   ],
 );
+export const profileOnboarding = sqliteTable(
+  'profile_onboarding',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id').notNull(),
+    draft: text('draft', { mode: 'json' }).notNull(),
+    status: text('status').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [uniqueIndex('idx_profile_onboarding_owner').on(table.ownerId)],
+);
 export const healthFocuses = sqliteTable(
   'health_focuses',
   {

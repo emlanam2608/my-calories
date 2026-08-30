@@ -1,11 +1,14 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { getDb } from '@/db';
-import { requestDeduplications, workoutPlans, workoutReadiness } from '@/db/schema';
+import { exerciseCatalog, profileOnboarding, requestDeduplications, workoutPlans, workoutReadiness } from '@/db/schema';
 import {
   confirmWorkoutPlanRequestSchema,
+  onboardingDraftSchema,
   workoutPlanResponseSchema,
 } from '@/lib/contracts';
+import { exerciseCatalogEntrySchema } from '@/lib/exercise-catalog';
+import { selectableWorkoutExercises } from '@/lib/workout-plan';
 
 async function currentPlanForOwner(ownerId: string) {
   const row = await getDb()
@@ -49,6 +52,58 @@ export async function POST(request: Request) {
   if (readiness[0]?.status !== 'cleared')
     return Response.json(
       { error: 'Workout plan confirmation is paused by your readiness screen.' },
+      { status: 422 },
+    );
+  const onboarding = await getDb()
+    .select({ status: profileOnboarding.status, draft: profileOnboarding.draft })
+    .from(profileOnboarding)
+    .where(eq(profileOnboarding.ownerId, user.userId))
+    .limit(1);
+  const onboardingRecord = onboarding[0];
+  if (onboardingRecord?.status !== 'complete')
+    return Response.json(
+      { error: 'Workout plan confirmation requires completed profile planning basics.' },
+      { status: 422 },
+    );
+  const onboardingDraft = onboardingDraftSchema.safeParse(onboardingRecord.draft);
+  if (!onboardingDraft.success || !onboardingDraft.data.equipment)
+    return Response.json(
+      { error: 'Review your saved equipment before confirming a plan.' },
+      { status: 422 },
+    );
+  const catalogRows = await getDb()
+    .select({
+      id: exerciseCatalog.id,
+      name: exerciseCatalog.name,
+      category: exerciseCatalog.category,
+      equipment: exerciseCatalog.equipment,
+      muscleGroups: exerciseCatalog.muscleGroups,
+      contraindicationTags: exerciseCatalog.contraindicationTags,
+      technique: exerciseCatalog.technique,
+      regression: exerciseCatalog.regression,
+      progression: exerciseCatalog.progression,
+      substitutionIds: exerciseCatalog.substitutionIds,
+    })
+    .from(exerciseCatalog)
+    .where(eq(exerciseCatalog.catalogVersion, 'starter-1'))
+    .orderBy(asc(exerciseCatalog.category), asc(exerciseCatalog.id));
+  const permittedExerciseIds = new Set(
+    selectableWorkoutExercises(
+      catalogRows.map((row) => exerciseCatalogEntrySchema.parse(row)),
+      {
+        equipment: onboardingDraft.data.equipment,
+        clinicianRestrictionFlags:
+          onboardingDraft.data.clinicianRestrictionFlags ?? [],
+      },
+    ).map((exercise) => exercise.id),
+  );
+  if (
+    parsed.data.plan.sessions
+      .flatMap((session) => session.exerciseIds)
+      .some((exerciseId) => !permittedExerciseIds.has(exerciseId))
+  )
+    return Response.json(
+      { error: 'This plan no longer matches your saved equipment or clinician exercise restrictions. Generate a new preview before confirming.' },
       { status: 422 },
     );
 

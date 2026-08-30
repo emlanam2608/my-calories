@@ -2,6 +2,7 @@
 
 import {
   type SyntheticEvent,
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
@@ -37,6 +38,7 @@ import type {
   MealCreateRequest,
   Measurement,
   MeasurementCreateRequest,
+  OnboardingDraft,
   WorkoutReadiness,
   WorkoutReadinessRequest,
   WorkoutPlanResponse,
@@ -126,6 +128,10 @@ export function Dashboard({ displayName }: { displayName: string }) {
     sodium: 2000,
   });
   const [healthFocuses, setHealthFocuses] = useState<HealthFocus[]>([]);
+  const [onboarding, setOnboarding] = useState<OnboardingDraft>({});
+  const [onboardingStatus, setOnboardingStatus] = useState<
+    'in_progress' | 'complete'
+  >('in_progress');
   const [draft, setDraft] = useState('');
   const [captureMode, setCaptureMode] = useState<
     'text' | 'barcode' | 'vietnam_database' | 'usda'
@@ -139,6 +145,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
   const [saving, setSaving] = useState(false);
   const [savingTargets, setSavingTargets] = useState(false);
   const [savingFocuses, setSavingFocuses] = useState(false);
+  const [savingOnboarding, setSavingOnboarding] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
 
@@ -178,6 +185,17 @@ export function Dashboard({ displayName }: { displayName: string }) {
       };
       if (focusesResponse.ok && focusBody.focuses)
         setHealthFocuses(focusBody.focuses);
+      const onboardingResponse = await fetch('/api/profile/onboarding', {
+        cache: 'no-store',
+      });
+      const onboardingBody = (await onboardingResponse.json()) as {
+        draft?: OnboardingDraft;
+        status?: 'in_progress' | 'complete';
+      };
+      if (onboardingResponse.ok && onboardingBody.draft) {
+        setOnboarding(onboardingBody.draft);
+        setOnboardingStatus(onboardingBody.status ?? 'in_progress');
+      }
       const measurementsResponse = await fetch('/api/measurements?days=90', {
         cache: 'no-store',
       });
@@ -436,6 +454,44 @@ export function Dashboard({ displayName }: { displayName: string }) {
       );
     } finally {
       setSavingFocuses(false);
+    }
+  }
+
+  async function saveOnboarding(nextDraft: OnboardingDraft) {
+    setSavingOnboarding(true);
+    setError('');
+    setNotice('');
+    try {
+      const response = await fetch('/api/profile/onboarding', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idempotencyKey: requestId(), draft: nextDraft }),
+      });
+      const body = (await response.json()) as {
+        error?: string;
+        replayed?: boolean;
+        draft?: OnboardingDraft;
+        status?: 'in_progress' | 'complete';
+      };
+      if (!response.ok || !body.draft || !body.status)
+        throw new Error(body.error || 'We could not save your profile setup.');
+      setOnboarding(body.draft);
+      setOnboardingStatus(body.status);
+      setNotice(
+        body.replayed
+          ? 'Your earlier profile setup was already saved.'
+          : body.status === 'complete'
+            ? 'Profile setup saved. Review workout readiness before starting a plan.'
+            : 'Profile setup saved. You can finish the remaining planning basics anytime.',
+      );
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : 'We could not save your profile setup.',
+      );
+    } finally {
+      setSavingOnboarding(false);
     }
   }
 
@@ -722,13 +778,17 @@ export function Dashboard({ displayName }: { displayName: string }) {
           />
         ) : (
           <Settings
-            key={JSON.stringify({ targetValues, healthFocuses })}
+            key={JSON.stringify({ targetValues, healthFocuses, onboarding })}
             targets={targetValues}
             saving={savingTargets}
             onSave={saveTargets}
             healthFocuses={healthFocuses}
             savingFocuses={savingFocuses}
             onSaveFocuses={saveHealthFocuses}
+            onboarding={onboarding}
+            onboardingStatus={onboardingStatus}
+            savingOnboarding={savingOnboarding}
+            onSaveOnboarding={saveOnboarding}
             locale={locale}
           />
         )}
@@ -1839,6 +1899,10 @@ function Settings({
   healthFocuses: currentFocuses,
   savingFocuses,
   onSaveFocuses,
+  onboarding,
+  onboardingStatus,
+  savingOnboarding,
+  onSaveOnboarding,
   locale,
 }: {
   targets: Record<TargetKey, number>;
@@ -1847,6 +1911,10 @@ function Settings({
   healthFocuses: HealthFocus[];
   savingFocuses: boolean;
   onSaveFocuses: (focuses: HealthFocus[]) => void;
+  onboarding: OnboardingDraft;
+  onboardingStatus: 'in_progress' | 'complete';
+  savingOnboarding: boolean;
+  onSaveOnboarding: (draft: OnboardingDraft) => void;
   locale: Locale;
 }) {
   const c = getCopy(locale);
@@ -1917,6 +1985,13 @@ function Settings({
           {c.settings.description}
         </p>
       </div>
+      <OnboardingSettings
+        initialDraft={onboarding}
+        status={onboardingStatus}
+        saving={savingOnboarding}
+        onSave={onSaveOnboarding}
+        locale={locale}
+      />
       <Card className="mt-7 border-none shadow-sm">
         <CardHeader>
           <CardTitle>{c.settings.title}</CardTitle>
@@ -2042,6 +2117,116 @@ function Settings({
       </p>
     </section>
   );
+}
+
+type OnboardingChoiceField =
+  | 'availableDays'
+  | 'equipment'
+  | 'environments'
+  | 'clinicianRestrictionFlags';
+
+function OnboardingSettings({
+  initialDraft,
+  status,
+  saving,
+  onSave,
+  locale,
+}: {
+  initialDraft: OnboardingDraft;
+  status: 'in_progress' | 'complete';
+  saving: boolean;
+  onSave: (draft: OnboardingDraft) => void;
+  locale: Locale;
+}) {
+  const c = getCopy(locale);
+  const [draft, setDraft] = useState<OnboardingDraft>(initialDraft);
+  const setNumber = (field: 'heightCm' | 'weightKg' | 'ageYears' | 'sleepHours', value: string) => {
+    const number = Number(value);
+    setDraft((current) => ({
+      ...current,
+      [field]: value === '' || !Number.isFinite(number) ? undefined : number,
+    }));
+  };
+  const toggle = (field: OnboardingChoiceField, value: string) => {
+    setDraft((current) => {
+      const values = (current[field] ?? []) as string[];
+      return {
+        ...current,
+        [field]: values.includes(value)
+          ? values.filter((item) => item !== value)
+          : [...values, value],
+      } as OnboardingDraft;
+    });
+  };
+  const choiceSets: Array<{
+    field: OnboardingChoiceField;
+    label: string;
+    options: Array<{ value: string; label: string }>;
+  }> = [
+    { field: 'availableDays', label: c.onboarding.days, options: [
+      { value: 'mon', label: c.onboarding.dayMon }, { value: 'tue', label: c.onboarding.dayTue }, { value: 'wed', label: c.onboarding.dayWed }, { value: 'thu', label: c.onboarding.dayThu }, { value: 'fri', label: c.onboarding.dayFri }, { value: 'sat', label: c.onboarding.daySat }, { value: 'sun', label: c.onboarding.daySun },
+    ] },
+    { field: 'equipment', label: c.onboarding.equipment, options: [
+      { value: 'bodyweight', label: c.onboarding.equipmentBodyweight }, { value: 'chair', label: c.onboarding.equipmentChair }, { value: 'exercise_mat', label: c.onboarding.equipmentMat }, { value: 'bicycle', label: c.onboarding.equipmentBicycle }, { value: 'mini_treadmill', label: c.onboarding.equipmentTreadmill }, { value: 'resistance_band', label: c.onboarding.equipmentBand }, { value: 'dumbbells', label: c.onboarding.equipmentDumbbells }, { value: 'gym', label: c.onboarding.equipmentGym },
+    ] },
+    { field: 'environments', label: c.onboarding.environments, options: [
+      { value: 'home', label: c.onboarding.environmentHome }, { value: 'outdoors', label: c.onboarding.environmentOutdoors }, { value: 'gym', label: c.onboarding.environmentGym },
+    ] },
+    { field: 'clinicianRestrictionFlags', label: c.onboarding.restrictions, options: [
+      { value: 'avoid_high_intensity', label: c.onboarding.restrictionIntensity }, { value: 'avoid_resistance', label: c.onboarding.restrictionResistance }, { value: 'avoid_impact', label: c.onboarding.restrictionImpact }, { value: 'monitor_glucose', label: c.onboarding.restrictionGlucose },
+    ] },
+  ];
+  return (
+    <Card className="mt-7 border-none shadow-sm">
+      <CardHeader>
+        <p className="text-xs font-bold uppercase tracking-[0.15em] text-emerald-700">{c.onboarding.eyebrow}</p>
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          {c.onboarding.title}
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${status === 'complete' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}`}>
+            {status === 'complete' ? c.onboarding.complete : c.onboarding.inProgress}
+          </span>
+        </CardTitle>
+        <CardDescription>{c.onboarding.description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={(event) => { event.preventDefault(); onSave(draft); }} className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <SelectField label={c.onboarding.goal} value={draft.goal ?? ''} onChange={(value) => setDraft((current) => ({ ...current, goal: value === '' ? undefined : value as OnboardingDraft['goal'] }))} required>
+              <option value="">{c.common.required}</option><option value="weight_loss">{c.onboarding.goalWeightLoss}</option><option value="maintain_weight">{c.onboarding.goalMaintain}</option><option value="muscle_gain">{c.onboarding.goalMuscleGain}</option><option value="fitness">{c.onboarding.goalFitness}</option><option value="health_tracking">{c.onboarding.goalHealthTracking}</option>
+            </SelectField>
+            <SelectField label={c.onboarding.sex} value={draft.sexForMetabolicCalculation ?? ''} onChange={(value) => setDraft((current) => ({ ...current, sexForMetabolicCalculation: value === '' ? undefined : value as OnboardingDraft['sexForMetabolicCalculation'] }))} required>
+              <option value="">{c.common.required}</option><option value="female">{c.onboarding.sexFemale}</option><option value="male">{c.onboarding.sexMale}</option><option value="not_specified">{c.onboarding.sexNotSpecified}</option>
+            </SelectField>
+            <NumberField label={c.onboarding.height} value={draft.heightCm} min="80" max="250" required onChange={(value) => setNumber('heightCm', value)} />
+            <NumberField label={c.onboarding.weight} value={draft.weightKg} min="1" max="500" onChange={(value) => setNumber('weightKg', value)} />
+            <NumberField label={c.onboarding.age} value={draft.ageYears} min="18" max="120" required onChange={(value) => setNumber('ageYears', value)} />
+            <NumberField label={c.onboarding.sleep} value={draft.sleepHours} min="0" max="24" step="0.5" onChange={(value) => setNumber('sleepHours', value)} />
+            <SelectField label={c.onboarding.activity} value={draft.activityLevel ?? ''} onChange={(value) => setDraft((current) => ({ ...current, activityLevel: value === '' ? undefined : value as OnboardingDraft['activityLevel'] }))} required>
+              <option value="">{c.common.required}</option><option value="sedentary">{c.onboarding.activitySedentary}</option><option value="light">{c.onboarding.activityLight}</option><option value="moderate">{c.onboarding.activityModerate}</option><option value="active">{c.onboarding.activityActive}</option><option value="very_active">{c.onboarding.activityVeryActive}</option>
+            </SelectField>
+            <SelectField label={c.onboarding.training} value={draft.trainingHistory ?? ''} onChange={(value) => setDraft((current) => ({ ...current, trainingHistory: value === '' ? undefined : value as OnboardingDraft['trainingHistory'] }))} required>
+              <option value="">{c.common.required}</option><option value="new_to_exercise">{c.onboarding.trainingNew}</option><option value="beginner">{c.onboarding.trainingBeginner}</option><option value="regular">{c.onboarding.trainingRegular}</option>
+            </SelectField>
+          </div>
+          {choiceSets.map(({ field, label, options }) => {
+            const selected = (draft[field] ?? []) as string[];
+            return <fieldset key={field}><legend className="mb-2 text-sm font-semibold text-slate-800">{label}{field !== 'clinicianRestrictionFlags' ? <span className="ml-1 text-rose-700">*</span> : null}</legend><div className="flex flex-wrap gap-2">{options.map((option) => <button type="button" key={option.value} aria-pressed={selected.includes(option.value)} onClick={() => toggle(field, option.value)} className={`rounded-lg border px-3 py-2 text-sm font-medium ${selected.includes(option.value) ? 'border-emerald-700 bg-emerald-700 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>{option.label}</button>)}</div></fieldset>;
+          })}
+          <Button type="submit" disabled={saving} className="w-full bg-emerald-800 hover:bg-emerald-900">
+            {saving ? <><LoaderCircle className="animate-spin" /> {c.common.saving}</> : <><Check /> {c.onboarding.save}</>}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SelectField({ label, value, onChange, required, children }: { label: string; value: string; onChange: (value: string) => void; required?: boolean; children: ReactNode }) {
+  return <label className="space-y-1.5 text-sm font-semibold text-slate-800"><span>{label}{required ? <span className="ml-1 text-rose-700">*</span> : null}</span><select required={required} value={value} onChange={(event) => onChange(event.target.value)} className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900">{children}</select></label>;
+}
+
+function NumberField({ label, value, min, max, step = '1', required, onChange }: { label: string; value: number | undefined; min: string; max: string; step?: string; required?: boolean; onChange: (value: string) => void }) {
+  return <label className="space-y-1.5 text-sm font-semibold text-slate-800"><span>{label}{required ? <span className="ml-1 text-rose-700">*</span> : null}</span><Input required={required} type="number" inputMode="decimal" min={min} max={max} step={step} value={value ?? ''} onChange={(event) => onChange(event.target.value)} className="bg-white font-normal" /></label>;
 }
 
 function Capture({

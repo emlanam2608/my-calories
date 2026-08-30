@@ -1,13 +1,15 @@
 # Nourishwell implementation tracker
 
-Last reviewed: 2026-08-30
+Last reviewed: 2026-08-31
+
+Implementation details, task ordering, safety constraints, acceptance criteria, and likely files are maintained in [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md). Agents should read it before starting the next unchecked task.
 
 This file tracks the gap between the current interactive prototype and the planned private nutrition and fitness coach. Check an item only after the behavior is implemented, tested, and no longer uses placeholder data.
 
 ## Current status
 
 - [x] Scaffold the TypeScript Sites application with shadcn, ChatGPT authentication capability, D1, and R2 bindings.
-- [x] Build responsive Today, Capture, Coach, Plan, Progress, and Settings surfaces.
+- [x] Build responsive Today, Capture, Measurements, Workouts, and Settings surfaces.
 - [x] Add a mobile navigation flow and initial English/Vietnamese navigation labels.
 - [x] Add editable meal-review UI with confidence and source labels.
 - [x] Add initial D1 schema and migration for profiles, targets, meals, measurements, workout sessions, and reminders.
@@ -27,10 +29,10 @@ This file tracks the gap between the current interactive prototype and the plann
 
 ## P0 - Private, persistent foundation
 
-- [ ] Require ChatGPT sign-in on every private page and server endpoint.
-- [ ] Add server-side ownership checks for every read, mutation, upload, export, and delete operation.
-- [ ] Add Zod request and response contracts for all API boundaries.
-- [ ] Require idempotency keys and audit metadata on all write endpoints.
+- [x] Require ChatGPT sign-in on every currently implemented private page and server endpoint; future endpoints must preserve this invariant.
+- [x] Add server-side ownership checks for every currently implemented user-owned read and mutation; uploads, exports, and deletion remain unimplemented.
+- [x] Add Zod request and response contracts for currently implemented product API boundaries.
+- [x] Require idempotency keys on currently implemented durable write endpoints; complete audit metadata remains pending.
 - [ ] Add D1 repositories and API routes for profiles, targets, meals, measurements, plans, workout logs, coach messages, reminders, analytics, and exports.
 - [ ] Replace React-only meal, workout, settings, and coach state with TanStack Query backed by those endpoints.
 - [ ] Expand the schema for conditions, allergies, medications, injuries, symptoms, clinician restrictions, food aliases, recipes, meal items, nutrient snapshots, exercise catalog, plans, sessions, sets, coach reviews, push subscriptions, uploads, and AI/rule execution records.
@@ -40,17 +42,20 @@ This file tracks the gap between the current interactive prototype and the plann
 - [ ] Add database indexes for every owner-and-date dashboard and analytics query.
 - [ ] Restore a complete Drizzle migration metadata snapshot so future migrations are reproducible.
 - [x] Add an `.env.example` containing runtime key names only, with no secrets.
-- [ ] Configure a production Sites project ID and verify private deployment access.
+- [x] Configure a production Sites project ID with D1 and R2 logical bindings.
+- [ ] Verify a real private Sites deployment reaches `succeeded` and enforces intended access.
 
 ## P0 - Safety and deterministic health rules
 
-- [ ] Implement onboarding for goals, demographics, preferences, allergies, conditions, medications, injuries, symptoms, sleep, training history, equipment, availability, and clinician restrictions.
+- [ ] Complete onboarding for preferences, allergies, user-reported contexts, injuries/symptoms, medication fields, and free-text clinician notes; the current Settings flow covers planning basics only.
+- [x] Add resumable, authenticated structured onboarding storage and API plus a bilingual Settings flow for goal, demographics, activity, sleep, training history, availability, equipment, environments, and enumerated clinician exercise restrictions. Encrypted medication/clinical notes and richer health-profile fields remain pending.
+- [x] Require completed profile planning basics before workout-plan preview or confirmation, filter the starter plan by saved equipment and `avoid_resistance`, and reject stale confirmations that no longer match those saved restrictions.
 - [x] Implement target authority precedence: clinician-defined, then user-defined, then guideline default.
 - [x] Add versioned deterministic meal-level checks for sodium, fiber, and energy, shown as non-diagnostic condition-specific findings that never change nutrient facts.
 - [x] Add private, persistent health-focus selection for blood pressure, cholesterol, blood glucose, and uric acid; meal reviews filter checks to selected focuses.
 - [x] Add a private, persistent readiness and contraindication screen before any workout plan is generated; reported red flags pause plan generation and show professional/urgent-care guidance.
 - [ ] Implement versioned deterministic rules for calories, protein, fiber, carbohydrates, added sugar, sodium, saturated fat, hydration, alcohol, micronutrients, and purine-risk categories.
-- [ ] Return separate findings for blood pressure, cholesterol, blood glucose, uric acid, and other configured concerns; do not create one opaque health score.
+- [x] Return separate starter findings for blood pressure, cholesterol, blood glucose, uric acid, and weight management without one opaque health score; expand nutrient/rule coverage before marking the full engine complete.
 - [ ] Disable affected recommendations when red flags, unsafe glucose readings, pain, concerning symptoms, medication risks, or clinician restrictions apply.
 - [ ] Add urgent/professional-care guidance copy for each reviewed red-flag scenario.
 - [ ] Keep measured facts, database values, estimates, deterministic findings, and AI explanations visibly distinct in the UI and stored records.
@@ -96,15 +101,15 @@ This file tracks the gap between the current interactive prototype and the plann
 
 - [ ] Create and review a bilingual exercise catalog for bodyweight, mobility, bicycle, mini treadmill, resistance bands, dumbbells, and gym equipment.
 - [x] Add a versioned, bilingual starter catalog for mobility, bodyweight, bicycle, mini treadmill, and resistance-band movements; it is not yet clinician-reviewed or comprehensive.
-- [ ] Store technique, regressions, progressions, equipment, muscle groups, contraindication tags, and substitutions for each exercise.
+- [x] Store technique, regressions, progressions, equipment, muscle groups, contraindication tags, and substitutions for each starter-catalog exercise.
 - [ ] Generate weekly plans with warm-up, strength, aerobic work, mobility, cooldown, duration, sets/reps, rest, RPE, rationale, progression criteria, and safety checks.
 - [x] Add a readiness-gated, deterministic three-session starter-week preview and explicit-confirmation save flow with duration, RPE, rationale, selected exercises, and stop-training guidance; warm-ups, cooldowns, sets/reps, and individual adaptation remain to be added.
 - [x] Log completion, sets, reps, load, duration, heart rate, RPE, pain, symptoms, enjoyment, and optional pre/post-workout glucose.
-- [x] Persist owner-scoped completion logs for confirmed-plan sessions with duration, RPE, enjoyment, pain, concerning-symptom flags, and optional pre/post-exercise glucose; sets, reps, load, and heart-rate capture remain to be added.
+- [x] Persist owner-scoped completion logs for confirmed-plan sessions with sets, reps, load, duration, heart rate, RPE, enjoyment, pain, concerning-symptom flags, and optional pre/post-exercise glucose.
 - [ ] Adapt only at scheduled check-ins using adherence and recovery: progress, maintain, deload, or substitute.
 - [x] Add a persistent, user-triggered weekly check-in that uses logged adherence and safety flags to recommend hold, repeat, or maintain; it never mutates a plan automatically and progression/deload/substitution remain to be added.
 - [ ] Make equipment and environment changes regenerate safe equivalents only after user confirmation.
-- [ ] Replace the current fixed workout and completion toggle with persistent plan/session records.
+- [x] Replace the browser-only workout completion state with persistent, confirmed plan and session-log records; plan generation remains a fixed starter template.
 
 ## P2 - Reminders, analytics, and reports
 
@@ -119,12 +124,12 @@ This file tracks the gap between the current interactive prototype and the plann
 ## P2 - PWA and product completion
 
 - [x] Add web app manifest, install icon metadata, theme metadata, and a privacy-preserving service worker.
-- [ ] Cache only a read-only shell and safe recent views; never queue sensitive offline writes.
+- [x] Cache only public shell assets and an offline fallback; do not cache authenticated HTML/API data or queue sensitive writes.
 - [ ] Add camera permission, offline, empty, unavailable-provider, retry, and recovery states.
 - [ ] Translate all content and data labels into Vietnamese and English, and update document language dynamically.
 - [ ] Replace the fixed date, profile name, targets, chart values, and advice with localized live data.
 - [ ] Add complete keyboard, screen-reader, focus, contrast, and reduced-motion support.
-- [ ] Add social/preview metadata and approved preview artwork if sharing the application URL is desired.
+- [x] Add application-level social metadata and approved preview artwork without private user data.
 
 ## Quality and release gates
 
@@ -135,7 +140,7 @@ This file tracks the gap between the current interactive prototype and the plann
 - [ ] Add mobile end-to-end tests for capture through correction/save, coaching, workouts, reminders, analytics, export, and deletion.
 - [ ] Add security tests for cross-user access, upload authorization, prompt injection, secret leakage, notification privacy, rate limits, and deletion completeness.
 - [ ] Resolve or intentionally baseline the 19 current lint errors in generated shadcn components and hooks.
-- [ ] Recheck dependency advisories; the 2026-08-30 install audit reports 14 vulnerabilities, including 8 high, and requires a deliberate dependency review before any forced upgrade.
+- [ ] Review dependency advisories; the 2026-08-31 audit reports 22 vulnerabilities, including 9 high and 13 moderate, largely in the Vinext/Vite/Cloudflare toolchain. Do not force-upgrade without compatibility validation.
 - [ ] Run typecheck, lint, unit, contract, end-to-end, accessibility, installability, and production build checks in CI.
 - [ ] Verify a real Sites deployment reaches `succeeded`; a local build alone is not a release.
 - [ ] Validate iOS and Android camera/install/push behavior on physical devices.
@@ -143,20 +148,14 @@ This file tracks the gap between the current interactive prototype and the plann
 
 ## Recommended next milestone
 
-Deliver one honest end-to-end meal flow before expanding the UI:
-
-1. Protect the app and API with sign-in plus ownership checks.
-2. Finalize the minimum profile, target, meal, item, snapshot, finding, upload, and execution schema.
-3. Persist typed meal capture, editable review, deterministic nutrient resolution, confirmation, and Today totals.
-4. Add Open Food Facts and USDA adapters with fixtures and manual fallback.
-5. Add photo extraction only after the same review/save path is reliable for typed input.
+Complete **M1 — Profile, restrictions, and equipment foundation** from `IMPLEMENTATION_PLAN.md`. The first task is structured, resumable onboarding storage and authenticated APIs. Do not start AI coaching or adaptive workout generation until persisted restrictions and equipment are available.
 
 ## Review notes
 
-- The current application is a strong responsive interaction prototype, not yet a functioning health-data system.
-- Meal analysis is keyword selection from local constants; it does not call AI or a food database.
-- Saving a meal, completing a workout, changing settings, and coach chat exist only in browser memory and disappear on reload.
-- The authentication helper and D1/R2 bindings are scaffolded but are not connected to the visible application flow.
-- Health advice, progress, targets, dates, user identity, and workouts are currently fixed demonstration content.
-- The export action, equipment management, notifications, real barcode capture, and image upload processing are placeholders.
-- TypeScript passes. Lint and the production dependency audit currently fail and must be resolved or explicitly risk-accepted before deployment.
+- The application now has functioning authenticated D1-backed meal, measurement, target, readiness, workout-plan, workout-log, and check-in flows.
+- Typed meal analysis still uses deterministic local parsing; provider searches are real, but OpenAI and image extraction are not implemented.
+- The visible surfaces are Today, Capture, Measurements, Workouts, and Settings. Coach and Progress do not yet exist.
+- Equipment management, reminders, analytics, clinician reports, full export, account deletion, real camera barcode scanning, and image upload processing remain unimplemented.
+- Workout generation is a conservative fixed starter template; it is not yet equipment-aware or individually adaptive.
+- TypeScript, 27 unit tests, and the production build pass. Full lint currently fails with 19 known errors in generated UI primitives/hooks.
+- A Sites project ID is configured, but successful private production deployment has not been verified.

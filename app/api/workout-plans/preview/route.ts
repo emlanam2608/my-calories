@@ -1,9 +1,9 @@
 import { asc, eq } from 'drizzle-orm';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { getDb } from '@/db';
-import { exerciseCatalog, workoutReadiness } from '@/db/schema';
+import { exerciseCatalog, profileOnboarding, workoutReadiness } from '@/db/schema';
 import { exerciseCatalogEntrySchema } from '@/lib/exercise-catalog';
-import { workoutPlanResponseSchema } from '@/lib/contracts';
+import { onboardingDraftSchema, workoutPlanResponseSchema } from '@/lib/contracts';
 import { createStarterWorkoutPlan } from '@/lib/workout-plan';
 
 function bangkokDate() {
@@ -32,6 +32,22 @@ export async function POST() {
       { error: 'Complete a cleared workout-readiness screen before generating a plan.' },
       { status: 422 },
     );
+  const onboarding = await getDb()
+    .select({ draft: profileOnboarding.draft, status: profileOnboarding.status })
+    .from(profileOnboarding)
+    .where(eq(profileOnboarding.ownerId, user.userId))
+    .limit(1);
+  if (onboarding[0]?.status !== 'complete')
+    return Response.json(
+      { error: 'Complete your profile setup, including available days and equipment, before generating a plan.' },
+      { status: 422 },
+    );
+  const onboardingDraft = onboardingDraftSchema.safeParse(onboarding[0].draft);
+  if (!onboardingDraft.success || !onboardingDraft.data.equipment)
+    return Response.json(
+      { error: 'Review your saved equipment before generating a plan.' },
+      { status: 422 },
+    );
 
   const rows = await getDb()
     .select({
@@ -53,6 +69,11 @@ export async function POST() {
     const plan = createStarterWorkoutPlan(
       rows.map((row) => exerciseCatalogEntrySchema.parse(row)),
       bangkokDate(),
+      {
+        equipment: onboardingDraft.data.equipment,
+        clinicianRestrictionFlags:
+          onboardingDraft.data.clinicianRestrictionFlags ?? [],
+      },
     );
     return Response.json(
       workoutPlanResponseSchema.parse({

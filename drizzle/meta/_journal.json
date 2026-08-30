@@ -87,6 +87,8 @@
       "breakpoints": true
     },
     { "idx": 12, "version": "6", "when": 1788028698057, "tag": "0012_workout_checkins", "breakpoints": true
+    },
+    { "idx": 13, "version": "6", "when": 1788028698058, "tag": "0013_profile_onboarding", "breakpoints": true
     }
   ]
 }
