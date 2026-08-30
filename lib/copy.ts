@@ -167,6 +167,13 @@ const englishCopy = {
     incompleteTitle: 'Readiness required',
     incompleteDescription:
       'A workout plan cannot be generated until you complete this safety screen.',
+    catalogTitle: 'Starter exercise library',
+    catalogDescription:
+      'These movements are a transparent starter catalog, not a workout prescription. A future plan will choose only compatible options.',
+    technique: 'Technique',
+    regression: 'Make it easier',
+    progression: 'Progress later',
+    equipment: 'Equipment',
   },
   settings: {
     eyebrow: 'Settings',
@@ -384,6 +391,13 @@ const vietnameseCopy: ProductCopy = {
     incompleteTitle: 'Cần hoàn thành sàng lọc',
     incompleteDescription:
       'Không thể tạo kế hoạch tập cho đến khi bạn hoàn thành màn hình an toàn này.',
+    catalogTitle: 'Thư viện bài tập khởi đầu',
+    catalogDescription:
+      'Các động tác này là danh mục khởi đầu minh bạch, không phải đơn tập. Kế hoạch trong tương lai chỉ chọn các lựa chọn phù hợp.',
+    technique: 'Kỹ thuật',
+    regression: 'Giảm độ khó',
+    progression: 'Tiến triển sau',
+    equipment: 'Dụng cụ',
   },
   settings: {
     eyebrow: 'Cài đặt',

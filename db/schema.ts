@@ -137,6 +137,26 @@ export const workoutReadiness = sqliteTable(
     uniqueIndex('idx_workout_readiness_owner').on(table.ownerId),
   ],
 );
+export const exerciseCatalog = sqliteTable(
+  'exercise_catalog',
+  {
+    id: text('id').primaryKey(),
+    name: text('name', { mode: 'json' }).notNull(),
+    category: text('category').notNull(),
+    equipment: text('equipment', { mode: 'json' }).notNull(),
+    muscleGroups: text('muscle_groups', { mode: 'json' }).notNull(),
+    contraindicationTags: text('contraindication_tags', { mode: 'json' })
+      .notNull(),
+    technique: text('technique', { mode: 'json' }).notNull(),
+    regression: text('regression', { mode: 'json' }).notNull(),
+    progression: text('progression', { mode: 'json' }).notNull(),
+    substitutionIds: text('substitution_ids', { mode: 'json' }).notNull(),
+    catalogVersion: text('catalog_version').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [index('idx_exercise_catalog_category').on(table.category)],
+);
 export const reminders = sqliteTable(
   'reminders',
   {

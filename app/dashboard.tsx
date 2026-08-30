@@ -43,6 +43,7 @@ import type {
 import { getCopy, localeMetadata, type Locale } from '@/lib/copy';
 import { evaluateMealHealthFindings } from '@/lib/health-rule-engine';
 import { canonicalMeasurementUnits, measurementUnitOptions } from '@/lib/measurement-conversions';
+import type { ExerciseCatalogEntry } from '@/lib/exercise-catalog';
 
 type Meal = {
   id: string;
@@ -110,6 +111,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [workoutReadiness, setWorkoutReadiness] =
     useState<WorkoutReadiness | null>(null);
+  const [exercises, setExercises] = useState<ExerciseCatalogEntry[]>([]);
   const [targetValues, setTargetValues] = useState<Record<TargetKey, number>>({
     calories: 1850,
     protein: 90,
@@ -182,6 +184,14 @@ export function Dashboard({ displayName }: { displayName: string }) {
       });
       const readinessBody = (await readinessResponse.json()) as WorkoutReadiness;
       if (readinessResponse.ok) setWorkoutReadiness(readinessBody);
+      const exerciseResponse = await fetch('/api/exercises', {
+        cache: 'no-store',
+      });
+      const exerciseBody = (await exerciseResponse.json()) as {
+        exercises?: ExerciseCatalogEntry[];
+      };
+      if (exerciseResponse.ok && exerciseBody.exercises)
+        setExercises(exerciseBody.exercises);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -619,6 +629,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
         ) : page === 'workouts' ? (
           <WorkoutReadinessScreen
             readiness={workoutReadiness}
+            exercises={exercises}
             onSave={saveWorkoutReadiness}
             locale={locale}
           />
@@ -869,10 +880,12 @@ const workoutReadinessFlags: WorkoutReadinessFlag[] = [
 
 function WorkoutReadinessScreen({
   readiness,
+  exercises,
   onSave,
   locale,
 }: {
   readiness: WorkoutReadiness | null;
+  exercises: ExerciseCatalogEntry[];
   onSave: (readiness: WorkoutReadinessRequest) => Promise<void>;
   locale: Locale;
 }) {
@@ -1014,6 +1027,50 @@ function WorkoutReadinessScreen({
           </CardContent>
         </Card>
       </div>
+      {status === 'cleared' ? (
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold">{c.workouts.catalogTitle}</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+            {c.workouts.catalogDescription}
+          </p>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {exercises.map((exercise) => (
+              <Card key={exercise.id} className="border-slate-200 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardDescription className="capitalize">
+                    {exercise.category}
+                  </CardDescription>
+                  <CardTitle className="mt-1 text-lg">
+                    {exercise.name[locale]}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm leading-6">
+                  <p>
+                    <span className="font-medium">{c.workouts.equipment}: </span>
+                    {exercise.equipment.join(', ')}
+                  </p>
+                  <p>
+                    <span className="font-medium">{c.workouts.technique}: </span>
+                    {exercise.technique[locale]}
+                  </p>
+                  <p className="text-slate-600">
+                    <span className="font-medium text-slate-800">
+                      {c.workouts.regression}: 
+                    </span>
+                    {exercise.regression[locale]}
+                  </p>
+                  <p className="text-slate-600">
+                    <span className="font-medium text-slate-800">
+                      {c.workouts.progression}: 
+                    </span>
+                    {exercise.progression[locale]}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

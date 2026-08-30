@@ -95,6 +95,7 @@ This file tracks the gap between the current interactive prototype and the plann
 ## P1 - Professional PT system
 
 - [ ] Create and review a bilingual exercise catalog for bodyweight, mobility, bicycle, mini treadmill, resistance bands, dumbbells, and gym equipment.
+- [x] Add a versioned, bilingual starter catalog for mobility, bodyweight, bicycle, mini treadmill, and resistance-band movements; it is not yet clinician-reviewed or comprehensive.
 - [ ] Store technique, regressions, progressions, equipment, muscle groups, contraindication tags, and substitutions for each exercise.
 - [ ] Generate weekly plans with warm-up, strength, aerobic work, mobility, cooldown, duration, sets/reps, rest, RPE, rationale, progression criteria, and safety checks.
 - [ ] Log completion, sets, reps, load, duration, heart rate, RPE, pain, symptoms, enjoyment, and optional pre/post-workout glucose.
