@@ -6,6 +6,7 @@ import {
   measurementCreateRequestSchema,
   measurementsResponseSchema,
 } from '@/lib/contracts';
+import { normalizeMeasurement } from '@/lib/measurement-conversions';
 
 const VALUE_SCALE = 100;
 
@@ -70,6 +71,10 @@ export async function POST(request: Request) {
       { status: 400 },
     );
 
+  const normalized = parsed.data.metric === 'custom_lab'
+    ? { value: parsed.data.value, secondaryValue: parsed.data.secondaryValue, unit: parsed.data.unit }
+    : normalizeMeasurement({ metric: parsed.data.metric, value: parsed.data.value, ...(parsed.data.secondaryValue === undefined ? {} : { secondaryValue: parsed.data.secondaryValue }), unit: parsed.data.unit });
+
   const db = getDb();
   const replay = await db
     .select({
@@ -107,13 +112,13 @@ export async function POST(request: Request) {
           ownerId: user.userId,
           metric: parsed.data.metric,
           label: parsed.data.label ?? null,
-          valueScaled: Math.round(parsed.data.value * VALUE_SCALE),
+          valueScaled: Math.round(normalized.value * VALUE_SCALE),
           secondaryValueScaled:
-            parsed.data.secondaryValue === undefined
+            normalized.secondaryValue === undefined
               ? null
-              : Math.round(parsed.data.secondaryValue * VALUE_SCALE),
+              : Math.round(normalized.secondaryValue * VALUE_SCALE),
           valueScale: VALUE_SCALE,
-          unit: parsed.data.unit,
+          unit: normalized.unit,
           source: parsed.data.source,
           confirmationStatus: 'confirmed',
           provenance: 'user_entered',

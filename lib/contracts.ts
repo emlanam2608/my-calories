@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { canonicalMeasurementUnits, isSupportedMeasurementUnit, type ConvertibleMeasurementMetric } from './measurement-conversions';
 
 export const nutrientTotalsSchema = z.object({
   calories: z.number().finite().min(0).max(10_000),
@@ -187,24 +188,14 @@ export const measurementCreateRequestSchema = z
     source: measurementSourceSchema,
   })
   .superRefine((value, context) => {
-    const expectedUnits: Record<
-      Exclude<typeof value.metric, 'custom_lab'>,
-      string
-    > = {
-      weight: 'kg',
-      blood_pressure: 'mmHg',
-      blood_glucose: 'mmol/L',
-      total_cholesterol: 'mmol/L',
-      uric_acid: 'µmol/L',
-    };
     if (
       value.metric !== 'custom_lab' &&
-      value.unit !== expectedUnits[value.metric]
+      !isSupportedMeasurementUnit(value.metric as ConvertibleMeasurementMetric, value.unit)
     )
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['unit'],
-        message: 'Use the standard unit for this measurement.',
+        message: `Use a supported unit for this measurement. It will be stored as ${canonicalMeasurementUnits[value.metric as ConvertibleMeasurementMetric]}.`,
       });
     if (value.metric === 'blood_pressure' && value.secondaryValue === undefined)
       context.addIssue({

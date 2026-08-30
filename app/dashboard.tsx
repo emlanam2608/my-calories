@@ -40,6 +40,7 @@ import type {
 } from '@/lib/contracts';
 import { getCopy, localeMetadata, type Locale } from '@/lib/copy';
 import { evaluateMealHealthFindings } from '@/lib/health-rule-engine';
+import { canonicalMeasurementUnits, measurementUnitOptions } from '@/lib/measurement-conversions';
 
 type Meal = {
   id: string;
@@ -804,6 +805,7 @@ const measurementOptions = [
   { metric: 'custom_lab', label: 'Custom lab result', unit: '', step: '0.01' },
 ] as const;
 type MeasurementMetric = (typeof measurementOptions)[number]['metric'];
+type ConvertibleMeasurementMetric = Exclude<MeasurementMetric, 'custom_lab'>;
 
 function Measurements({
   entries,
@@ -819,12 +821,17 @@ function Measurements({
   const [secondaryValue, setSecondaryValue] = useState('');
   const [customLabel, setCustomLabel] = useState('');
   const [customUnit, setCustomUnit] = useState('');
+  const [measurementUnit, setMeasurementUnit] = useState('kg');
   const [occurredAt, setOccurredAt] = useState(() =>
     new Date().toISOString().slice(0, 16),
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const option = measurementOptions.find((item) => item.metric === metric)!;
+  const isConvertibleMetric = metric !== 'custom_lab';
+  const supportedUnits = isConvertibleMetric
+    ? measurementUnitOptions[metric as ConvertibleMeasurementMetric]
+    : [];
   const c = getCopy(locale);
   const metricLabels: Record<MeasurementMetric, string> = {
     weight: c.measurements.metrics.weight,
@@ -870,7 +877,7 @@ function Measurements({
         value: primary,
         ...(secondary === undefined ? {} : { secondaryValue: secondary }),
         ...(metric === 'custom_lab' ? { label: customLabel.trim() } : {}),
-        unit: metric === 'custom_lab' ? customUnit.trim() : option.unit,
+        unit: metric === 'custom_lab' ? customUnit.trim() : measurementUnit,
         occurredAt: measuredAt.toISOString(),
         source: 'manual',
       });
@@ -916,9 +923,11 @@ function Measurements({
                 <select
                   value={metric}
                   onChange={(event) => {
-                    setMetric(event.target.value as MeasurementMetric);
+                    const nextMetric = event.target.value as MeasurementMetric;
+                    setMetric(nextMetric);
                     setValue('');
                     setSecondaryValue('');
+                    setMeasurementUnit(nextMetric === 'custom_lab' ? '' : canonicalMeasurementUnits[nextMetric as ConvertibleMeasurementMetric]);
                   }}
                   className="mt-2 flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm"
                 >
@@ -1003,10 +1012,13 @@ function Measurements({
                   />
                 </label>
               ) : (
-                <p className="text-xs text-slate-500">
-                  {c.measurements.unit}: {option.unit}
-                  {metric === 'blood_pressure' ? ' (systolic / diastolic)' : ''}
-                </p>
+                <label className="block text-sm font-medium">
+                  {c.measurements.unit}
+                  <select value={measurementUnit} onChange={(event) => setMeasurementUnit(event.target.value)} className="mt-2 flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm">
+                    {supportedUnits.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
+                  </select>
+                  <span className="mt-2 block text-xs text-slate-500">Stored as {canonicalMeasurementUnits[metric as ConvertibleMeasurementMetric]}{metric === 'blood_pressure' ? ' (systolic / diastolic)' : ''}</span>
+                </label>
               )}
               <label className="block text-sm font-medium">
                 {c.measurements.measuredAt}

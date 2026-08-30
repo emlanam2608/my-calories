@@ -81,7 +81,7 @@ This file tracks the gap between the current interactive prototype and the plann
 
 - [x] Implement manual weight, blood pressure, glucose, cholesterol, and uric acid entry in validated standard units.
 - [x] Add custom lab entry with a user-provided test name, unit, and timestamp.
-- [ ] Add safe unit conversion beyond the validated standard-unit measurement flow; analyte-specific conversions must not be inferred from a generic lab label.
+- [x] Add safe analyte-specific unit conversion for weight, glucose, cholesterol, and uric acid; custom labs remain unit-preserving and are never inferred.
 - [ ] Implement confirm-before-save extraction from measurement and report photos.
 - [ ] Delete source report images after confirmation by default; retain only with explicit consent.
 - [ ] Build the permission-checked compact context supplied to coach chat.
