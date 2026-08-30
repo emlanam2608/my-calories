@@ -12,10 +12,11 @@ describe('evaluateMealHealthFindings', () => {
     expect(findings.map((finding) => finding.ruleCode)).toEqual([
       'meal-sodium-800mg',
       'meal-fiber-under-3g',
+      'meal-glucose-fiber-pattern',
       'meal-energy-750kcal',
     ]);
-    expect(findings.map((finding) => finding.severity)).toEqual(['attention', 'info', 'info']);
-    expect(findings.every((finding) => finding.ruleVersion === 'meal-starter-rules-1')).toBe(true);
+    expect(findings.map((finding) => finding.severity)).toEqual(['attention', 'info', 'info', 'info']);
+    expect(findings.every((finding) => finding.ruleVersion === 'meal-starter-rules-2')).toBe(true);
   });
 
   it('does not treat an exact 3 g of fiber as low fiber', () => {
@@ -32,5 +33,16 @@ describe('evaluateMealHealthFindings', () => {
 
     expect(findings).toHaveLength(1);
     expect(findings[0]).toMatchObject({ condition: 'cholesterol', ruleCode: 'meal-fiber-under-3g' });
+  });
+
+  it('surfaces an ingredient-based purine-risk review only for selected uric-acid focus', () => {
+    const findings = evaluateMealHealthFindings(
+      { calories: 400, protein: 25, fiber: 4, sodium: 300 },
+      ['uric_acid'],
+      ['Beef', 'Broth', 'Herbs'],
+    );
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toMatchObject({ condition: 'uric_acid', ruleCode: 'meal-purine-ingredient-signal' });
   });
 });

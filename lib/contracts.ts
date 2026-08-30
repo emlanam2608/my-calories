@@ -69,7 +69,7 @@ export const foodAnalysisSchema = z.object({
     severity: z.enum(['info', 'attention']),
     text: z.string().trim().min(1).max(500),
   }),
-  healthFindings: z.array(healthFindingSchema).max(4).optional(),
+  healthFindings: z.array(healthFindingSchema).max(6).optional(),
 });
 export const analyseFoodRequestSchema = z.discriminatedUnion('mode', [
   z.object({

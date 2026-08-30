@@ -264,7 +264,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
       return {
         ...current,
         snapshot: { ...current.snapshot, totals },
-        healthFindings: evaluateMealHealthFindings(totals, healthFocuses),
+        healthFindings: evaluateMealHealthFindings(totals, healthFocuses, current.snapshot.ingredients),
       };
     });
   }

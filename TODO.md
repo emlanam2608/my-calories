@@ -75,7 +75,7 @@ This file tracks the gap between the current interactive prototype and the plann
 - [x] Record serving assumptions, provider reference, source version, estimation level, barcode, and confidence in immutable meal snapshots.
 - [x] Send malformed, ambiguous, unmatched-barcode, and low-confidence results to review; never auto-save them.
 - [x] Aggregate confirmed meals into the Today dashboard and remaining personal targets.
-- [ ] Generate deterministic concern-specific findings and practical substitutions or portion changes.
+- [x] Generate deterministic concern-specific meal findings and practical substitutions for sodium, fiber patterns, meal energy, and detected purine-risk ingredients; glucose and purine checks state their data limits.
 - [ ] Add durable distributed quotas for food providers and future AI work before multi-device or multi-user release.
 
 ## P1 - Measurements and coach
