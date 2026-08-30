@@ -248,6 +248,16 @@ export const sensitiveNotesResponseSchema = z.object({
   notes: sensitiveNotesSchema,
   updatedAt: z.string().datetime({ offset: true }).nullable(),
 });
+export const uploadKindSchema = z.enum(['meal_photo', 'nutrition_label', 'measurement_report']);
+export const uploadResponseSchema = z.object({
+  id: z.string().uuid(),
+  kind: uploadKindSchema,
+  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  byteSize: z.number().int().positive().max(10_000_000),
+  width: z.number().int().positive().max(8_000),
+  height: z.number().int().positive().max(8_000),
+  expiresAt: z.string().datetime({ offset: true }),
+});
 export const updateProfileLocaleRequestSchema = z.object({
   idempotencyKey: z.string().uuid(),
   locale: profileLocaleSchema,
@@ -443,6 +453,7 @@ export type HealthFocus = z.infer<typeof healthFocusSchema>;
 export type MealCreateRequest = z.infer<typeof createMealRequestSchema>;
 export type OnboardingDraft = z.infer<typeof onboardingDraftSchema>;
 export type SensitiveNotes = z.infer<typeof sensitiveNotesSchema>;
+export type UploadRecord = z.infer<typeof uploadResponseSchema>;
 export type ProfileTargetsUpdateRequest = z.infer<
   typeof updateProfileTargetsRequestSchema
 >;

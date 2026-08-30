@@ -20,7 +20,13 @@ function productAnalysis(barcode: string, product: OffProduct): FoodAnalysis {
   const nutriments = product.nutriments ?? {};
   const servingGrams = grams(product.serving_size);
   const factor = servingGrams ? servingGrams / 100 : 1;
-  const perServing = (key: string) => optionalNumber(nutriments[`${key}_serving`]) ?? (optionalNumber(nutriments[`${key}_100g`]) ?? optionalNumber(nutriments[key]) ?? 0) * factor;
+  const perServingOptional = (key: string) => {
+    const serving = optionalNumber(nutriments[`${key}_serving`]);
+    if (serving !== null) return serving;
+    const base = optionalNumber(nutriments[`${key}_100g`]) ?? optionalNumber(nutriments[key]);
+    return base === null ? null : base * factor;
+  };
+  const perServing = (key: string) => perServingOptional(key) ?? 0;
   const calories = perServing('energy-kcal');
   const protein = perServing('proteins');
   const fiber = perServing('fiber');
@@ -34,13 +40,33 @@ function productAnalysis(barcode: string, product: OffProduct): FoodAnalysis {
     mealType: inferMealType(),
     confidence: hasNutrition ? 86 : 50,
     unresolvedQuestions: hasNutrition ? ['Confirm the serving shown matches the amount you ate. Product data is community-supplied and may be incomplete.'] : ['Nutrition values were not available from the product record. Enter the label values manually before saving.'],
-    snapshot: { totals: { calories, protein, fiber, sodium: Math.round(sodiumGrams * 1_000) }, servingDescription: servingGrams ? `${servingGrams} g serving (product label)` : '100 g label basis (serving not supplied)', source: 'open_food_facts', sourceVersion: 'open-food-facts-api-v3', sourceReference: `${baseUrl}/${barcode}`, barcode, estimationLevel: 'label_derived', ingredients: ingredients.length ? ingredients : ['Packaged food'] },
+    snapshot: { totals: { calories, protein, fiber, sodium: Math.round(sodiumGrams * 1_000) }, additionalNutrients: additionalNutrients(perServingOptional), servingDescription: servingGrams ? `${servingGrams} g serving (product label)` : '100 g label basis (serving not supplied)', source: 'open_food_facts', sourceVersion: 'open-food-facts-api-v3', sourceReference: `${baseUrl}/${barcode}`, barcode, estimationLevel: 'label_derived', ingredients: ingredients.length ? ingredients : ['Packaged food'] },
     finding: { code: hasNutrition ? 'packaged-label-review' : 'packaged-nutrition-missing', severity: hasNutrition ? 'info' : 'attention', text: hasNutrition ? 'Nutrition comes from the packaged-product record. Verify the serving and label against the product in hand before saving.' : 'This product record has no usable nutrition values. Manual label entry is required before this becomes a reliable record.' },
   };
 }
 
 function notFoundAnalysis(barcode: string): FoodAnalysis {
   return { name: `Unmatched barcode ${barcode}`, nameVi: `Mã vạch chưa khớp ${barcode}`, mealType: inferMealType(), confidence: 0, unresolvedQuestions: ['No matching packaged-food record was found. Add the nutrition label values manually before saving.'], snapshot: { totals: { calories: 0, protein: 0, fiber: 0, sodium: 0 }, servingDescription: 'Manual label entry required', source: 'manual_entry', sourceVersion: 'manual-entry-1', sourceReference: null, barcode, estimationLevel: 'estimated', ingredients: ['Packaged food'] }, finding: { code: 'barcode-not-found', severity: 'attention', text: 'No trusted packaged-food record was found for this barcode. The empty fields are intentional—enter values from the label to create a confirmed record.' } };
+}
+
+function additionalNutrients(perServing: (key: string) => number | null) {
+  const values: Record<string, { value: number; unit: string; state: 'reported' }> = {};
+  const add = (name: string, key: string, unit: string) => {
+    const value = perServing(key);
+    if (value !== null) values[name] = { value, unit, state: 'reported' };
+  };
+  add('carbohydrates', 'carbohydrates', 'g');
+  add('totalSugar', 'sugars', 'g');
+  add('addedSugar', 'added-sugars', 'g');
+  add('totalFat', 'fat', 'g');
+  add('saturatedFat', 'saturated-fat', 'g');
+  add('cholesterol', 'cholesterol', 'mg');
+  add('potassium', 'potassium', 'mg');
+  add('calcium', 'calcium', 'mg');
+  add('iron', 'iron', 'mg');
+  add('alcohol', 'alcohol', 'g');
+  add('water', 'water', 'g');
+  return Object.keys(values).length ? values : undefined;
 }
 
 function optionalNumber(value: unknown) { const parsed = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : Number.NaN; return Number.isFinite(parsed) && parsed >= 0 ? parsed : null; }

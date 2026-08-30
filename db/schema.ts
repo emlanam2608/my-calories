@@ -55,6 +55,27 @@ export const profileSensitiveNotes = sqliteTable(
   },
   (table) => [uniqueIndex('idx_profile_sensitive_notes_owner').on(table.ownerId)],
 );
+export const uploads = sqliteTable(
+  'uploads',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id').notNull(),
+    storageKey: text('storage_key').notNull(),
+    kind: text('kind').notNull(),
+    contentType: text('content_type').notNull(),
+    byteSize: integer('byte_size').notNull(),
+    width: integer('width').notNull(),
+    height: integer('height').notNull(),
+    status: text('status').notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
+  },
+  (table) => [
+    index('idx_uploads_owner_status').on(table.ownerId, table.status),
+    index('idx_uploads_expiry').on(table.status, table.expiresAt),
+  ],
+);
 export const healthFocuses = sqliteTable(
   'health_focuses',
   {

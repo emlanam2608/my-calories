@@ -34,7 +34,7 @@ function analysisFromRecord(record: ProviderRecord, catalog: 'ingredient' | 'dis
     mealType: inferMealType(),
     confidence: hasNutrition ? 78 : 48,
     unresolvedQuestions: [`The first of ${matchCount} matching ${catalog === 'ingredient' ? 'ingredient' : 'dish'} records is shown. Confirm the food and serving before saving.`, ...(hasNutrition ? [] : ['The selected record did not expose usable nutrient components. Enter the values manually before saving.'])],
-    snapshot: { totals: { calories, protein: nutrients.protein, fiber: nutrients.fiber, sodium: nutrients.sodium }, servingDescription: catalog === 'ingredient' ? '100 g database basis' : 'Database dish basis; serving needs confirmation', source: 'vietnam_institute_nutrition', sourceVersion, sourceReference, estimationLevel: 'database_derived', ingredients: ingredients.length ? ingredients : [nameVi] },
+    snapshot: { totals: { calories, protein: nutrients.protein, fiber: nutrients.fiber, sodium: nutrients.sodium }, additionalNutrients: mapAdditionalNutrients(components), servingDescription: catalog === 'ingredient' ? '100 g database basis' : 'Database dish basis; serving needs confirmation', source: 'vietnam_institute_nutrition', sourceVersion, sourceReference, estimationLevel: 'database_derived', ingredients: ingredients.length ? ingredients : [nameVi] },
     finding: { code: hasNutrition ? 'vietnam-catalog-review' : 'vietnam-catalog-values-missing', severity: hasNutrition ? 'info' : 'attention', text: hasNutrition ? 'Nutrients come from a Vietnam nutrition catalog result. Database basis and your actual serving can differ, so review every value before saving.' : 'A matching Vietnam catalog record was found, but usable nutrient values were unavailable. Add the nutrition values manually before saving.' },
   };
 }
@@ -58,10 +58,57 @@ function mapNutrients(components: ProviderRecord[]) {
   return result;
 }
 
+function mapAdditionalNutrients(components: ProviderRecord[]) {
+  const result: Record<string, { value: number; unit: string; state: 'reported' }> = {};
+  for (const component of components) {
+    const label = [component.name_vi, component.name_en, component.name, component.nutrient, component.component_name, component.description].map(string).join(' ').toLocaleLowerCase('vi-VN');
+    const value = componentValue(component);
+    const unit = string(component.unit).toLowerCase();
+    if (value === null || !unit) continue;
+    const add = (key: string, targetUnit: 'g' | 'mg' | 'ml') => {
+      if (result[key]) return;
+      const converted = convertUnit(value, unit, targetUnit);
+      if (converted !== null) result[key] = { value: converted, unit: targetUnit, state: 'reported' };
+    };
+    if (/(đường bổ sung|added sugar)/.test(label)) add('addedSugar', 'g');
+    else if (/(carbohydrate|carbohydrat|glucid|đường bột)/.test(label)) add('carbohydrates', 'g');
+    else if (/(đường|sugar)/.test(label)) add('totalSugar', 'g');
+    else if (/(bão hòa|saturated)/.test(label) && /(fat|lipid|chất béo)/.test(label)) add('saturatedFat', 'g');
+    else if (/(lipid|fat|chất béo)/.test(label)) add('totalFat', 'g');
+    else if (/cholesterol/.test(label)) add('cholesterol', 'mg');
+    else if (/(potassium|kali)/.test(label)) add('potassium', 'mg');
+    else if (/(calcium|canxi)/.test(label)) add('calcium', 'mg');
+    else if (/(\biron\b|sắt)/.test(label)) add('iron', 'mg');
+    else if (/(alcohol|ethanol|cồn)/.test(label)) add('alcohol', 'g');
+    else if (/(water|nước)/.test(label)) add('water', 'ml');
+  }
+  return Object.keys(result).length ? result : undefined;
+}
+
+function componentValue(component: ProviderRecord) {
+  for (const value of [component.value, component.amount, component.quantity, component.nutrition_value, component.content]) {
+    const parsed = numericNullable(value);
+    if (parsed !== null) return parsed;
+  }
+  return null;
+}
+
+function convertUnit(value: number, sourceUnit: string, targetUnit: 'g' | 'mg' | 'ml') {
+  if (sourceUnit === targetUnit) return value;
+  if (targetUnit === 'g' && sourceUnit === 'mg') return value / 1_000;
+  if (targetUnit === 'g' && /^(µg|ug)$/.test(sourceUnit)) return value / 1_000_000;
+  if (targetUnit === 'mg' && sourceUnit === 'g') return value * 1_000;
+  if (targetUnit === 'mg' && /^(µg|ug)$/.test(sourceUnit)) return value / 1_000;
+  if (targetUnit === 'ml' && sourceUnit === 'g') return value;
+  if (targetUnit === 'ml' && sourceUnit === 'l') return value * 1_000;
+  return null;
+}
+
 function toCalories(value: number, unit: string) { return /kj/.test(unit) ? Math.round(value / 4.184) : value; }
 function componentNames(items: ProviderRecord[]) { return items.map((item) => string(item.name_vi) || string(item.name) || string(item.food_name)).filter(Boolean).slice(0, 12); }
 function asRecords(value: unknown) { return Array.isArray(value) ? value.filter(isRecord) : []; }
 function isRecord(value: unknown): value is ProviderRecord { return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
 function string(value: unknown) { return typeof value === 'string' ? value.trim() : ''; }
 function numeric(value: unknown) { const parsed = typeof value === 'number' ? value : typeof value === 'string' ? Number(value.replace(',', '.')) : 0; return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0; }
+function numericNullable(value: unknown) { const parsed = typeof value === 'number' ? value : typeof value === 'string' ? Number(value.replace(',', '.')) : Number.NaN; return Number.isFinite(parsed) && parsed >= 0 ? parsed : null; }
 function inferMealType(): FoodAnalysis['mealType'] { const hour = new Date().getHours(); return hour < 11 ? 'breakfast' : hour < 16 ? 'lunch' : hour < 21 ? 'dinner' : 'snack'; }

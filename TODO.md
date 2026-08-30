@@ -54,6 +54,7 @@ This file tracks the gap between the current interactive prototype and the plann
 - [x] Pause workout-plan preview/confirmation for reported chest discomfort, dizziness, or shortness of breath, and exclude catalog exercises tagged for reported balance or joint concerns.
 - [x] Implement target authority precedence: clinician-defined, then user-defined, then guideline default.
 - [x] Add versioned deterministic meal-level checks for sodium, fiber, and energy, shown as non-diagnostic condition-specific findings that never change nutrient facts.
+- [x] Add evidence-limited deterministic checks for reported carbohydrates, added sugar, saturated fat, and alcohol; missing fields produce data-limit messaging rather than inferred values.
 - [x] Add private, persistent health-focus selection for blood pressure, cholesterol, blood glucose, and uric acid; meal reviews filter checks to selected focuses.
 - [x] Add a private, persistent readiness and contraindication screen before any workout plan is generated; reported red flags pause plan generation and show professional/urgent-care guidance.
 - [ ] Implement versioned deterministic rules for calories, protein, fiber, carbohydrates, added sugar, sodium, saturated fat, hydration, alcohol, micronutrients, and purine-risk categories.
@@ -69,6 +70,7 @@ This file tracks the gap between the current interactive prototype and the plann
 - [ ] Add text and image extraction through the OpenAI Responses API with storage disabled and identity excluded.
 - [ ] Make the routine extraction model configurable, defaulting to `gpt-5.6-luna`.
 - [ ] Upload meal and label photos to private R2 with authorization, expiry, deletion, and redacted logs.
+- [x] Add authenticated private R2 upload APIs with random keys, D1 ownership/expiry metadata, JPEG/PNG/WebP header and dimension validation, owner-only fetch, and explicit deletion. Capture UI, extraction linkage, automatic post-confirmation deletion, and scheduled expiry cleanup remain pending.
 - [ ] Add a real barcode scanner/capture path.
 - [ ] Resolve confirmed user recipes and foods before external providers.
 - [x] Integrate Open Food Facts for packaged-food barcode lookup, ingredient text, and available label nutrition; missing records remain manual-review entries.
@@ -80,7 +82,7 @@ This file tracks the gap between the current interactive prototype and the plann
 - [x] Add provider timeouts, bounded retry/backoff, a best-effort circuit breaker, and editable manual-entry fallback for unavailable food providers.
 - [x] Add a private per-owner, per-feature analysis quota with retry timing; it is intentionally best-effort per worker isolate until production distributed limits are configured.
 - [x] Record serving assumptions, provider reference, source version, estimation level, barcode, and confidence in immutable meal snapshots.
-- [x] Extend immutable snapshots with optional additional-nutrient records that preserve source-reported zero versus unavailable data; USDA results now map available carbohydrates, sugars, fats, selected minerals, alcohol, and water. Other providers and broader rules remain pending.
+- [x] Extend immutable snapshots with optional additional-nutrient records that preserve source-reported zero versus unavailable data; USDA, Open Food Facts, and Vietnam portal results map available carbohydrates, sugars, fats, selected minerals, alcohol, and water. Broader rules remain pending.
 - [x] Send malformed, ambiguous, unmatched-barcode, and low-confidence results to review; never auto-save them.
 - [x] Aggregate confirmed meals into the Today dashboard and remaining personal targets.
 - [x] Generate deterministic concern-specific meal findings and practical substitutions for sodium, fiber patterns, meal energy, and detected purine-risk ingredients; glucose and purine checks state their data limits.

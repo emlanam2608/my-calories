@@ -1,8 +1,8 @@
-import type { HealthFinding, HealthFocus } from './contracts';
+import type { FoodAnalysis, HealthFinding, HealthFocus } from './contracts';
 
 type NutrientTotals = { calories: number; protein: number; fiber: number; sodium: number };
 
-const ruleVersion = 'meal-starter-rules-2';
+const ruleVersion = 'meal-starter-rules-3';
 const source = 'Conservative personal-tracking starter rules';
 const highPurineSignals = [
   'organ meat', 'liver', 'kidney', 'gan', 'thận', 'red meat', 'beef', 'thịt bò',
@@ -10,7 +10,22 @@ const highPurineSignals = [
   'gravy', 'broth', 'soup', 'nước dùng',
 ];
 
-export function evaluateMealHealthFindings(totals: NutrientTotals, activeFocuses: HealthFocus[] = [], ingredients: string[] = []): HealthFinding[] {
+type AdditionalNutrients = FoodAnalysis['snapshot']['additionalNutrients'];
+
+function reportedNutrient(
+  additionalNutrients: AdditionalNutrients,
+  key: keyof NonNullable<AdditionalNutrients>,
+) {
+  const nutrient = additionalNutrients?.[key];
+  return nutrient && nutrient.state !== 'unavailable' ? nutrient.value : null;
+}
+
+export function evaluateMealHealthFindings(
+  totals: NutrientTotals,
+  activeFocuses: HealthFocus[] = [],
+  ingredients: string[] = [],
+  additionalNutrients?: AdditionalNutrients,
+): HealthFinding[] {
   const findings: HealthFinding[] = [];
 
   if (totals.sodium >= 800) findings.push({
@@ -20,11 +35,35 @@ export function evaluateMealHealthFindings(totals: NutrientTotals, activeFocuses
     suggestedActions: ['Reduce broth, seasoning packets, sauces, and salty side dishes.', 'Compare the label or recipe with the serving you actually ate.'],
   });
 
-  if (totals.fiber < 3 && totals.calories >= 300) findings.push({
+  const carbohydrates = reportedNutrient(additionalNutrients, 'carbohydrates');
+  if (totals.fiber < 3 && totals.calories >= 300 && carbohydrates === null) findings.push({
     condition: 'cholesterol', severity: 'info', ruleCode: 'meal-fiber-under-3g', ruleVersion,
     observedValue: totals.fiber, observedUnit: 'g fiber', targetValue: 28, targetUnit: 'g/day', evidenceSource: source,
     text: 'This meal is low in fiber for its energy amount. Fiber can be a useful general food-pattern focus for cholesterol support; this is not a treatment recommendation.',
     suggestedActions: ['Add vegetables, beans, fruit, or whole grains when appropriate.', 'Use the day total—not one meal alone—to review progress.'],
+  });
+
+  if (carbohydrates !== null && carbohydrates >= 60) findings.push({
+    condition: 'blood_glucose', severity: 'info', ruleCode: 'meal-carbohydrates-60g', ruleVersion,
+    observedValue: carbohydrates, observedUnit: 'g carbohydrates', targetValue: null, targetUnit: 'personal plan needed', evidenceSource: 'ADA food and blood glucose educational guidance',
+    text: 'This serving has a substantial amount of reported carbohydrate. The app cannot predict glucose response or medication needs from a meal record.',
+    suggestedActions: ['Review the serving, carbohydrate source, and fiber together.', 'Use your own glucose checks and clinician guidance for individualized decisions.'],
+  });
+
+  const addedSugar = reportedNutrient(additionalNutrients, 'addedSugar');
+  if (addedSugar !== null && addedSugar >= 20) findings.push({
+    condition: 'weight_management', severity: 'info', ruleCode: 'meal-added-sugar-20g', ruleVersion,
+    observedValue: addedSugar, observedUnit: 'g added sugar', targetValue: null, targetUnit: 'personal target needed', evidenceSource: source,
+    text: 'This serving has a notable amount of reported added sugar. This is a tracking observation, not a diagnosis or treatment recommendation.',
+    suggestedActions: ['Check whether a smaller serving or an unsweetened alternative fits your goals.', 'Compare the label with the amount you actually ate.'],
+  });
+
+  const saturatedFat = reportedNutrient(additionalNutrients, 'saturatedFat');
+  if (saturatedFat !== null && saturatedFat >= 5) findings.push({
+    condition: 'cholesterol', severity: 'info', ruleCode: 'meal-saturated-fat-5g', ruleVersion,
+    observedValue: saturatedFat, observedUnit: 'g saturated fat', targetValue: null, targetUnit: 'personal target needed', evidenceSource: source,
+    text: 'This serving has a notable amount of reported saturated fat. One meal does not determine cholesterol health or treatment needs.',
+    suggestedActions: ['Review portions and compare lower-saturated-fat alternatives when useful.', 'Use the wider food pattern and clinician guidance for decisions.'],
   });
 
   if (totals.fiber < 3 && totals.calories >= 300) findings.push({
@@ -47,6 +86,14 @@ export function evaluateMealHealthFindings(totals: NutrientTotals, activeFocuses
     observedValue: purineMatches.length, observedUnit: 'ingredient signals', targetValue: null, targetUnit: 'recipe confirmation needed', evidenceSource: 'American College of Rheumatology gout patient guidance',
     text: `The ingredient list includes ${purineMatches.join(', ')}. Confirm the recipe and portion: ingredient text alone cannot measure purines or predict a flare.`,
     suggestedActions: ['If this is a regular choice, consider a lower-purine protein or a meal with more vegetables.', 'Follow your clinician’s plan during a gout flare or if you have symptoms.'],
+  });
+
+  const alcohol = reportedNutrient(additionalNutrients, 'alcohol');
+  if (alcohol !== null && alcohol > 0) findings.push({
+    condition: 'uric_acid', severity: 'info', ruleCode: 'meal-alcohol-reported', ruleVersion,
+    observedValue: alcohol, observedUnit: 'g alcohol', targetValue: null, targetUnit: 'personal plan needed', evidenceSource: 'American College of Rheumatology gout patient guidance',
+    text: 'Alcohol was reported for this serving. The app cannot predict uric-acid changes or a flare from this record alone.',
+    suggestedActions: ['Confirm the serving and follow any clinician guidance about alcohol.', 'Use symptom and measurement trends rather than a single meal to review patterns.'],
   });
 
   return activeFocuses.length ? findings.filter((finding) => activeFocuses.includes(finding.condition as HealthFocus)) : findings;

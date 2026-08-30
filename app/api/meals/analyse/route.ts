@@ -49,6 +49,6 @@ export async function POST(request: Request) {
   }
   const focusRows = await getDb().select({ focus: healthFocuses.focus }).from(healthFocuses).where(eq(healthFocuses.ownerId, user.userId));
   const focuses = focusRows.flatMap((row) => { const parsedFocus = healthFocusSchema.safeParse(row.focus); return parsedFocus.success ? [parsedFocus.data] : []; });
-  const analysis = foodAnalysisSchema.parse({ ...result, healthFindings: evaluateMealHealthFindings(result.snapshot.totals, focuses, result.snapshot.ingredients) });
+  const analysis = foodAnalysisSchema.parse({ ...result, healthFindings: evaluateMealHealthFindings(result.snapshot.totals, focuses, result.snapshot.ingredients, result.snapshot.additionalNutrients) });
   return Response.json({ analysis }, { headers: { 'Cache-Control': 'no-store' } });
 }

@@ -337,7 +337,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
       return {
         ...current,
         snapshot: { ...current.snapshot, totals },
-        healthFindings: evaluateMealHealthFindings(totals, healthFocuses, current.snapshot.ingredients),
+        healthFindings: evaluateMealHealthFindings(totals, healthFocuses, current.snapshot.ingredients, current.snapshot.additionalNutrients),
       };
     });
   }
@@ -365,6 +365,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
           snapshot.totals,
           healthFocuses,
           ingredients,
+          current.snapshot.additionalNutrients,
         ),
       };
     });

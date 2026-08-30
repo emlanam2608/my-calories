@@ -16,7 +16,7 @@ describe('evaluateMealHealthFindings', () => {
       'meal-energy-750kcal',
     ]);
     expect(findings.map((finding) => finding.severity)).toEqual(['attention', 'info', 'info', 'info']);
-    expect(findings.every((finding) => finding.ruleVersion === 'meal-starter-rules-2')).toBe(true);
+    expect(findings.every((finding) => finding.ruleVersion === 'meal-starter-rules-3')).toBe(true);
   });
 
   it('does not treat an exact 3 g of fiber as low fiber', () => {
@@ -44,5 +44,24 @@ describe('evaluateMealHealthFindings', () => {
 
     expect(findings).toHaveLength(1);
     expect(findings[0]).toMatchObject({ condition: 'uric_acid', ruleCode: 'meal-purine-ingredient-signal' });
+  });
+
+  it('uses reported additional nutrients without inferring missing ones', () => {
+    const findings = evaluateMealHealthFindings(
+      { calories: 500, protein: 20, fiber: 4, sodium: 300 },
+      [],
+      [],
+      {
+        carbohydrates: { value: 65, unit: 'g', state: 'reported' },
+        addedSugar: { value: 20, unit: 'g', state: 'reported' },
+        saturatedFat: { value: 5, unit: 'g', state: 'reported' },
+        alcohol: { value: null, unit: 'g', state: 'unavailable' },
+      },
+    );
+    expect(findings.map((finding) => finding.ruleCode)).toEqual([
+      'meal-carbohydrates-60g',
+      'meal-added-sugar-20g',
+      'meal-saturated-fat-5g',
+    ]);
   });
 });
