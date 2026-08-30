@@ -10,10 +10,17 @@ import { getDb } from '@/db';
 import { healthFocuses } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { manualProviderFallback } from '@/lib/provider-fallback';
+import { consumeRequestQuota } from '@/lib/request-quota';
 
 export async function POST(request: Request) {
   const user = await getChatGPTUser();
   if (!user) return Response.json({ error: 'Sign in is required.' }, { status: 401 });
+
+  const quota = consumeRequestQuota('meal_analysis', user.userId, { limit: 30, windowMs: 60 * 60 * 1_000 });
+  if (!quota.allowed) return Response.json(
+    { error: 'Meal analysis is temporarily limited to protect provider availability. Please try again shortly.' },
+    { status: 429, headers: { 'Retry-After': String(quota.retryAfterSeconds), 'Cache-Control': 'no-store' } },
+  );
 
   const body = await request.json().catch(() => null);
   const parsed = analyseFoodRequestSchema.safeParse(body);

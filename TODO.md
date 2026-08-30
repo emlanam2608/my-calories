@@ -71,11 +71,12 @@ This file tracks the gap between the current interactive prototype and the plann
 - [x] Add editable manual nutrient entry when a barcode has no trustworthy match.
 - [x] Cache normalized provider matches and AI-independent nutrient results in D1 for seven days, using hashed cache keys and no personal meal records.
 - [x] Add provider timeouts, bounded retry/backoff, a best-effort circuit breaker, and editable manual-entry fallback for unavailable food providers.
+- [x] Add a private per-owner, per-feature analysis quota with retry timing; it is intentionally best-effort per worker isolate until production distributed limits are configured.
 - [x] Record serving assumptions, provider reference, source version, estimation level, barcode, and confidence in immutable meal snapshots.
 - [x] Send malformed, ambiguous, unmatched-barcode, and low-confidence results to review; never auto-save them.
 - [x] Aggregate confirmed meals into the Today dashboard and remaining personal targets.
 - [ ] Generate deterministic concern-specific findings and practical substitutions or portion changes.
-- [ ] Add per-feature quotas for food providers and AI work.
+- [ ] Add durable distributed quotas for food providers and future AI work before multi-device or multi-user release.
 
 ## P1 - Measurements and coach
 
