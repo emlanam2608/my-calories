@@ -39,6 +39,7 @@ import type {
   Measurement,
   MeasurementCreateRequest,
   OnboardingDraft,
+  SensitiveNotes,
   WorkoutReadiness,
   WorkoutReadinessRequest,
   WorkoutPlanResponse,
@@ -132,6 +133,12 @@ export function Dashboard({ displayName }: { displayName: string }) {
   const [onboardingStatus, setOnboardingStatus] = useState<
     'in_progress' | 'complete'
   >('in_progress');
+  const [sensitiveNotes, setSensitiveNotes] = useState<SensitiveNotes>({
+    medicationNote: '',
+    clinicianNote: '',
+    symptomNote: '',
+  });
+  const [sensitiveNotesAvailable, setSensitiveNotesAvailable] = useState(true);
   const [draft, setDraft] = useState('');
   const [captureMode, setCaptureMode] = useState<
     'text' | 'barcode' | 'vietnam_database' | 'usda'
@@ -146,6 +153,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
   const [savingTargets, setSavingTargets] = useState(false);
   const [savingFocuses, setSavingFocuses] = useState(false);
   const [savingOnboarding, setSavingOnboarding] = useState(false);
+  const [savingSensitiveNotes, setSavingSensitiveNotes] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
 
@@ -196,6 +204,15 @@ export function Dashboard({ displayName }: { displayName: string }) {
         setOnboarding(onboardingBody.draft);
         setOnboardingStatus(onboardingBody.status ?? 'in_progress');
       }
+      const sensitiveNotesResponse = await fetch('/api/profile/sensitive-notes', {
+        cache: 'no-store',
+      });
+      const sensitiveNotesBody = (await sensitiveNotesResponse.json()) as {
+        notes?: SensitiveNotes;
+      };
+      setSensitiveNotesAvailable(sensitiveNotesResponse.ok);
+      if (sensitiveNotesResponse.ok && sensitiveNotesBody.notes)
+        setSensitiveNotes(sensitiveNotesBody.notes);
       const measurementsResponse = await fetch('/api/measurements?days=90', {
         cache: 'no-store',
       });
@@ -495,6 +512,35 @@ export function Dashboard({ displayName }: { displayName: string }) {
     }
   }
 
+  async function saveSensitiveNotes(nextNotes: SensitiveNotes) {
+    setSavingSensitiveNotes(true);
+    setError('');
+    setNotice('');
+    try {
+      const response = await fetch('/api/profile/sensitive-notes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idempotencyKey: requestId(), notes: nextNotes }),
+      });
+      const body = (await response.json()) as {
+        error?: string;
+        notes?: SensitiveNotes;
+      };
+      if (!response.ok || !body.notes)
+        throw new Error(body.error || 'We could not save encrypted health notes.');
+      setSensitiveNotes(body.notes);
+      setNotice('Encrypted health notes saved to your private profile.');
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : 'We could not save encrypted health notes.',
+      );
+    } finally {
+      setSavingSensitiveNotes(false);
+    }
+  }
+
   async function saveMeasurement(nextMeasurement: MeasurementCreateRequest) {
     setError('');
     setNotice('');
@@ -778,7 +824,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
           />
         ) : (
           <Settings
-            key={JSON.stringify({ targetValues, healthFocuses, onboarding })}
+            key={JSON.stringify({ targetValues, healthFocuses, onboarding, sensitiveNotes })}
             targets={targetValues}
             saving={savingTargets}
             onSave={saveTargets}
@@ -789,6 +835,10 @@ export function Dashboard({ displayName }: { displayName: string }) {
             onboardingStatus={onboardingStatus}
             savingOnboarding={savingOnboarding}
             onSaveOnboarding={saveOnboarding}
+            sensitiveNotes={sensitiveNotes}
+            sensitiveNotesAvailable={sensitiveNotesAvailable}
+            savingSensitiveNotes={savingSensitiveNotes}
+            onSaveSensitiveNotes={saveSensitiveNotes}
             locale={locale}
           />
         )}
@@ -1903,6 +1953,10 @@ function Settings({
   onboardingStatus,
   savingOnboarding,
   onSaveOnboarding,
+  sensitiveNotes,
+  sensitiveNotesAvailable,
+  savingSensitiveNotes,
+  onSaveSensitiveNotes,
   locale,
 }: {
   targets: Record<TargetKey, number>;
@@ -1915,6 +1969,10 @@ function Settings({
   onboardingStatus: 'in_progress' | 'complete';
   savingOnboarding: boolean;
   onSaveOnboarding: (draft: OnboardingDraft) => void;
+  sensitiveNotes: SensitiveNotes;
+  sensitiveNotesAvailable: boolean;
+  savingSensitiveNotes: boolean;
+  onSaveSensitiveNotes: (notes: SensitiveNotes) => void;
   locale: Locale;
 }) {
   const c = getCopy(locale);
@@ -1990,6 +2048,13 @@ function Settings({
         status={onboardingStatus}
         saving={savingOnboarding}
         onSave={onSaveOnboarding}
+        locale={locale}
+      />
+      <SensitiveNotesSettings
+        initialNotes={sensitiveNotes}
+        available={sensitiveNotesAvailable}
+        saving={savingSensitiveNotes}
+        onSave={onSaveSensitiveNotes}
         locale={locale}
       />
       <Card className="mt-7 border-none shadow-sm">
@@ -2250,6 +2315,60 @@ function OnboardingSettings({
       </CardContent>
     </Card>
   );
+}
+
+function SensitiveNotesSettings({
+  initialNotes,
+  available,
+  saving,
+  onSave,
+  locale,
+}: {
+  initialNotes: SensitiveNotes;
+  available: boolean;
+  saving: boolean;
+  onSave: (notes: SensitiveNotes) => void;
+  locale: Locale;
+}) {
+  const c = getCopy(locale);
+  const [notes, setNotes] = useState<SensitiveNotes>(initialNotes);
+  return (
+    <Card className="mt-6 border-none shadow-sm">
+      <CardHeader>
+        <p className="text-xs font-bold uppercase tracking-[0.15em] text-emerald-700">
+          {c.sensitiveNotes.eyebrow}
+        </p>
+        <CardTitle>{c.sensitiveNotes.title}</CardTitle>
+        <CardDescription>{c.sensitiveNotes.description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {available ? (
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              onSave(notes);
+            }}
+          >
+            <NoteField label={c.sensitiveNotes.medication} value={notes.medicationNote} onChange={(value) => setNotes((current) => ({ ...current, medicationNote: value }))} />
+            <NoteField label={c.sensitiveNotes.clinician} value={notes.clinicianNote} onChange={(value) => setNotes((current) => ({ ...current, clinicianNote: value }))} />
+            <NoteField label={c.sensitiveNotes.symptoms} value={notes.symptomNote} onChange={(value) => setNotes((current) => ({ ...current, symptomNote: value }))} />
+            <Button type="submit" disabled={saving} className="w-full bg-emerald-800 hover:bg-emerald-900">
+              {saving ? <><LoaderCircle className="animate-spin" /> {c.common.saving}</> : <><ShieldCheck /> {c.sensitiveNotes.save}</>}
+            </Button>
+          </form>
+        ) : (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+            {c.sensitiveNotes.unavailable}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function NoteField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return <label className="block space-y-1.5 text-sm font-semibold text-slate-800"><span>{label}</span><Textarea maxLength={2_000} value={value} onChange={(event) => onChange(event.target.value)} className="min-h-20 bg-white font-normal" /></label>;
 }
 
 function SelectField({ label, value, onChange, required, children }: { label: string; value: string; onChange: (value: string) => void; required?: boolean; children: ReactNode }) {

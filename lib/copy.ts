@@ -290,6 +290,16 @@ const englishCopy = {
     environmentHome: 'Home', environmentOutdoors: 'Outdoors', environmentGym: 'Gym',
     restrictionIntensity: 'Avoid high intensity', restrictionResistance: 'Avoid resistance training', restrictionImpact: 'Avoid impact exercise', restrictionGlucose: 'Monitor glucose',
   },
+  sensitiveNotes: {
+    eyebrow: 'Encrypted health notes',
+    title: 'Private notes for your plan',
+    description: 'These notes are encrypted before storage. They are not shown in reminders or used to diagnose or change medication.',
+    medication: 'Medication or exercise-safety notes',
+    clinician: 'Clinician instructions',
+    symptoms: 'Additional symptom notes',
+    save: 'Save encrypted notes',
+    unavailable: 'Encrypted health notes are unavailable until the server-side encryption key is configured.',
+  },
   safety: {
     notMedicalAdvice:
       'This information is for general wellness support and is not medical advice.',
@@ -587,6 +597,16 @@ const vietnameseCopy: ProductCopy = {
     equipmentBodyweight: 'Trọng lượng cơ thể', equipmentChair: 'Ghế', equipmentMat: 'Thảm tập', equipmentBicycle: 'Xe đạp', equipmentTreadmill: 'Máy chạy mini', equipmentBand: 'Dây kháng lực', equipmentDumbbells: 'Tạ tay', equipmentGym: 'Phòng gym',
     environmentHome: 'Tại nhà', environmentOutdoors: 'Ngoài trời', environmentGym: 'Phòng gym',
     restrictionIntensity: 'Tránh cường độ cao', restrictionResistance: 'Tránh tập kháng lực', restrictionImpact: 'Tránh bài tập va chạm', restrictionGlucose: 'Theo dõi đường huyết',
+  },
+  sensitiveNotes: {
+    eyebrow: 'Ghi chú sức khỏe được mã hóa',
+    title: 'Ghi chú riêng tư cho kế hoạch của bạn',
+    description: 'Các ghi chú này được mã hóa trước khi lưu. Chúng không xuất hiện trong lời nhắc và không dùng để chẩn đoán hoặc thay đổi thuốc.',
+    medication: 'Ghi chú về thuốc hoặc an toàn khi tập',
+    clinician: 'Hướng dẫn của bác sĩ',
+    symptoms: 'Ghi chú bổ sung về triệu chứng',
+    save: 'Lưu ghi chú đã mã hóa',
+    unavailable: 'Ghi chú sức khỏe được mã hóa chưa khả dụng cho đến khi khóa mã hóa phía máy chủ được cấu hình.',
   },
   safety: {
     notMedicalAdvice:
