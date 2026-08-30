@@ -108,6 +108,35 @@ export const workoutSessions = sqliteTable(
     index('idx_workouts_owner_completed').on(table.ownerId, table.completedAt),
   ],
 );
+export const workoutReadiness = sqliteTable(
+  'workout_readiness',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id').notNull(),
+    chestPain: integer('chest_pain', { mode: 'boolean' }).notNull(),
+    faintingOrDizziness: integer('fainting_or_dizziness', {
+      mode: 'boolean',
+    }).notNull(),
+    severeShortnessOfBreath: integer('severe_shortness_of_breath', {
+      mode: 'boolean',
+    }).notNull(),
+    irregularHeartbeat: integer('irregular_heartbeat', {
+      mode: 'boolean',
+    }).notNull(),
+    clinicianRestriction: integer('clinician_restriction', {
+      mode: 'boolean',
+    }).notNull(),
+    exerciseGlucoseRisk: integer('exercise_glucose_risk', {
+      mode: 'boolean',
+    }).notNull(),
+    status: text('status').notNull(),
+    confirmedAt: integer('confirmed_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    uniqueIndex('idx_workout_readiness_owner').on(table.ownerId),
+  ],
+);
 export const reminders = sqliteTable(
   'reminders',
   {

@@ -29,6 +29,6 @@
 :root { --background: #f4f8f5; --foreground: #17231d; --card: #ffffff; --card-foreground: #17231d; --primary: #166534; --primary-foreground: #ffffff; --secondary: #edf5ef; --secondary-foreground: #173d2a; --muted: #eff3f0; --muted-foreground: #6d7a72; --accent: #e5f2e8; --accent-foreground: #174c2d; --destructive: #dc2626; --border: #dce6df; --input: #dce6df; --ring: #2f8f55; }
 
 * { @apply border-border; }
-html { @apply bg-background; }
+html { @apply bg-background; color-scheme: light; }
 body { @apply bg-background text-foreground antialiased; font-family: var(--font-geist-sans), Arial, sans-serif; }
 button, input, textarea { font: inherit; }

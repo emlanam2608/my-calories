@@ -21,6 +21,7 @@ const englishCopy = {
     today: 'Today',
     capture: 'Capture',
     measurements: 'Measurements',
+    workouts: 'Workouts',
     settings: 'Settings',
     openNavigation: 'Open navigation',
     closeNavigation: 'Close navigation',
@@ -141,6 +142,32 @@ const englishCopy = {
       customLab: 'Custom lab result',
     },
   },
+  workouts: {
+    eyebrow: 'Movement safety',
+    title: 'Workout readiness',
+    description:
+      'Complete this screen before the app can generate a workout plan. It does not replace medical advice.',
+    screeningTitle: 'Tell us what applies today',
+    screeningDescription:
+      'Select every statement that applies. Any selection pauses new plan generation for professional review.',
+    chestPain: 'Chest pain, pressure, or tightness with activity',
+    faintingOrDizziness: 'Fainting, new severe dizziness, or confusion',
+    severeShortnessOfBreath: 'Unusual or severe shortness of breath',
+    irregularHeartbeat: 'A fast or irregular heartbeat with activity',
+    clinicianRestriction: 'A clinician has told me to avoid or restrict exercise',
+    exerciseGlucoseRisk:
+      'I use insulin or a medicine that can lower glucose and do not have an exercise plan from my care team',
+    confirm: 'Confirm workout readiness',
+    clearedTitle: 'Readiness confirmed',
+    clearedDescription:
+      'No gate flags were reported. A future plan will still use your equipment, recovery, and clinician restrictions.',
+    pausedTitle: 'Workout plan paused',
+    pausedDescription:
+      'Do not start a new program from this app until the reported concern is reviewed by an appropriate clinician. Seek urgent care for severe or emergency symptoms.',
+    incompleteTitle: 'Readiness required',
+    incompleteDescription:
+      'A workout plan cannot be generated until you complete this safety screen.',
+  },
   settings: {
     eyebrow: 'Settings',
     title: 'Personal targets',
@@ -212,6 +239,7 @@ const vietnameseCopy: ProductCopy = {
     today: 'Hôm nay',
     capture: 'Ghi bữa ăn',
     measurements: 'Chỉ số',
+    workouts: 'Tập luyện',
     settings: 'Cài đặt',
     openNavigation: 'Mở điều hướng',
     closeNavigation: 'Đóng điều hướng',
@@ -330,6 +358,32 @@ const vietnameseCopy: ProductCopy = {
       uricAcid: 'Axit uric',
       customLab: 'Kết quả xét nghiệm khác',
     },
+  },
+  workouts: {
+    eyebrow: 'An toàn vận động',
+    title: 'Sẵn sàng tập luyện',
+    description:
+      'Hoàn thành phần này trước khi ứng dụng có thể tạo kế hoạch tập. Phần này không thay thế lời khuyên y tế.',
+    screeningTitle: 'Cho biết điều nào đúng với bạn hôm nay',
+    screeningDescription:
+      'Chọn tất cả điều phù hợp. Bất kỳ lựa chọn nào cũng sẽ tạm dừng tạo kế hoạch mới để cần đánh giá chuyên môn.',
+    chestPain: 'Đau, tức hoặc nặng ngực khi vận động',
+    faintingOrDizziness: 'Ngất, chóng mặt nặng mới xuất hiện hoặc lú lẫn',
+    severeShortnessOfBreath: 'Khó thở bất thường hoặc nghiêm trọng',
+    irregularHeartbeat: 'Tim đập nhanh hoặc không đều khi vận động',
+    clinicianRestriction: 'Bác sĩ đã yêu cầu tôi tránh hoặc hạn chế tập luyện',
+    exerciseGlucoseRisk:
+      'Tôi dùng insulin hoặc thuốc có thể làm hạ đường huyết và chưa có kế hoạch tập từ đội ngũ chăm sóc',
+    confirm: 'Xác nhận sẵn sàng tập luyện',
+    clearedTitle: 'Đã xác nhận sẵn sàng',
+    clearedDescription:
+      'Bạn không báo cáo cờ an toàn nào. Kế hoạch trong tương lai vẫn sẽ dùng thiết bị, hồi phục và hạn chế của bác sĩ.',
+    pausedTitle: 'Đã tạm dừng kế hoạch tập',
+    pausedDescription:
+      'Không bắt đầu chương trình mới từ ứng dụng này cho đến khi vấn đề được báo cáo được chuyên gia phù hợp xem xét. Hãy tìm trợ giúp khẩn cấp khi có triệu chứng nặng hoặc cấp cứu.',
+    incompleteTitle: 'Cần hoàn thành sàng lọc',
+    incompleteDescription:
+      'Không thể tạo kế hoạch tập cho đến khi bạn hoàn thành màn hình an toàn này.',
   },
   settings: {
     eyebrow: 'Cài đặt',

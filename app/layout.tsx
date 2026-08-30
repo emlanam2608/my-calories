@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import { PwaRegistration } from '@/components/pwa-registration';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -16,6 +17,8 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://nourishwell-private.akirathanhnam.chatgpt.site'),
   title: 'Nourishwell — Private Nutrition & Movement Support',
   description: 'Review-first private meal, measurement, and movement tracking.',
+  manifest: '/manifest.webmanifest',
+  icons: { icon: '/favicon.svg', apple: '/favicon.svg' },
   openGraph: {
     title: 'Nourishwell',
     description: 'Private nutrition & movement support',
@@ -40,6 +43,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <PwaRegistration />
         {children}
       </body>
     </html>

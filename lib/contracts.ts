@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { canonicalMeasurementUnits, isSupportedMeasurementUnit, type ConvertibleMeasurementMetric } from './measurement-conversions';
+import { workoutReadinessFlagKeys } from './workout-readiness';
 
 export const nutrientTotalsSchema = z.object({
   calories: z.number().finite().min(0).max(10_000),
@@ -237,6 +238,21 @@ export const measurementSchema = z.object({
 export const measurementsResponseSchema = z.object({
   measurements: z.array(measurementSchema),
 });
+export const workoutReadinessFlagSchema = z.enum(workoutReadinessFlagKeys);
+export const workoutReadinessRequestSchema = z.object({
+  idempotencyKey: z.string().uuid(),
+  chestPain: z.boolean(),
+  faintingOrDizziness: z.boolean(),
+  severeShortnessOfBreath: z.boolean(),
+  irregularHeartbeat: z.boolean(),
+  clinicianRestriction: z.boolean(),
+  exerciseGlucoseRisk: z.boolean(),
+});
+export const workoutReadinessResponseSchema = z.object({
+  status: z.enum(['not_completed', 'cleared', 'needs_review']),
+  flags: z.array(workoutReadinessFlagSchema),
+  confirmedAt: z.string().datetime({ offset: true }).nullable(),
+});
 export type FoodAnalysis = z.infer<typeof foodAnalysisSchema>;
 export type HealthFinding = z.infer<typeof healthFindingSchema>;
 export type HealthFocus = z.infer<typeof healthFocusSchema>;
@@ -248,3 +264,5 @@ export type Measurement = z.infer<typeof measurementSchema>;
 export type MeasurementCreateRequest = z.infer<
   typeof measurementCreateRequestSchema
 >;
+export type WorkoutReadiness = z.infer<typeof workoutReadinessResponseSchema>;
+export type WorkoutReadinessRequest = z.infer<typeof workoutReadinessRequestSchema>;

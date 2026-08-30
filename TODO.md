@@ -48,7 +48,7 @@ This file tracks the gap between the current interactive prototype and the plann
 - [x] Implement target authority precedence: clinician-defined, then user-defined, then guideline default.
 - [x] Add versioned deterministic meal-level checks for sodium, fiber, and energy, shown as non-diagnostic condition-specific findings that never change nutrient facts.
 - [x] Add private, persistent health-focus selection for blood pressure, cholesterol, blood glucose, and uric acid; meal reviews filter checks to selected focuses.
-- [ ] Add the readiness and contraindication screen before any workout plan is generated.
+- [x] Add a private, persistent readiness and contraindication screen before any workout plan is generated; reported red flags pause plan generation and show professional/urgent-care guidance.
 - [ ] Implement versioned deterministic rules for calories, protein, fiber, carbohydrates, added sugar, sodium, saturated fat, hydration, alcohol, micronutrients, and purine-risk categories.
 - [ ] Return separate findings for blood pressure, cholesterol, blood glucose, uric acid, and other configured concerns; do not create one opaque health score.
 - [ ] Disable affected recommendations when red flags, unsafe glucose readings, pain, concerning symptoms, medication risks, or clinician restrictions apply.
@@ -114,7 +114,7 @@ This file tracks the gap between the current interactive prototype and the plann
 
 ## P2 - PWA and product completion
 
-- [ ] Add a web app manifest, install icons, theme metadata, and service worker.
+- [x] Add web app manifest, install icon metadata, theme metadata, and a privacy-preserving service worker.
 - [ ] Cache only a read-only shell and safe recent views; never queue sensitive offline writes.
 - [ ] Add camera permission, offline, empty, unavailable-provider, retry, and recovery states.
 - [ ] Translate all content and data labels into Vietnamese and English, and update document language dynamically.

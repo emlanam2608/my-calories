@@ -37,6 +37,8 @@ import type {
   MealCreateRequest,
   Measurement,
   MeasurementCreateRequest,
+  WorkoutReadiness,
+  WorkoutReadinessRequest,
 } from '@/lib/contracts';
 import { getCopy, localeMetadata, type Locale } from '@/lib/copy';
 import { evaluateMealHealthFindings } from '@/lib/health-rule-engine';
@@ -102,10 +104,12 @@ function bangkokDate() {
 export function Dashboard({ displayName }: { displayName: string }) {
   const [locale, setLocale] = useState<Locale>('en');
   const [page, setPage] = useState<
-    'today' | 'capture' | 'measurements' | 'settings'
+    'today' | 'capture' | 'measurements' | 'workouts' | 'settings'
   >('today');
   const [meals, setMeals] = useState<Meal[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [workoutReadiness, setWorkoutReadiness] =
+    useState<WorkoutReadiness | null>(null);
   const [targetValues, setTargetValues] = useState<Record<TargetKey, number>>({
     calories: 1850,
     protein: 90,
@@ -173,6 +177,11 @@ export function Dashboard({ displayName }: { displayName: string }) {
       };
       if (measurementsResponse.ok && measurementBody.measurements)
         setMeasurements(measurementBody.measurements);
+      const readinessResponse = await fetch('/api/workouts/readiness', {
+        cache: 'no-store',
+      });
+      const readinessBody = (await readinessResponse.json()) as WorkoutReadiness;
+      if (readinessResponse.ok) setWorkoutReadiness(readinessBody);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -423,6 +432,28 @@ export function Dashboard({ displayName }: { displayName: string }) {
     await loadMeals();
   }
 
+  async function saveWorkoutReadiness(nextReadiness: WorkoutReadinessRequest) {
+    setError('');
+    setNotice('');
+    const response = await fetch('/api/workouts/readiness', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nextReadiness),
+    });
+    const body = (await response.json()) as WorkoutReadiness & {
+      error?: string;
+      replayed?: boolean;
+    };
+    if (!response.ok)
+      throw new Error(body.error || 'We could not save workout readiness.');
+    setWorkoutReadiness(body);
+    setNotice(
+      body.status === 'cleared'
+        ? 'Workout readiness confirmed. A plan can be considered after you choose your equipment and availability.'
+        : 'Workout-plan generation is paused until you review the reported safety concern with an appropriate clinician.',
+    );
+  }
+
   async function changeLocale(nextLocale: Locale) {
     const previousLocale = locale;
     if (nextLocale === previousLocale) return;
@@ -530,6 +561,15 @@ export function Dashboard({ displayName }: { displayName: string }) {
             {c.nav.measurements}
           </Button>
           <Button
+            variant={page === 'workouts' ? 'default' : 'ghost'}
+            className={
+              page === 'workouts' ? 'bg-emerald-800 hover:bg-emerald-900' : ''
+            }
+            onClick={() => setPage('workouts')}
+          >
+            {c.nav.workouts}
+          </Button>
+          <Button
             variant={page === 'settings' ? 'default' : 'ghost'}
             className={
               page === 'settings' ? 'bg-emerald-800 hover:bg-emerald-900' : ''
@@ -574,6 +614,12 @@ export function Dashboard({ displayName }: { displayName: string }) {
           <Measurements
             entries={measurements}
             onSave={saveMeasurement}
+            locale={locale}
+          />
+        ) : page === 'workouts' ? (
+          <WorkoutReadinessScreen
+            readiness={workoutReadiness}
+            onSave={saveWorkoutReadiness}
             locale={locale}
           />
         ) : (
@@ -806,6 +852,171 @@ const measurementOptions = [
 ] as const;
 type MeasurementMetric = (typeof measurementOptions)[number]['metric'];
 type ConvertibleMeasurementMetric = Exclude<MeasurementMetric, 'custom_lab'>;
+
+type WorkoutReadinessFlag = Exclude<
+  keyof WorkoutReadinessRequest,
+  'idempotencyKey'
+>;
+
+const workoutReadinessFlags: WorkoutReadinessFlag[] = [
+  'chestPain',
+  'faintingOrDizziness',
+  'severeShortnessOfBreath',
+  'irregularHeartbeat',
+  'clinicianRestriction',
+  'exerciseGlucoseRisk',
+];
+
+function WorkoutReadinessScreen({
+  readiness,
+  onSave,
+  locale,
+}: {
+  readiness: WorkoutReadiness | null;
+  onSave: (readiness: WorkoutReadinessRequest) => Promise<void>;
+  locale: Locale;
+}) {
+  const [answers, setAnswers] = useState<
+    Record<WorkoutReadinessFlag, boolean>
+  >({
+    chestPain: false,
+    faintingOrDizziness: false,
+    severeShortnessOfBreath: false,
+    irregularHeartbeat: false,
+    clinicianRestriction: false,
+    exerciseGlucoseRisk: false,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const c = getCopy(locale);
+  const labels: Record<WorkoutReadinessFlag, string> = {
+    chestPain: c.workouts.chestPain,
+    faintingOrDizziness: c.workouts.faintingOrDizziness,
+    severeShortnessOfBreath: c.workouts.severeShortnessOfBreath,
+    irregularHeartbeat: c.workouts.irregularHeartbeat,
+    clinicianRestriction: c.workouts.clinicianRestriction,
+    exerciseGlucoseRisk: c.workouts.exerciseGlucoseRisk,
+  };
+  const status = readiness?.status ?? 'not_completed';
+
+  async function submit(event: SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSaving(true);
+    setError('');
+    try {
+      await onSave({ idempotencyKey: requestId(), ...answers });
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : 'We could not save workout readiness.',
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const resultCopy =
+    status === 'cleared'
+      ? {
+          title: c.workouts.clearedTitle,
+          description: c.workouts.clearedDescription,
+          tone: 'border-emerald-200 bg-emerald-50 text-emerald-950',
+        }
+      : status === 'needs_review'
+        ? {
+            title: c.workouts.pausedTitle,
+            description: c.workouts.pausedDescription,
+            tone: 'border-rose-200 bg-rose-50 text-rose-950',
+          }
+        : {
+            title: c.workouts.incompleteTitle,
+            description: c.workouts.incompleteDescription,
+            tone: 'border-amber-200 bg-amber-50 text-amber-950',
+          };
+
+  return (
+    <section className="mx-auto max-w-3xl">
+      <div>
+        <p className="text-sm font-medium text-slate-500">
+          {c.workouts.eyebrow} · {c.common.private}
+        </p>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
+          {c.workouts.title}
+        </h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+          {c.workouts.description}
+        </p>
+      </div>
+      <div className="mt-7 grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
+        <Card className="border-none shadow-sm">
+          <CardHeader>
+            <CardTitle>{c.workouts.screeningTitle}</CardTitle>
+            <CardDescription>{c.workouts.screeningDescription}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={submit} className="space-y-3">
+              {workoutReadinessFlags.map((flag) => (
+                <label
+                  key={flag}
+                  className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 text-sm leading-5"
+                >
+                  <input
+                    type="checkbox"
+                    checked={answers[flag]}
+                    onChange={(event) =>
+                      setAnswers((current) => ({
+                        ...current,
+                        [flag]: event.target.checked,
+                      }))
+                    }
+                    className="mt-0.5 size-4 accent-emerald-800"
+                  />
+                  <span>{labels[flag]}</span>
+                </label>
+              ))}
+              {error ? (
+                <p className="rounded-lg bg-rose-50 p-3 text-sm text-rose-900">
+                  {error}
+                </p>
+              ) : null}
+              <Button
+                type="submit"
+                disabled={saving}
+                className="w-full bg-emerald-800 hover:bg-emerald-900"
+              >
+                {saving ? (
+                  <>
+                    <LoaderCircle className="animate-spin" /> {c.common.saving}
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck /> {c.workouts.confirm}
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+        <Card className={`border shadow-sm ${resultCopy.tone}`}>
+          <CardHeader>
+            <div className="grid size-11 place-items-center rounded-xl bg-white/70">
+              <Activity className="size-5" />
+            </div>
+            <CardTitle className="mt-4">{resultCopy.title}</CardTitle>
+            <CardDescription className="text-inherit/80">
+              {resultCopy.description}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm leading-6">{c.safety.stopTraining}</p>
+            <p className="mt-3 text-sm leading-6">{c.safety.clinicianPriority}</p>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  );
+}
 
 function Measurements({
   entries,
