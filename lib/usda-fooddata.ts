@@ -27,7 +27,7 @@ function analysisFromFood(food: UsdaFood, matchCount: number): FoodAnalysis {
   const totals = mapNutrients(nutrients);
   const name = text(food.description) || 'USDA food result';
   const fdcId = text(food.fdcId);
-  return { name, nameVi: name, mealType: inferMealType(), confidence: totals.calories || totals.protein || totals.fiber || totals.sodium ? 84 : 50, unresolvedQuestions: [`The first of ${matchCount} USDA search results is shown. Confirm the food and amount before saving.`], snapshot: { totals, servingDescription: '100 g USDA database basis', source: 'usda_fooddata_central', sourceVersion: 'usda-fdc-api-v1', sourceReference: fdcId ? `https://fdc.nal.usda.gov/food-details/${fdcId}/nutrients` : 'https://fdc.nal.usda.gov/', estimationLevel: 'database_derived', ingredients: [text(food.foodCategory) || text(food.dataType) || 'USDA FoodData Central'] }, finding: { code: 'usda-database-review', severity: 'info', text: 'Nutrients come from a USDA database result on a 100 g basis. Confirm the exact food and your serving before saving.' } };
+  return { name, nameVi: name, mealType: inferMealType(), confidence: totals.calories || totals.protein || totals.fiber || totals.sodium ? 84 : 50, unresolvedQuestions: [`The first of ${matchCount} USDA search results is shown. Confirm the food and amount before saving.`], snapshot: { totals, additionalNutrients: mapAdditionalNutrients(nutrients), servingDescription: '100 g USDA database basis', source: 'usda_fooddata_central', sourceVersion: 'usda-fdc-api-v1', sourceReference: fdcId ? `https://fdc.nal.usda.gov/food-details/${fdcId}/nutrients` : 'https://fdc.nal.usda.gov/', estimationLevel: 'database_derived', ingredients: [text(food.foodCategory) || text(food.dataType) || 'USDA FoodData Central'] }, finding: { code: 'usda-database-review', severity: 'info', text: 'Nutrients come from a USDA database result on a 100 g basis. Confirm the exact food and your serving before saving.' } };
 }
 
 function noMatch(query: string, sourceReference: string): FoodAnalysis {
@@ -49,8 +49,36 @@ function mapNutrients(nutrients: UsdaNutrient[]) {
   return totals;
 }
 
+function mapAdditionalNutrients(nutrients: UsdaNutrient[]) {
+  const result: Record<string, { value: number; unit: string; state: 'reported' }> = {};
+  for (const nutrient of nutrients) {
+    const label = [nutrient.nutrientName, nutrient.name, isRecord(nutrient.nutrient) ? nutrient.nutrient.name : ''].map(text).join(' ').toLowerCase();
+    const value = numericNullable(nutrient.value) ?? numericNullable(nutrient.amount);
+    const sourceUnit = text(nutrient.unitName || nutrient.unit || (isRecord(nutrient.nutrient) ? nutrient.nutrient.unitName : '')).toLowerCase();
+    if (value === null) continue;
+    const add = (key: string, unit: 'g' | 'mg') => {
+      if (result[key]) return;
+      const converted = unit === 'mg' && sourceUnit === 'g' ? value * 1_000 : unit === 'g' && sourceUnit === 'mg' ? value / 1_000 : value;
+      result[key] = { value: converted, unit, state: 'reported' };
+    };
+    if (/added sugars?/.test(label)) add('addedSugar', 'g');
+    else if (/total sugars?|sugars, total/.test(label)) add('totalSugar', 'g');
+    else if (/carbohydrate/.test(label)) add('carbohydrates', 'g');
+    else if (/total lipid|total fat/.test(label)) add('totalFat', 'g');
+    else if (/saturated/.test(label) && /fat|fatty/.test(label)) add('saturatedFat', 'g');
+    else if (/cholesterol/.test(label)) add('cholesterol', 'mg');
+    else if (/potassium/.test(label)) add('potassium', 'mg');
+    else if (/calcium/.test(label)) add('calcium', 'mg');
+    else if (/\biron\b/.test(label)) add('iron', 'mg');
+    else if (/alcohol|ethanol/.test(label)) add('alcohol', 'g');
+    else if (/moisture|water/.test(label)) add('water', 'g');
+  }
+  return Object.keys(result).length ? result : undefined;
+}
+
 function isFood(value: unknown): value is UsdaFood { return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
 function isRecord(value: unknown): value is Record<string, unknown> { return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
 function text(value: unknown) { return typeof value === 'string' ? value.trim() : typeof value === 'number' ? String(value) : ''; }
 function numeric(value: unknown) { const parsed = typeof value === 'number' ? value : typeof value === 'string' ? Number(value.replace(',', '.')) : 0; return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0; }
+function numericNullable(value: unknown) { const parsed = typeof value === 'number' ? value : typeof value === 'string' ? Number(value.replace(',', '.')) : Number.NaN; return Number.isFinite(parsed) && parsed >= 0 ? parsed : null; }
 function inferMealType(): FoodAnalysis['mealType'] { const hour = new Date().getHours(); return hour < 11 ? 'breakfast' : hour < 16 ? 'lunch' : hour < 21 ? 'dinner' : 'snack'; }

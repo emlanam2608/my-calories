@@ -80,6 +80,7 @@ This file tracks the gap between the current interactive prototype and the plann
 - [x] Add provider timeouts, bounded retry/backoff, a best-effort circuit breaker, and editable manual-entry fallback for unavailable food providers.
 - [x] Add a private per-owner, per-feature analysis quota with retry timing; it is intentionally best-effort per worker isolate until production distributed limits are configured.
 - [x] Record serving assumptions, provider reference, source version, estimation level, barcode, and confidence in immutable meal snapshots.
+- [x] Extend immutable snapshots with optional additional-nutrient records that preserve source-reported zero versus unavailable data; USDA results now map available carbohydrates, sugars, fats, selected minerals, alcohol, and water. Other providers and broader rules remain pending.
 - [x] Send malformed, ambiguous, unmatched-barcode, and low-confidence results to review; never auto-save them.
 - [x] Aggregate confirmed meals into the Today dashboard and remaining personal targets.
 - [x] Generate deterministic concern-specific meal findings and practical substitutions for sodium, fiber patterns, meal energy, and detected purine-risk ingredients; glucose and purine checks state their data limits.

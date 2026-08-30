@@ -33,6 +33,40 @@ export const healthFocusSchema = z.enum([
   'blood_glucose',
   'uric_acid',
 ]);
+export const additionalNutrientKeySchema = z.enum([
+  'carbohydrates',
+  'totalSugar',
+  'addedSugar',
+  'totalFat',
+  'saturatedFat',
+  'cholesterol',
+  'potassium',
+  'calcium',
+  'iron',
+  'alcohol',
+  'water',
+]);
+export const additionalNutrientSchema = z
+  .object({
+    value: z.number().finite().min(0).nullable(),
+    unit: z.string().trim().min(1).max(16),
+    state: z.enum(['reported', 'estimated', 'unavailable']),
+  })
+  .superRefine((value, context) => {
+    if (value.state === 'unavailable' && value.value !== null)
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Unavailable nutrients must not contain a value.',
+      });
+    if (value.state !== 'unavailable' && value.value === null)
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Available nutrients require a value.',
+      });
+  });
+export const additionalNutrientsSchema = z
+  .record(additionalNutrientKeySchema, additionalNutrientSchema)
+  .optional();
 export const nutritionSnapshotSchema = z.object({
   totals: nutrientTotalsSchema,
   servingDescription: z.string().trim().min(1).max(160),
@@ -56,6 +90,7 @@ export const nutritionSnapshotSchema = z.object({
     'user_confirmed',
   ]),
   ingredients: z.array(z.string().trim().min(1).max(120)).min(1).max(24),
+  additionalNutrients: additionalNutrientsSchema,
 });
 export const mealTypeSchema = z.enum(['breakfast', 'lunch', 'dinner', 'snack']);
 export const foodAnalysisSchema = z.object({

@@ -2691,6 +2691,22 @@ function Review({
     fiber: c.today.fiber,
     sodium: c.today.sodium,
   };
+  const additionalNutrientLabels: Record<string, string> = {
+    carbohydrates: c.mealCapture.carbohydrates,
+    totalSugar: c.mealCapture.totalSugar,
+    addedSugar: c.mealCapture.addedSugar,
+    totalFat: c.mealCapture.totalFat,
+    saturatedFat: c.mealCapture.saturatedFat,
+    cholesterol: c.mealCapture.cholesterol,
+    potassium: c.mealCapture.potassium,
+    calcium: c.mealCapture.calcium,
+    iron: c.mealCapture.iron,
+    alcohol: c.mealCapture.alcohol,
+    water: c.mealCapture.water,
+  };
+  const additionalNutrients = Object.entries(
+    analysis.snapshot.additionalNutrients ?? {},
+  ).filter(([, nutrient]) => nutrient?.value !== null);
   return (
     <>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -2714,6 +2730,28 @@ function Review({
           </label>
         ))}
       </div>
+      {additionalNutrients.length ? (
+        <div className="mt-5 rounded-xl bg-slate-50 p-4">
+          <p className="text-sm font-semibold">
+            {c.mealCapture.additionalNutrients}
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {additionalNutrients.map(([key, nutrient]) => (
+              <div key={key} className="rounded-lg bg-white p-3 text-sm">
+                <p className="text-xs font-medium text-slate-500">
+                  {additionalNutrientLabels[key] ?? key}
+                </p>
+                <p className="mt-1 font-semibold">
+                  {nutrient!.value!.toLocaleString(locale)} {nutrient!.unit}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs leading-5 text-slate-500">
+            {c.mealCapture.additionalNutrientsSource}
+          </p>
+        </div>
+      ) : null}
       <div className="mt-5">
         <label className="block text-sm font-semibold">
           {c.mealCapture.servingAssumption}
