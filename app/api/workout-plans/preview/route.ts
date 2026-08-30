@@ -48,6 +48,15 @@ export async function POST() {
       { error: 'Review your saved equipment before generating a plan.' },
       { status: 422 },
     );
+  if (
+    onboardingDraft.data.symptomFlags?.some((flag) =>
+      ['chest_discomfort', 'dizziness', 'shortness_of_breath'].includes(flag),
+    )
+  )
+    return Response.json(
+      { error: 'Workout-plan generation is paused because you reported a concerning symptom. Review this with an appropriate clinician before starting a plan.' },
+      { status: 422 },
+    );
 
   const rows = await getDb()
     .select({
@@ -73,6 +82,8 @@ export async function POST() {
         equipment: onboardingDraft.data.equipment,
         clinicianRestrictionFlags:
           onboardingDraft.data.clinicianRestrictionFlags ?? [],
+        injuryFlags: onboardingDraft.data.injuryFlags ?? [],
+        availableDays: onboardingDraft.data.availableDays,
       },
     );
     return Response.json(

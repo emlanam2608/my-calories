@@ -20,6 +20,8 @@ export type WorkoutPlanDraft = {
 export type WorkoutPlanPreferences = {
   equipment: string[];
   clinicianRestrictionFlags: string[];
+  injuryFlags?: string[];
+  availableDays?: string[];
 };
 
 const safetyNote = {
@@ -56,7 +58,19 @@ export function selectableWorkoutExercises(
   return catalog.filter((exercise) => {
     const hasEquipment = exercise.equipment.every((item) => equipmentLabels.has(item));
     const avoidsResistance = preferences.clinicianRestrictionFlags.includes('avoid_resistance');
-    return hasEquipment && !(avoidsResistance && exercise.category === 'strength');
+    const injuryTags = new Set(
+      (preferences.injuryFlags ?? []).flatMap((flag) =>
+        flag === 'balance_concern'
+          ? ['balance_risk']
+          : flag === 'joint_pain'
+            ? ['knee_pain']
+            : flag === 'back_pain'
+              ? ['back_pain']
+              : [],
+      ),
+    );
+    const hasInjuryContraindication = exercise.contraindicationTags.some((tag) => injuryTags.has(tag));
+    return hasEquipment && !hasInjuryContraindication && !(avoidsResistance && exercise.category === 'strength');
   });
 }
 
@@ -68,12 +82,27 @@ function firstAvailable(catalog: ExerciseCatalogEntry[], ids: string[]) {
   return id;
 }
 
+function scheduledOffsets(periodStart: string, availableDays: string[], count: number) {
+  const dayIndexes: Record<string, number> = {
+    sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
+  };
+  const startDay = new Date(`${periodStart}T00:00:00.000Z`).getUTCDay();
+  return [...new Set(availableDays)]
+    .map((day) => dayIndexes[day])
+    .filter((day): day is number => day !== undefined)
+    .map((day) => (day - startDay + 7) % 7)
+    .sort((left, right) => left - right)
+    .slice(0, count);
+}
+
 export function createStarterWorkoutPlan(
   catalog: ExerciseCatalogEntry[],
   periodStart: string,
   preferences: WorkoutPlanPreferences = {
     equipment: ['exercise_mat', 'chair', 'bodyweight', 'bicycle', 'mini_treadmill', 'resistance_band'],
     clinicianRestrictionFlags: [],
+    injuryFlags: [],
+    availableDays: ['mon', 'wed', 'fri'],
   },
 ): WorkoutPlanDraft {
   const selectedCatalog = selectableWorkoutExercises(catalog, preferences);
@@ -158,9 +187,19 @@ export function createStarterWorkoutPlan(
     exerciseIds: requireExercises(selectedCatalog, [aerobic]),
     safetyNote: note,
   };
+  const selectedSessions = [strengthSessions[0], aerobicSession, strengthSessions[1]]
+    .slice(0, Math.min(preferences.availableDays?.length ?? 3, 3));
+  const offsets = scheduledOffsets(
+    periodStart,
+    preferences.availableDays ?? ['mon', 'wed', 'fri'],
+    selectedSessions.length,
+  );
   return {
     planVersion: 'starter-plan-1',
     periodStart,
-    sessions: [strengthSessions[0], aerobicSession, strengthSessions[1]],
+    sessions: selectedSessions.map((session, index) => ({
+      ...session,
+      dayOffset: offsets[index],
+    })),
   };
 }

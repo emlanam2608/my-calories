@@ -188,6 +188,15 @@ export const onboardingDraftSchema = z.object({
     const items = value[key];
     if (items && new Set(items).size !== items.length) context.addIssue({ code: z.ZodIssueCode.custom, path: [key], message: 'Each choice can only be selected once.' });
   }
+  if (
+    value.symptomFlags?.includes('none') &&
+    value.symptomFlags.length > 1
+  )
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['symptomFlags'],
+      message: 'No symptoms cannot be selected with a symptom flag.',
+    });
 });
 export const updateOnboardingRequestSchema = z.object({ idempotencyKey: z.string().uuid(), draft: onboardingDraftSchema });
 export const onboardingResponseSchema = z.object({ draft: onboardingDraftSchema, status: z.enum(['in_progress', 'complete']), updatedAt: z.string().datetime({ offset: true }).nullable() });

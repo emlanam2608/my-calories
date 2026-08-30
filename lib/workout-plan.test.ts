@@ -9,7 +9,7 @@ const catalog = [
   ['treadmill-walk', 'mini treadmill', 'aerobic'],
   ['bicycle-easy', 'bicycle', 'aerobic'],
   ['band-row', 'resistance band', 'strength'],
-].map(([id, equipment, category]) => ({ id, equipment: [equipment], category })) as ExerciseCatalogEntry[];
+].map(([id, equipment, category]) => ({ id, equipment: [equipment], category, contraindicationTags: [] })) as unknown as ExerciseCatalogEntry[];
 
 describe('createStarterWorkoutPlan', () => {
   it('creates three conservative sessions from the approved starter catalog', () => {
@@ -37,5 +37,30 @@ describe('createStarterWorkoutPlan', () => {
       equipment: ['exercise_mat', 'bicycle'],
       clinicianRestrictionFlags: [],
     })).toThrow('selected equipment');
+  });
+
+  it('excludes exercises tagged for a reported injury concern', () => {
+    const balanceCatalog = catalog.map((exercise) =>
+      exercise.id === 'treadmill-walk'
+        ? { ...exercise, contraindicationTags: ['balance_risk'] }
+        : exercise,
+    );
+    const plan = createStarterWorkoutPlan(balanceCatalog, '2026-08-31', {
+      equipment: ['exercise_mat', 'chair', 'bicycle', 'mini_treadmill'],
+      clinicianRestrictionFlags: [],
+      injuryFlags: ['balance_concern'],
+    });
+    expect(plan.sessions.flatMap((session) => session.exerciseIds)).toContain('bicycle-easy');
+    expect(plan.sessions.flatMap((session) => session.exerciseIds)).not.toContain('treadmill-walk');
+  });
+
+  it('limits sessions to persisted available training days', () => {
+    const plan = createStarterWorkoutPlan(catalog, '2026-08-31', {
+      equipment: ['exercise_mat', 'chair', 'mini_treadmill'],
+      clinicianRestrictionFlags: [],
+      availableDays: ['wed'],
+    });
+    expect(plan.sessions).toHaveLength(1);
+    expect(plan.sessions[0].dayOffset).toBe(2);
   });
 });

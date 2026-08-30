@@ -47,9 +47,11 @@ This file tracks the gap between the current interactive prototype and the plann
 
 ## P0 - Safety and deterministic health rules
 
-- [ ] Complete onboarding for preferences, allergies, user-reported contexts, injuries/symptoms, medication fields, and free-text clinician notes; the current Settings flow covers planning basics only.
+- [ ] Complete onboarding for medication fields and encrypted free-text clinician notes. Food preferences, allergies, tracking contexts, and structured injuries/symptoms are captured; clinician-defined targets and medication-risk screening still need dedicated flows.
 - [x] Add resumable, authenticated structured onboarding storage and API plus a bilingual Settings flow for goal, demographics, activity, sleep, training history, availability, equipment, environments, and enumerated clinician exercise restrictions. Encrypted medication/clinical notes and richer health-profile fields remain pending.
 - [x] Require completed profile planning basics before workout-plan preview or confirmation, filter the starter plan by saved equipment and `avoid_resistance`, and reject stale confirmations that no longer match those saved restrictions.
+- [x] Schedule the conservative starter-plan sessions only on the owner’s saved available training days and reject a stale confirmation whose session days no longer match.
+- [x] Pause workout-plan preview/confirmation for reported chest discomfort, dizziness, or shortness of breath, and exclude catalog exercises tagged for reported balance or joint concerns.
 - [x] Implement target authority precedence: clinician-defined, then user-defined, then guideline default.
 - [x] Add versioned deterministic meal-level checks for sodium, fiber, and energy, shown as non-diagnostic condition-specific findings that never change nutrient facts.
 - [x] Add private, persistent health-focus selection for blood pressure, cholesterol, blood glucose, and uric acid; meal reviews filter checks to selected focuses.

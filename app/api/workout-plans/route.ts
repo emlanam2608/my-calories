@@ -71,6 +71,27 @@ export async function POST(request: Request) {
       { error: 'Review your saved equipment before confirming a plan.' },
       { status: 422 },
     );
+  if (
+    onboardingDraft.data.symptomFlags?.some((flag) =>
+      ['chest_discomfort', 'dizziness', 'shortness_of_breath'].includes(flag),
+    )
+  )
+    return Response.json(
+      { error: 'Workout plan confirmation is paused because you reported a concerning symptom. Review this with an appropriate clinician first.' },
+      { status: 422 },
+    );
+  const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const planStart = new Date(`${parsed.data.plan.periodStart}T00:00:00.000Z`);
+  const usesUnavailableDay = parsed.data.plan.sessions.some((session) => {
+    const date = new Date(planStart);
+    date.setUTCDate(date.getUTCDate() + session.dayOffset);
+    return !onboardingDraft.data.availableDays?.includes(dayNames[date.getUTCDay()] as 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat');
+  });
+  if (usesUnavailableDay)
+    return Response.json(
+      { error: 'This plan no longer matches your saved available training days. Generate a new preview before confirming.' },
+      { status: 422 },
+    );
   const catalogRows = await getDb()
     .select({
       id: exerciseCatalog.id,
@@ -94,6 +115,7 @@ export async function POST(request: Request) {
         equipment: onboardingDraft.data.equipment,
         clinicianRestrictionFlags:
           onboardingDraft.data.clinicianRestrictionFlags ?? [],
+        injuryFlags: onboardingDraft.data.injuryFlags ?? [],
       },
     ).map((exercise) => exercise.id),
   );

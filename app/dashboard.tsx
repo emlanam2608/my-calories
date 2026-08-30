@@ -2120,6 +2120,11 @@ function Settings({
 }
 
 type OnboardingChoiceField =
+  | 'foodPreferences'
+  | 'allergies'
+  | 'reportedContexts'
+  | 'injuryFlags'
+  | 'symptomFlags'
   | 'availableDays'
   | 'equipment'
   | 'environments'
@@ -2150,6 +2155,17 @@ function OnboardingSettings({
   const toggle = (field: OnboardingChoiceField, value: string) => {
     setDraft((current) => {
       const values = (current[field] ?? []) as string[];
+      if (field === 'symptomFlags') {
+        if (value === 'none')
+          return { ...current, symptomFlags: values.includes('none') ? [] : ['none'] };
+        const withoutNone = values.filter((item) => item !== 'none');
+        return {
+          ...current,
+          symptomFlags: withoutNone.includes(value)
+            ? withoutNone.filter((item) => item !== value)
+            : [...withoutNone, value],
+        } as OnboardingDraft;
+      }
       return {
         ...current,
         [field]: values.includes(value)
@@ -2163,6 +2179,21 @@ function OnboardingSettings({
     label: string;
     options: Array<{ value: string; label: string }>;
   }> = [
+    { field: 'foodPreferences', label: c.onboarding.preferences, options: [
+      { value: 'omnivore', label: c.onboarding.preferenceOmnivore }, { value: 'vegetarian', label: c.onboarding.preferenceVegetarian }, { value: 'vegan', label: c.onboarding.preferenceVegan }, { value: 'pescatarian', label: c.onboarding.preferencePescatarian }, { value: 'halal', label: c.onboarding.preferenceHalal }, { value: 'low_sodium', label: c.onboarding.preferenceLowSodium }, { value: 'low_purine', label: c.onboarding.preferenceLowPurine },
+    ] },
+    { field: 'allergies', label: c.onboarding.allergies, options: [
+      { value: 'milk', label: c.onboarding.allergyMilk }, { value: 'egg', label: c.onboarding.allergyEgg }, { value: 'fish', label: c.onboarding.allergyFish }, { value: 'shellfish', label: c.onboarding.allergyShellfish }, { value: 'peanut', label: c.onboarding.allergyPeanut }, { value: 'tree_nut', label: c.onboarding.allergyTreeNut }, { value: 'soy', label: c.onboarding.allergySoy }, { value: 'wheat', label: c.onboarding.allergyWheat }, { value: 'sesame', label: c.onboarding.allergySesame },
+    ] },
+    { field: 'reportedContexts', label: c.onboarding.contexts, options: [
+      { value: 'blood_pressure', label: c.onboarding.contextBloodPressure }, { value: 'cholesterol', label: c.onboarding.contextCholesterol }, { value: 'blood_glucose', label: c.onboarding.contextBloodGlucose }, { value: 'uric_acid', label: c.onboarding.contextUricAcid },
+    ] },
+    { field: 'injuryFlags', label: c.onboarding.injuries, options: [
+      { value: 'back_pain', label: c.onboarding.injuryBack }, { value: 'joint_pain', label: c.onboarding.injuryJoint }, { value: 'balance_concern', label: c.onboarding.injuryBalance },
+    ] },
+    { field: 'symptomFlags', label: c.onboarding.symptoms, options: [
+      { value: 'none', label: c.onboarding.symptomNone }, { value: 'chest_discomfort', label: c.onboarding.symptomChest }, { value: 'dizziness', label: c.onboarding.symptomDizziness }, { value: 'shortness_of_breath', label: c.onboarding.symptomBreath },
+    ] },
     { field: 'availableDays', label: c.onboarding.days, options: [
       { value: 'mon', label: c.onboarding.dayMon }, { value: 'tue', label: c.onboarding.dayTue }, { value: 'wed', label: c.onboarding.dayWed }, { value: 'thu', label: c.onboarding.dayThu }, { value: 'fri', label: c.onboarding.dayFri }, { value: 'sat', label: c.onboarding.daySat }, { value: 'sun', label: c.onboarding.daySun },
     ] },
@@ -2210,7 +2241,7 @@ function OnboardingSettings({
           </div>
           {choiceSets.map(({ field, label, options }) => {
             const selected = (draft[field] ?? []) as string[];
-            return <fieldset key={field}><legend className="mb-2 text-sm font-semibold text-slate-800">{label}{field !== 'clinicianRestrictionFlags' ? <span className="ml-1 text-rose-700">*</span> : null}</legend><div className="flex flex-wrap gap-2">{options.map((option) => <button type="button" key={option.value} aria-pressed={selected.includes(option.value)} onClick={() => toggle(field, option.value)} className={`rounded-lg border px-3 py-2 text-sm font-medium ${selected.includes(option.value) ? 'border-emerald-700 bg-emerald-700 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>{option.label}</button>)}</div></fieldset>;
+            return <fieldset key={field}><legend className="mb-2 text-sm font-semibold text-slate-800">{label}{['availableDays', 'equipment', 'environments'].includes(field) ? <span className="ml-1 text-rose-700">*</span> : null}</legend><div className="flex flex-wrap gap-2">{options.map((option) => <button type="button" key={option.value} aria-pressed={selected.includes(option.value)} onClick={() => toggle(field, option.value)} className={`rounded-lg border px-3 py-2 text-sm font-medium ${selected.includes(option.value) ? 'border-emerald-700 bg-emerald-700 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>{option.label}</button>)}</div></fieldset>;
           })}
           <Button type="submit" disabled={saving} className="w-full bg-emerald-800 hover:bg-emerald-900">
             {saving ? <><LoaderCircle className="animate-spin" /> {c.common.saving}</> : <><Check /> {c.onboarding.save}</>}

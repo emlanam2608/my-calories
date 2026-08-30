@@ -16,4 +16,10 @@ describe('onboarding', () => {
     });
     expect(onboardingStatus(draft)).toBe('complete');
   });
+
+  it('does not accept no symptoms together with a reported symptom', () => {
+    expect(() => onboardingDraftSchema.parse({
+      symptomFlags: ['none', 'dizziness'],
+    })).toThrow('No symptoms');
+  });
 });
