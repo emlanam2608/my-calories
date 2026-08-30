@@ -100,6 +100,7 @@ This file tracks the gap between the current interactive prototype and the plann
 - [ ] Generate weekly plans with warm-up, strength, aerobic work, mobility, cooldown, duration, sets/reps, rest, RPE, rationale, progression criteria, and safety checks.
 - [x] Add a readiness-gated, deterministic three-session starter-week preview and explicit-confirmation save flow with duration, RPE, rationale, selected exercises, and stop-training guidance; warm-ups, cooldowns, sets/reps, and individual adaptation remain to be added.
 - [ ] Log completion, sets, reps, load, duration, heart rate, RPE, pain, symptoms, enjoyment, and optional pre/post-workout glucose.
+- [x] Persist owner-scoped completion logs for confirmed-plan sessions with duration, RPE, enjoyment, pain, concerning-symptom flags, and optional pre/post-exercise glucose; sets, reps, load, and heart-rate capture remain to be added.
 - [ ] Adapt only at scheduled check-ins using adherence and recovery: progress, maintain, deload, or substitute.
 - [ ] Make equipment and environment changes regenerate safe equivalents only after user confirmation.
 - [ ] Replace the current fixed workout and completion toggle with persistent plan/session records.

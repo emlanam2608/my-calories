@@ -286,6 +286,43 @@ export const confirmWorkoutPlanRequestSchema = z.object({
   idempotencyKey: z.string().uuid(),
   plan: workoutPlanSchema,
 });
+export const workoutLogRequestSchema = z
+  .object({
+    idempotencyKey: z.string().uuid(),
+    planId: z.string().uuid(),
+    sessionId: z.string().trim().min(1).max(80),
+    durationMinutes: z.number().int().min(1).max(300),
+    rpe: z.number().int().min(1).max(10),
+    enjoyment: z.number().int().min(1).max(5).optional(),
+    pain: z.boolean(),
+    concerningSymptoms: z.boolean(),
+    preGlucose: z.number().finite().positive().max(40).optional(),
+    postGlucose: z.number().finite().positive().max(40).optional(),
+  })
+  .superRefine((value, context) => {
+    if ((value.pain || value.concerningSymptoms) && value.rpe > 5)
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['rpe'],
+        message: 'Use the actual effort, but do not continue a high-effort session with pain or concerning symptoms.',
+      });
+  });
+export const workoutLogSchema = z.object({
+  id: z.string().uuid(),
+  planId: z.string().uuid(),
+  sessionId: z.string().trim().min(1).max(80),
+  status: z.enum(['completed', 'stopped_for_safety']),
+  durationMinutes: z.number().int().min(1),
+  rpe: z.number().int().min(1).max(10),
+  enjoyment: z.number().int().min(1).max(5).nullable(),
+  pain: z.boolean(),
+  concerningSymptoms: z.boolean(),
+  preGlucose: z.number().finite().positive().nullable(),
+  postGlucose: z.number().finite().positive().nullable(),
+  completedAt: z.string().datetime({ offset: true }),
+  requiresReview: z.boolean(),
+});
+export const workoutLogsResponseSchema = z.object({ logs: z.array(workoutLogSchema) });
 export type FoodAnalysis = z.infer<typeof foodAnalysisSchema>;
 export type HealthFinding = z.infer<typeof healthFindingSchema>;
 export type HealthFocus = z.infer<typeof healthFocusSchema>;
@@ -301,3 +338,5 @@ export type WorkoutReadiness = z.infer<typeof workoutReadinessResponseSchema>;
 export type WorkoutReadinessRequest = z.infer<typeof workoutReadinessRequestSchema>;
 export type WorkoutPlan = z.infer<typeof workoutPlanSchema>;
 export type WorkoutPlanResponse = z.infer<typeof workoutPlanResponseSchema>;
+export type WorkoutLog = z.infer<typeof workoutLogSchema>;
+export type WorkoutLogRequest = z.infer<typeof workoutLogRequestSchema>;

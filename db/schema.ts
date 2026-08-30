@@ -97,15 +97,30 @@ export const workoutSessions = sqliteTable(
   {
     id: text('id').primaryKey(),
     ownerId: text('owner_id').notNull(),
+    planId: text('plan_id'),
+    sessionId: text('session_id'),
     planVersion: text('plan_version').notNull(),
     status: text('status').notNull(),
     durationMinutes: integer('duration_minutes'),
     rpe: integer('rpe'),
+    enjoyment: integer('enjoyment'),
+    pain: integer('pain', { mode: 'boolean' }).notNull().default(false),
+    concerningSymptoms: integer('concerning_symptoms', { mode: 'boolean' })
+      .notNull()
+      .default(false),
+    preGlucoseScaled: integer('pre_glucose_scaled'),
+    postGlucoseScaled: integer('post_glucose_scaled'),
+    glucoseScale: integer('glucose_scale').notNull().default(10),
     safetyNotes: text('safety_notes'),
     completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
   },
   (table) => [
     index('idx_workouts_owner_completed').on(table.ownerId, table.completedAt),
+    index('idx_workouts_owner_plan_session').on(
+      table.ownerId,
+      table.planId,
+      table.sessionId,
+    ),
   ],
 );
 export const workoutReadiness = sqliteTable(

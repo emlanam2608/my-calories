@@ -40,6 +40,8 @@ import type {
   WorkoutReadiness,
   WorkoutReadinessRequest,
   WorkoutPlanResponse,
+  WorkoutLog,
+  WorkoutLogRequest,
 } from '@/lib/contracts';
 import { getCopy, localeMetadata, type Locale } from '@/lib/copy';
 import { evaluateMealHealthFindings } from '@/lib/health-rule-engine';
@@ -114,6 +116,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
     useState<WorkoutReadiness | null>(null);
   const [exercises, setExercises] = useState<ExerciseCatalogEntry[]>([]);
   const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlanResponse | null>(null);
+  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
   const [targetValues, setTargetValues] = useState<Record<TargetKey, number>>({
     calories: 1850,
     protein: 90,
@@ -201,6 +204,11 @@ export function Dashboard({ displayName }: { displayName: string }) {
         plan?: WorkoutPlanResponse | null;
       };
       if (planResponse.ok) setWorkoutPlan(planBody.plan ?? null);
+      const logsResponse = await fetch('/api/workout-logs', {
+        cache: 'no-store',
+      });
+      const logsBody = (await logsResponse.json()) as { logs?: WorkoutLog[] };
+      if (logsResponse.ok && logsBody.logs) setWorkoutLogs(logsBody.logs);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -506,6 +514,27 @@ export function Dashboard({ displayName }: { displayName: string }) {
     );
   }
 
+  async function saveWorkoutLog(nextLog: WorkoutLogRequest) {
+    const response = await fetch('/api/workout-logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(nextLog),
+    });
+    const body = (await response.json()) as {
+      error?: string;
+      log?: WorkoutLog;
+      replayed?: boolean;
+    };
+    if (!response.ok || !body.log)
+      throw new Error(body.error || 'We could not save this workout log.');
+    setWorkoutLogs((current) => [body.log!, ...current]);
+    setNotice(
+      body.log.requiresReview
+        ? 'Workout log saved. Do not progress your plan; review the reported pain or symptoms with an appropriate clinician.'
+        : 'Workout completion saved to your private history.',
+    );
+  }
+
   async function changeLocale(nextLocale: Locale) {
     const previousLocale = locale;
     if (nextLocale === previousLocale) return;
@@ -673,9 +702,11 @@ export function Dashboard({ displayName }: { displayName: string }) {
             readiness={workoutReadiness}
             exercises={exercises}
             confirmedPlan={workoutPlan}
+            logs={workoutLogs}
             onSave={saveWorkoutReadiness}
             onPreview={previewWorkoutPlan}
             onConfirmPlan={confirmWorkoutPlan}
+            onSaveLog={saveWorkoutLog}
             locale={locale}
           />
         ) : (
@@ -927,17 +958,21 @@ function WorkoutReadinessScreen({
   readiness,
   exercises,
   confirmedPlan,
+  logs,
   onSave,
   onPreview,
   onConfirmPlan,
+  onSaveLog,
   locale,
 }: {
   readiness: WorkoutReadiness | null;
   exercises: ExerciseCatalogEntry[];
   confirmedPlan: WorkoutPlanResponse | null;
+  logs: WorkoutLog[];
   onSave: (readiness: WorkoutReadinessRequest) => Promise<void>;
   onPreview: () => Promise<WorkoutPlanResponse>;
   onConfirmPlan: (plan: WorkoutPlanResponse['plan']) => Promise<void>;
+  onSaveLog: (log: WorkoutLogRequest) => Promise<void>;
   locale: Locale;
 }) {
   const [answers, setAnswers] = useState<
@@ -1185,6 +1220,14 @@ function WorkoutReadinessScreen({
                 )}
               </Button>
             ) : null}
+            {confirmedPlan ? (
+              <WorkoutLogForm
+                plan={confirmedPlan}
+                logs={logs}
+                onSave={onSaveLog}
+                locale={locale}
+              />
+            ) : null}
           </section>
           <section>
           <h2 className="text-xl font-semibold">{c.workouts.catalogTitle}</h2>
@@ -1231,6 +1274,167 @@ function WorkoutReadinessScreen({
         </div>
       ) : null}
     </section>
+  );
+}
+
+function WorkoutLogForm({
+  plan,
+  logs,
+  onSave,
+  locale,
+}: {
+  plan: WorkoutPlanResponse;
+  logs: WorkoutLog[];
+  onSave: (log: WorkoutLogRequest) => Promise<void>;
+  locale: Locale;
+}) {
+  const [sessionId, setSessionId] = useState(plan.plan.sessions[0]?.id ?? '');
+  const [durationMinutes, setDurationMinutes] = useState('20');
+  const [rpe, setRpe] = useState('3');
+  const [enjoyment, setEnjoyment] = useState('3');
+  const [pain, setPain] = useState(false);
+  const [concerningSymptoms, setConcerningSymptoms] = useState(false);
+  const [preGlucose, setPreGlucose] = useState('');
+  const [postGlucose, setPostGlucose] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const c = getCopy(locale);
+
+  async function submit(event: SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const duration = Number(durationMinutes);
+    const actualRpe = Number(rpe);
+    const actualEnjoyment = Number(enjoyment);
+    const before = preGlucose ? Number(preGlucose) : undefined;
+    const after = postGlucose ? Number(postGlucose) : undefined;
+    if (
+      !Number.isInteger(duration) ||
+      duration < 1 ||
+      !Number.isInteger(actualRpe) ||
+      actualRpe < 1 ||
+      actualRpe > 10 ||
+      !Number.isInteger(actualEnjoyment) ||
+      actualEnjoyment < 1 ||
+      actualEnjoyment > 5 ||
+      (before !== undefined && (!Number.isFinite(before) || before <= 0)) ||
+      (after !== undefined && (!Number.isFinite(after) || after <= 0))
+    ) {
+      setError('Enter valid duration, effort, enjoyment, and optional glucose values.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      await onSave({
+        idempotencyKey: requestId(),
+        planId: plan.id!,
+        sessionId,
+        durationMinutes: duration,
+        rpe: actualRpe,
+        enjoyment: actualEnjoyment,
+        pain,
+        concerningSymptoms,
+        ...(before === undefined ? {} : { preGlucose: before }),
+        ...(after === undefined ? {} : { postGlucose: after }),
+      });
+      setPain(false);
+      setConcerningSymptoms(false);
+      setPreGlucose('');
+      setPostGlucose('');
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : 'We could not save this workout log.',
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-8 grid gap-5 lg:grid-cols-[1fr_.9fr]">
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader>
+          <CardTitle>{c.workouts.logTitle}</CardTitle>
+          <CardDescription>{c.workouts.safetyLogNote}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={submit} className="space-y-4">
+            <label className="block text-sm font-medium">
+              {c.workouts.session}
+              <select
+                value={sessionId}
+                onChange={(event) => setSessionId(event.target.value)}
+                className="mt-2 flex h-10 w-full rounded-md border border-input bg-white px-3 text-sm shadow-sm"
+              >
+                {plan.plan.sessions.map((session) => (
+                  <option key={session.id} value={session.id}>
+                    {session.title[locale]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="grid grid-cols-3 gap-3">
+              <label className="text-sm font-medium">
+                {c.workouts.duration} ({c.workouts.minutes})
+                <Input className="mt-2 bg-white" type="number" min="1" max="300" value={durationMinutes} onChange={(event) => setDurationMinutes(event.target.value)} required />
+              </label>
+              <label className="text-sm font-medium">
+                {c.workouts.effort} RPE
+                <Input className="mt-2 bg-white" type="number" min="1" max="10" value={rpe} onChange={(event) => setRpe(event.target.value)} required />
+              </label>
+              <label className="text-sm font-medium">
+                {c.workouts.enjoyment} /5
+                <Input className="mt-2 bg-white" type="number" min="1" max="5" value={enjoyment} onChange={(event) => setEnjoyment(event.target.value)} required />
+              </label>
+            </div>
+            <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-3 text-sm">
+              <input type="checkbox" checked={pain} onChange={(event) => setPain(event.target.checked)} className="mt-0.5 size-4 accent-rose-700" />
+              {c.workouts.pain}
+            </label>
+            <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-3 text-sm">
+              <input type="checkbox" checked={concerningSymptoms} onChange={(event) => setConcerningSymptoms(event.target.checked)} className="mt-0.5 size-4 accent-rose-700" />
+              {c.workouts.concerningSymptoms}
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="text-sm font-medium">
+                {c.workouts.preGlucose}
+                <Input className="mt-2 bg-white" type="number" min="0.1" step="0.1" value={preGlucose} onChange={(event) => setPreGlucose(event.target.value)} />
+              </label>
+              <label className="text-sm font-medium">
+                {c.workouts.postGlucose}
+                <Input className="mt-2 bg-white" type="number" min="0.1" step="0.1" value={postGlucose} onChange={(event) => setPostGlucose(event.target.value)} />
+              </label>
+            </div>
+            {error ? <p className="rounded-lg bg-rose-50 p-3 text-sm text-rose-900">{error}</p> : null}
+            <Button type="submit" disabled={saving} className="w-full bg-emerald-800 hover:bg-emerald-900">
+              {saving ? <><LoaderCircle className="animate-spin" /> {c.common.saving}</> : <><Check /> {c.workouts.saveLog}</>}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader>
+          <CardTitle>{c.workouts.logHistory}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {logs.slice(0, 6).map((log) => (
+            <div key={log.id} className="rounded-xl border border-slate-100 p-3 text-sm">
+              <p className="font-semibold">
+                {plan.plan.sessions.find((session) => session.id === log.sessionId)?.title[locale] ?? log.sessionId}
+              </p>
+              <p className="mt-1 text-slate-600">
+                {log.durationMinutes} {c.workouts.minutes} · RPE {log.rpe}/10
+                {log.enjoyment === null ? '' : ` · ${c.workouts.enjoyment} ${log.enjoyment}/5`}
+              </p>
+              {log.requiresReview ? <p className="mt-2 text-xs font-medium text-rose-800">{c.workouts.safetyLogNote}</p> : null}
+            </div>
+          ))}
+          {!logs.length ? <p className="text-sm text-slate-500">{c.common.loading}</p> : null}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
