@@ -157,6 +157,22 @@ export const exerciseCatalog = sqliteTable(
   },
   (table) => [index('idx_exercise_catalog_category').on(table.category)],
 );
+export const workoutPlans = sqliteTable(
+  'workout_plans',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id').notNull(),
+    planVersion: text('plan_version').notNull(),
+    periodStart: text('period_start').notNull(),
+    status: text('status').notNull(),
+    plan: text('plan', { mode: 'json' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    confirmedAt: integer('confirmed_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    index('idx_workout_plans_owner_created').on(table.ownerId, table.createdAt),
+  ],
+);
 export const reminders = sqliteTable(
   'reminders',
   {

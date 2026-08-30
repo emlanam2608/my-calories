@@ -64,6 +64,13 @@
       "when": 1788028698053,
       "tag": "0008_exercise_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1788028698054,
+      "tag": "0009_workout_plans",
+      "breakpoints": true
     }
   ]
 }

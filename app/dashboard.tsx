@@ -39,6 +39,7 @@ import type {
   MeasurementCreateRequest,
   WorkoutReadiness,
   WorkoutReadinessRequest,
+  WorkoutPlanResponse,
 } from '@/lib/contracts';
 import { getCopy, localeMetadata, type Locale } from '@/lib/copy';
 import { evaluateMealHealthFindings } from '@/lib/health-rule-engine';
@@ -112,6 +113,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
   const [workoutReadiness, setWorkoutReadiness] =
     useState<WorkoutReadiness | null>(null);
   const [exercises, setExercises] = useState<ExerciseCatalogEntry[]>([]);
+  const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlanResponse | null>(null);
   const [targetValues, setTargetValues] = useState<Record<TargetKey, number>>({
     calories: 1850,
     protein: 90,
@@ -192,6 +194,13 @@ export function Dashboard({ displayName }: { displayName: string }) {
       };
       if (exerciseResponse.ok && exerciseBody.exercises)
         setExercises(exerciseBody.exercises);
+      const planResponse = await fetch('/api/workout-plans', {
+        cache: 'no-store',
+      });
+      const planBody = (await planResponse.json()) as {
+        plan?: WorkoutPlanResponse | null;
+      };
+      if (planResponse.ok) setWorkoutPlan(planBody.plan ?? null);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -464,6 +473,39 @@ export function Dashboard({ displayName }: { displayName: string }) {
     );
   }
 
+  async function previewWorkoutPlan() {
+    const response = await fetch('/api/workout-plans/preview', {
+      method: 'POST',
+    });
+    const body = (await response.json()) as WorkoutPlanResponse & {
+      error?: string;
+    };
+    if (!response.ok)
+      throw new Error(body.error || 'We could not generate a workout-plan preview.');
+    return body;
+  }
+
+  async function confirmWorkoutPlan(plan: WorkoutPlanResponse['plan']) {
+    const response = await fetch('/api/workout-plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idempotencyKey: requestId(), plan }),
+    });
+    const body = (await response.json()) as {
+      error?: string;
+      plan?: WorkoutPlanResponse;
+      replayed?: boolean;
+    };
+    if (!response.ok || !body.plan)
+      throw new Error(body.error || 'We could not confirm this workout plan.');
+    setWorkoutPlan(body.plan);
+    setNotice(
+      body.replayed
+        ? 'Your earlier workout-plan confirmation was already recorded.'
+        : 'Workout plan confirmed. Keep the intensity easy and stop for concerning symptoms.',
+    );
+  }
+
   async function changeLocale(nextLocale: Locale) {
     const previousLocale = locale;
     if (nextLocale === previousLocale) return;
@@ -630,7 +672,10 @@ export function Dashboard({ displayName }: { displayName: string }) {
           <WorkoutReadinessScreen
             readiness={workoutReadiness}
             exercises={exercises}
+            confirmedPlan={workoutPlan}
             onSave={saveWorkoutReadiness}
+            onPreview={previewWorkoutPlan}
+            onConfirmPlan={confirmWorkoutPlan}
             locale={locale}
           />
         ) : (
@@ -881,12 +926,18 @@ const workoutReadinessFlags: WorkoutReadinessFlag[] = [
 function WorkoutReadinessScreen({
   readiness,
   exercises,
+  confirmedPlan,
   onSave,
+  onPreview,
+  onConfirmPlan,
   locale,
 }: {
   readiness: WorkoutReadiness | null;
   exercises: ExerciseCatalogEntry[];
+  confirmedPlan: WorkoutPlanResponse | null;
   onSave: (readiness: WorkoutReadinessRequest) => Promise<void>;
+  onPreview: () => Promise<WorkoutPlanResponse>;
+  onConfirmPlan: (plan: WorkoutPlanResponse['plan']) => Promise<void>;
   locale: Locale;
 }) {
   const [answers, setAnswers] = useState<
@@ -900,6 +951,9 @@ function WorkoutReadinessScreen({
     exerciseGlucoseRisk: false,
   });
   const [saving, setSaving] = useState(false);
+  const [previewPlan, setPreviewPlan] = useState<WorkoutPlanResponse | null>(null);
+  const [generatingPlan, setGeneratingPlan] = useState(false);
+  const [confirmingPlan, setConfirmingPlan] = useState(false);
   const [error, setError] = useState('');
   const c = getCopy(locale);
   const labels: Record<WorkoutReadinessFlag, string> = {
@@ -926,6 +980,40 @@ function WorkoutReadinessScreen({
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function generatePreview() {
+    setGeneratingPlan(true);
+    setError('');
+    try {
+      setPreviewPlan(await onPreview());
+    } catch (previewError) {
+      setError(
+        previewError instanceof Error
+          ? previewError.message
+          : 'We could not generate a workout-plan preview.',
+      );
+    } finally {
+      setGeneratingPlan(false);
+    }
+  }
+
+  async function confirmPlan() {
+    if (!previewPlan) return;
+    setConfirmingPlan(true);
+    setError('');
+    try {
+      await onConfirmPlan(previewPlan.plan);
+      setPreviewPlan(null);
+    } catch (confirmationError) {
+      setError(
+        confirmationError instanceof Error
+          ? confirmationError.message
+          : 'We could not confirm this workout plan.',
+      );
+    } finally {
+      setConfirmingPlan(false);
     }
   }
 
@@ -1028,7 +1116,77 @@ function WorkoutReadinessScreen({
         </Card>
       </div>
       {status === 'cleared' ? (
-        <div className="mt-8">
+        <div className="mt-8 space-y-8">
+          <section>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold">{c.workouts.planTitle}</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                  {confirmedPlan ? c.workouts.confirmedPlanNote : c.workouts.planPreviewNote}
+                </p>
+              </div>
+              {!confirmedPlan ? (
+                <Button
+                  type="button"
+                  disabled={generatingPlan}
+                  onClick={() => void generatePreview()}
+                  className="bg-emerald-800 hover:bg-emerald-900"
+                >
+                  {generatingPlan ? (
+                    <>
+                      <LoaderCircle className="animate-spin" /> {c.common.loading}
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardCheck /> {c.workouts.previewPlan}
+                    </>
+                  )}
+                </Button>
+              ) : null}
+            </div>
+            {previewPlan || confirmedPlan ? (
+              <div className="mt-5 grid gap-4 md:grid-cols-3">
+                {(previewPlan ?? confirmedPlan)!.plan.sessions.map((session) => (
+                  <Card key={session.id} className="border-slate-200 shadow-sm">
+                    <CardHeader className="pb-3">
+                      <CardDescription>
+                        {session.durationMinutes} {c.workouts.minutes} · {c.workouts.effort} RPE {session.rpe}/10
+                      </CardDescription>
+                      <CardTitle className="mt-1 text-lg">{session.title[locale]}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm leading-6">
+                      <p>{session.rationale[locale]}</p>
+                      <ul className="list-disc space-y-1 pl-5 text-slate-600">
+                        {session.exerciseIds.map((id) => (
+                          <li key={id}>{exercises.find((exercise) => exercise.id === id)?.name[locale] ?? id}</li>
+                        ))}
+                      </ul>
+                      <p className="text-xs text-slate-500">{session.safetyNote[locale]}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : null}
+            {previewPlan ? (
+              <Button
+                type="button"
+                disabled={confirmingPlan}
+                onClick={() => void confirmPlan()}
+                className="mt-5 bg-emerald-800 hover:bg-emerald-900"
+              >
+                {confirmingPlan ? (
+                  <>
+                    <LoaderCircle className="animate-spin" /> {c.common.saving}
+                  </>
+                ) : (
+                  <>
+                    <Check /> {c.workouts.confirmPlan}
+                  </>
+                )}
+              </Button>
+            ) : null}
+          </section>
+          <section>
           <h2 className="text-xl font-semibold">{c.workouts.catalogTitle}</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
             {c.workouts.catalogDescription}
@@ -1069,6 +1227,7 @@ function WorkoutReadinessScreen({
               </Card>
             ))}
           </div>
+          </section>
         </div>
       ) : null}
     </section>

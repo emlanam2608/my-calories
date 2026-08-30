@@ -174,6 +174,15 @@ const englishCopy = {
     regression: 'Make it easier',
     progression: 'Progress later',
     equipment: 'Equipment',
+    planTitle: 'Your starter week',
+    previewPlan: 'Generate plan preview',
+    confirmPlan: 'Confirm this plan',
+    planPreviewNote:
+      'Review this conservative plan before saving. It is intentionally not adapted to symptoms, recovery, or equipment changes yet.',
+    confirmedPlanNote:
+      'Confirmed plan. Log completion and recovery in the upcoming workout-log flow.',
+    minutes: 'minutes',
+    effort: 'Effort',
   },
   settings: {
     eyebrow: 'Settings',
@@ -398,6 +407,15 @@ const vietnameseCopy: ProductCopy = {
     regression: 'Giảm độ khó',
     progression: 'Tiến triển sau',
     equipment: 'Dụng cụ',
+    planTitle: 'Tuần khởi đầu của bạn',
+    previewPlan: 'Tạo bản xem trước kế hoạch',
+    confirmPlan: 'Xác nhận kế hoạch này',
+    planPreviewNote:
+      'Hãy xem lại kế hoạch thận trọng này trước khi lưu. Hiện kế hoạch chưa điều chỉnh theo triệu chứng, hồi phục hoặc thay đổi thiết bị.',
+    confirmedPlanNote:
+      'Kế hoạch đã xác nhận. Hãy ghi nhận hoàn thành và hồi phục trong luồng nhật ký tập sắp tới.',
+    minutes: 'phút',
+    effort: 'Cường độ',
   },
   settings: {
     eyebrow: 'Cài đặt',

@@ -98,6 +98,7 @@ This file tracks the gap between the current interactive prototype and the plann
 - [x] Add a versioned, bilingual starter catalog for mobility, bodyweight, bicycle, mini treadmill, and resistance-band movements; it is not yet clinician-reviewed or comprehensive.
 - [ ] Store technique, regressions, progressions, equipment, muscle groups, contraindication tags, and substitutions for each exercise.
 - [ ] Generate weekly plans with warm-up, strength, aerobic work, mobility, cooldown, duration, sets/reps, rest, RPE, rationale, progression criteria, and safety checks.
+- [x] Add a readiness-gated, deterministic three-session starter-week preview and explicit-confirmation save flow with duration, RPE, rationale, selected exercises, and stop-training guidance; warm-ups, cooldowns, sets/reps, and individual adaptation remain to be added.
 - [ ] Log completion, sets, reps, load, duration, heart rate, RPE, pain, symptoms, enjoyment, and optional pre/post-workout glucose.
 - [ ] Adapt only at scheduled check-ins using adherence and recovery: progress, maintain, deload, or substitute.
 - [ ] Make equipment and environment changes regenerate safe equivalents only after user confirmation.

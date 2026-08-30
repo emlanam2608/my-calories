@@ -253,6 +253,39 @@ export const workoutReadinessResponseSchema = z.object({
   flags: z.array(workoutReadinessFlagSchema),
   confirmedAt: z.string().datetime({ offset: true }).nullable(),
 });
+const localizedTextSchema = z.object({
+  en: z.string().trim().min(1).max(500),
+  vi: z.string().trim().min(1).max(500),
+});
+export const workoutPlanSchema = z.object({
+  planVersion: z.literal('starter-plan-1'),
+  periodStart: z.string().date(),
+  sessions: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1).max(80),
+        dayOffset: z.number().int().min(0).max(6),
+        title: localizedTextSchema,
+        durationMinutes: z.number().int().min(5).max(180),
+        rpe: z.number().int().min(1).max(10),
+        rationale: localizedTextSchema,
+        exerciseIds: z.array(z.string().trim().min(1).max(80)).min(1).max(8),
+        safetyNote: localizedTextSchema,
+      }),
+    )
+    .min(1)
+    .max(7),
+});
+export const workoutPlanResponseSchema = z.object({
+  id: z.string().uuid().nullable(),
+  status: z.enum(['preview', 'confirmed']),
+  plan: workoutPlanSchema,
+  confirmedAt: z.string().datetime({ offset: true }).nullable(),
+});
+export const confirmWorkoutPlanRequestSchema = z.object({
+  idempotencyKey: z.string().uuid(),
+  plan: workoutPlanSchema,
+});
 export type FoodAnalysis = z.infer<typeof foodAnalysisSchema>;
 export type HealthFinding = z.infer<typeof healthFindingSchema>;
 export type HealthFocus = z.infer<typeof healthFocusSchema>;
@@ -266,3 +299,5 @@ export type MeasurementCreateRequest = z.infer<
 >;
 export type WorkoutReadiness = z.infer<typeof workoutReadinessResponseSchema>;
 export type WorkoutReadinessRequest = z.infer<typeof workoutReadinessRequestSchema>;
+export type WorkoutPlan = z.infer<typeof workoutPlanSchema>;
+export type WorkoutPlanResponse = z.infer<typeof workoutPlanResponseSchema>;
