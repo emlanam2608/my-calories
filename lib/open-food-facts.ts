@@ -1,4 +1,5 @@
 import type { FoodAnalysis } from './contracts';
+import { fetchProvider } from './provider-resilience';
 
 type OffProduct = { product_name?: unknown; product_name_vi?: unknown; brands?: unknown; serving_size?: unknown; ingredients_text?: unknown; nutriments?: Record<string, unknown> };
 type OffResponse = { status?: unknown; product?: OffProduct };
@@ -7,7 +8,7 @@ const fields = 'code,product_name,product_name_vi,brands,serving_size,ingredient
 const baseUrl = 'https://world.openfoodfacts.org/api/v3/product';
 
 export async function lookupOpenFoodFacts(barcode: string): Promise<FoodAnalysis> {
-  const response = await fetch(`${baseUrl}/${encodeURIComponent(barcode)}?fields=${encodeURIComponent(fields)}`, { headers: { Accept: 'application/json', 'User-Agent': 'Nourishwell/0.1 (https://openai.com)' }, signal: AbortSignal.timeout(7_000) });
+  const response = await fetchProvider('open_food_facts', `${baseUrl}/${encodeURIComponent(barcode)}?fields=${encodeURIComponent(fields)}`, { headers: { Accept: 'application/json', 'User-Agent': 'Nourishwell/0.1 (https://openai.com)' } });
   if (response.status === 404) return notFoundAnalysis(barcode);
   if (!response.ok) throw new Error('The packaged-food service is temporarily unavailable. Try again later or use typed manual entry.');
   const body = await response.json() as OffResponse;

@@ -70,11 +70,12 @@ This file tracks the gap between the current interactive prototype and the plann
 - [ ] Import and normalize a licensed/approved Vietnamese food composition catalog.
 - [x] Add editable manual nutrient entry when a barcode has no trustworthy match.
 - [x] Cache normalized provider matches and AI-independent nutrient results in D1 for seven days, using hashed cache keys and no personal meal records.
+- [x] Add provider timeouts, bounded retry/backoff, a best-effort circuit breaker, and editable manual-entry fallback for unavailable food providers.
 - [x] Record serving assumptions, provider reference, source version, estimation level, barcode, and confidence in immutable meal snapshots.
 - [x] Send malformed, ambiguous, unmatched-barcode, and low-confidence results to review; never auto-save them.
 - [x] Aggregate confirmed meals into the Today dashboard and remaining personal targets.
 - [ ] Generate deterministic concern-specific findings and practical substitutions or portion changes.
-- [ ] Add provider timeouts, retry/backoff, circuit breakers, quotas, and manual-entry fallback.
+- [ ] Add per-feature quotas for food providers and AI work.
 
 ## P1 - Measurements and coach
 

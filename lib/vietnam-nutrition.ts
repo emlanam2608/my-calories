@@ -1,4 +1,5 @@
 import type { FoodAnalysis } from './contracts';
+import { fetchProvider } from './provider-resilience';
 
 type ProviderRecord = Record<string, unknown>;
 type ProviderPage = { data?: unknown };
@@ -10,7 +11,7 @@ export async function lookupVietnamNutrition(query: string, catalog: 'ingredient
   const endpoint = catalog === 'ingredient' ? 'foodNatunal/getPageFoodData' : 'tool/getPageFoodData';
   const url = new URL(`${baseUrl}/${endpoint}`);
   url.search = new URLSearchParams({ page: '1', pageSize: '8', name: query, energy: '0' }).toString();
-  const response = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'Nourishwell/0.1 (https://openai.com)' }, signal: AbortSignal.timeout(7_000) });
+  const response = await fetchProvider('vietnam_nutrition', url, { headers: { Accept: 'application/json', 'User-Agent': 'Nourishwell/0.1 (https://openai.com)' } });
   if (!response.ok) throw new Error('The Vietnam nutrition service is temporarily unavailable. Try again later or use typed manual entry.');
   const page = await response.json() as ProviderPage;
   const records = Array.isArray(page.data) ? page.data.filter(isRecord) : [];

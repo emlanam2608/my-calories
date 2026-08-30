@@ -1153,24 +1153,23 @@ function Settings({
   }> = [
     {
       key: 'blood_pressure',
-      label: 'Blood pressure',
-      description: 'Prioritize sodium-related review checks.',
+      label: c.settings.bloodPressure,
+      description: c.settings.bloodPressureDescription,
     },
     {
       key: 'cholesterol',
-      label: 'Cholesterol',
-      description: 'Prioritize fiber-pattern review checks.',
+      label: c.settings.cholesterol,
+      description: c.settings.cholesterolDescription,
     },
     {
       key: 'blood_glucose',
-      label: 'Blood glucose',
-      description:
-        'Saved now; exercise and carbohydrate safety rules come later.',
+      label: c.settings.bloodGlucose,
+      description: c.settings.bloodGlucoseDescription,
     },
     {
       key: 'uric_acid',
-      label: 'Uric acid / gout',
-      description: 'Saved now; purine-risk rules come later.',
+      label: c.settings.uricAcid,
+      description: c.settings.uricAcidDescription,
     },
   ];
   function toggleFocus(focus: HealthFocus) {
@@ -1196,10 +1195,7 @@ function Settings({
       <Card className="mt-7 border-none shadow-sm">
         <CardHeader>
           <CardTitle>{c.settings.title}</CardTitle>
-          <CardDescription>
-            These targets guide the Today dashboard only; they are not medical
-            advice.
-          </CardDescription>
+          <CardDescription>{c.settings.targetsDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-4">
@@ -1234,7 +1230,7 @@ function Settings({
                       [target.key]: event.target.value,
                     }))
                   }
-                  aria-label={`${target.label} target`}
+                  aria-label={`${target.key === 'calories' ? c.settings.calories : target.key === 'protein' ? c.settings.protein : target.key === 'fiber' ? c.settings.fiber : c.settings.sodium} ${c.settings.targetSuffix}`}
                   className="w-28 bg-white"
                   required
                 />
@@ -1274,7 +1270,7 @@ function Settings({
                 <button
                   type="button"
                   key={option.key}
-                  aria-label={`${selected ? 'Remove' : 'Add'} ${option.label} health focus`}
+                  aria-label={`${selected ? c.settings.removeFocus : c.settings.addFocus} ${option.label} ${c.settings.focusSuffix}`}
                   aria-pressed={selected}
                   onClick={() => toggleFocus(option.key)}
                   className={`w-full rounded-xl border p-4 text-left transition-colors ${selected ? 'border-emerald-600 bg-emerald-50' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
@@ -1317,8 +1313,7 @@ function Settings({
         </CardContent>
       </Card>
       <p className="mt-4 text-xs leading-5 text-slate-500">
-        Do not enter medication, symptoms, or clinician notes here yet. Those
-        need the upcoming encrypted health-profile flow.
+        {c.settings.sensitiveDataNotice}
       </p>
     </section>
   );
@@ -1369,12 +1364,12 @@ function Capture({
         : draft.trim().length >= 3;
   const providerNote =
     captureMode === 'text'
-      ? 'Typed meals use transparent starter rules. Always review the values.'
+      ? c.mealCapture.typedProviderNote
       : captureMode === 'barcode'
-        ? 'Barcode lookup uses Open Food Facts product data. The product label and your confirmation take priority.'
+        ? c.mealCapture.barcodeProviderNote
         : captureMode === 'vietnam_database'
-          ? 'Vietnam nutrition catalog values are database-derived. Review the match and your serving before saving.'
-          : 'USDA FoodData Central uses a 100 g database basis and requires a private API key. Review the food and serving before saving.';
+          ? c.mealCapture.vietnamProviderNote
+          : c.mealCapture.usdaProviderNote;
   return (
     <section>
       <div>
@@ -1469,7 +1464,7 @@ function Capture({
                       }
                       onClick={() => setVietnamCatalog('dish')}
                     >
-                      Dish / Món ăn
+                      {c.mealCapture.vietnamDish}
                     </Button>
                     <Button
                       type="button"
@@ -1481,16 +1476,18 @@ function Capture({
                       }
                       onClick={() => setVietnamCatalog('ingredient')}
                     >
-                      Ingredient / Thực phẩm
+                      {c.mealCapture.vietnamIngredient}
                     </Button>
                   </div>
                   <Input
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
                     placeholder={
-                      vietnamCatalog === 'dish' ? 'e.g. cơm gà' : 'e.g. thịt gà'
+                      vietnamCatalog === 'dish'
+                        ? c.mealCapture.vietnamDishPlaceholder
+                        : c.mealCapture.vietnamIngredientPlaceholder
                     }
-                    aria-label="Vietnam nutrition catalog search"
+                    aria-label={c.mealCapture.vietnamSearchLabel}
                   />
                 </>
               ) : (
@@ -1498,7 +1495,7 @@ function Capture({
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
                   placeholder={c.mealCapture.usdaPlaceholder}
-                  aria-label="USDA food search"
+                  aria-label={c.mealCapture.usdaSearchLabel}
                 />
               )}
               <p className="mt-3 text-xs leading-5 text-slate-500">
@@ -1528,14 +1525,14 @@ function Capture({
             <div>
               <CardDescription>{c.mealCapture.reviewTitle}</CardDescription>
               <CardTitle className="mt-1">
-                {analysis ? analysis.name : 'Your meal will appear here'}
+                {analysis ? analysis.name : c.mealCapture.reviewPlaceholder}
               </CardTitle>
             </div>
             {analysis ? (
               <span
                 className={`rounded-full px-2 py-1 text-xs font-semibold ${analysis.confidence < 70 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}
               >
-                {analysis.confidence}% confidence
+                {analysis.confidence}% {c.mealCapture.confidence}
               </span>
             ) : null}
           </CardHeader>
@@ -1547,6 +1544,7 @@ function Capture({
                 onDiscard={onDiscard}
                 onConfirm={onConfirm}
                 saving={saving}
+                locale={locale}
               />
             ) : (
               <div className="grid min-h-80 place-items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
@@ -1574,6 +1572,7 @@ function Review({
   onDiscard,
   onConfirm,
   saving,
+  locale,
 }: {
   analysis: FoodAnalysis;
   onNutrientChange: (
@@ -1583,14 +1582,22 @@ function Review({
   onDiscard: () => void;
   onConfirm: () => void;
   saving: boolean;
+  locale: Locale;
 }) {
+  const c = getCopy(locale);
+  const targetLabels: Record<TargetKey, string> = {
+    calories: c.today.calories,
+    protein: c.today.protein,
+    fiber: c.today.fiber,
+    sodium: c.today.sodium,
+  };
   return (
     <>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {targets.map((target) => (
           <label className="rounded-xl bg-slate-50 p-3" key={target.key}>
             <span className="text-[11px] font-semibold text-slate-500">
-              {target.label}
+              {targetLabels[target.key]}
             </span>
             <Input
               type="number"
@@ -1608,7 +1615,9 @@ function Review({
         ))}
       </div>
       <div className="mt-5">
-        <p className="text-sm font-semibold">Detected ingredients</p>
+        <p className="text-sm font-semibold">
+          {c.mealCapture.detectedIngredients}
+        </p>
         <div className="mt-2 flex flex-wrap gap-2">
           {analysis.snapshot.ingredients.map((ingredient) => (
             <span
@@ -1620,22 +1629,23 @@ function Review({
           ))}
         </div>
         <p className="mt-2 text-xs text-slate-500">
-          Serving: {analysis.snapshot.servingDescription}
+          {c.mealCapture.serving}: {analysis.snapshot.servingDescription}
         </p>
       </div>
       <div
         className={`mt-5 rounded-xl p-4 text-sm leading-6 ${analysis.finding.severity === 'attention' ? 'bg-amber-50 text-amber-950' : 'bg-emerald-50 text-emerald-950'}`}
       >
-        <p className="font-semibold">Source and review note</p>
+        <p className="font-semibold">{c.mealCapture.sourceAndReview}</p>
         <p className="mt-1">{analysis.finding.text}</p>
       </div>
       {analysis.healthFindings?.length ? (
         <div className="mt-5 space-y-3">
           <div>
-            <p className="text-sm font-semibold">Condition-specific checks</p>
+            <p className="text-sm font-semibold">
+              {c.mealCapture.conditionChecks}
+            </p>
             <p className="mt-1 text-xs leading-5 text-slate-500">
-              Versioned tracking rules—not diagnoses or medical advice. They do
-              not alter the nutrient values above.
+              {c.mealCapture.conditionChecksDescription}
             </p>
           </div>
           {analysis.healthFindings.map((finding) => (
@@ -1645,7 +1655,8 @@ function Review({
             >
               <p className="font-semibold">
                 {finding.condition.replace('_', ' ')} ·{' '}
-                {finding.observedValue.toLocaleString()} {finding.observedUnit}
+                {finding.observedValue.toLocaleString(locale)}{' '}
+                {finding.observedUnit}
               </p>
               <p className="mt-1">{finding.text}</p>
               <ul className="mt-2 list-disc space-y-1 pl-5">
@@ -1672,7 +1683,7 @@ function Review({
           onClick={onDiscard}
           disabled={saving}
         >
-          Discard
+          {c.mealCapture.discard}
         </Button>
         <Button
           className="flex-1 bg-emerald-800 hover:bg-emerald-900"
@@ -1681,11 +1692,11 @@ function Review({
         >
           {saving ? (
             <>
-              <LoaderCircle className="animate-spin" /> Saving…
+              <LoaderCircle className="animate-spin" /> {c.common.saving}
             </>
           ) : (
             <>
-              <Check /> Confirm & save
+              <Check /> {c.mealCapture.confirmAndSave}
             </>
           )}
         </Button>

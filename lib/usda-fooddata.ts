@@ -1,5 +1,6 @@
 import { env } from 'cloudflare:workers';
 import type { FoodAnalysis } from './contracts';
+import { fetchProvider } from './provider-resilience';
 
 type UsdaNutrient = Record<string, unknown>;
 type UsdaFood = { fdcId?: unknown; description?: unknown; dataType?: unknown; foodNutrients?: unknown; foodCategory?: unknown; additionalDescriptions?: unknown };
@@ -12,7 +13,7 @@ export async function lookupUsdaFoodData(query: string): Promise<FoodAnalysis> {
   if (!key) throw new Error('USDA lookup is not configured yet. Add USDA_FDC_API_KEY in private runtime settings, or use Vietnam data/manual entry.');
   const url = new URL(baseUrl);
   url.search = new URLSearchParams({ api_key: key, query, pageSize: '5', dataType: 'Foundation' }).toString();
-  const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(7_000) });
+  const response = await fetchProvider('usda_fooddata', url, { headers: { Accept: 'application/json' } });
   if (response.status === 429) throw new Error('USDA lookup is temporarily rate-limited. Try again later or use manual entry.');
   if (!response.ok) throw new Error('USDA lookup is temporarily unavailable. Try again later or use manual entry.');
   const body = await response.json() as UsdaSearchResponse;

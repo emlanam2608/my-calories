@@ -93,6 +93,27 @@ const englishCopy = {
     estimate: 'Estimate',
     manualEntry: 'Manual entry',
     reviewRequired: 'Review required before saving.',
+    vietnamDish: 'Dish / Món ăn',
+    vietnamIngredient: 'Ingredient / Thực phẩm',
+    vietnamSearchLabel: 'Vietnam nutrition catalog search',
+    usdaSearchLabel: 'USDA food search',
+    typedProviderNote:
+      'Typed meals use transparent starter rules. Always review the values.',
+    barcodeProviderNote:
+      'Barcode lookup uses Open Food Facts product data. The product label and your confirmation take priority.',
+    vietnamProviderNote:
+      'Vietnam nutrition catalog values are database-derived. Review the match and your serving before saving.',
+    usdaProviderNote:
+      'USDA FoodData Central uses a 100 g database basis and requires a private API key. Review the food and serving before saving.',
+    reviewPlaceholder: 'Your meal will appear here',
+    detectedIngredients: 'Detected ingredients',
+    serving: 'Serving',
+    sourceAndReview: 'Source and review note',
+    conditionChecks: 'Condition-specific checks',
+    conditionChecksDescription:
+      'Versioned tracking rules—not diagnoses or medical advice. They do not alter the nutrient values above.',
+    discard: 'Discard',
+    confirmAndSave: 'Confirm & save',
   },
   measurements: {
     eyebrow: 'Measurements',
@@ -136,6 +157,23 @@ const englishCopy = {
     dataPrivacy: 'Privacy and data',
     exportData: 'Export my data',
     deleteData: 'Delete my data',
+    targetsDescription:
+      'These targets guide the Today dashboard only; they are not medical advice.',
+    targetSuffix: 'target',
+    bloodPressure: 'Blood pressure',
+    bloodPressureDescription: 'Prioritize sodium-related review checks.',
+    cholesterol: 'Cholesterol',
+    cholesterolDescription: 'Prioritize fiber-pattern review checks.',
+    bloodGlucose: 'Blood glucose',
+    bloodGlucoseDescription:
+      'Saved now; exercise and carbohydrate safety rules come later.',
+    uricAcid: 'Uric acid / gout',
+    uricAcidDescription: 'Saved now; purine-risk rules come later.',
+    addFocus: 'Add',
+    removeFocus: 'Remove',
+    focusSuffix: 'health focus',
+    sensitiveDataNotice:
+      'Do not enter medication, symptoms, or clinician notes here yet. Those need the upcoming encrypted health-profile flow.',
   },
   safety: {
     notMedicalAdvice:
@@ -246,6 +284,27 @@ const vietnameseCopy: ProductCopy = {
     estimate: 'Ước tính',
     manualEntry: 'Nhập thủ công',
     reviewRequired: 'Cần xem lại trước khi lưu.',
+    vietnamDish: 'Món ăn / Dish',
+    vietnamIngredient: 'Thực phẩm / Ingredient',
+    vietnamSearchLabel: 'Tìm kiếm trong cơ sở dữ liệu dinh dưỡng Việt Nam',
+    usdaSearchLabel: 'Tìm kiếm thực phẩm USDA',
+    typedProviderNote:
+      'Các bữa ăn nhập chữ dùng quy tắc khởi đầu minh bạch. Luôn kiểm tra lại các giá trị.',
+    barcodeProviderNote:
+      'Tra mã vạch dùng dữ liệu sản phẩm Open Food Facts. Nhãn sản phẩm và xác nhận của bạn được ưu tiên.',
+    vietnamProviderNote:
+      'Giá trị từ cơ sở dữ liệu dinh dưỡng Việt Nam. Hãy kiểm tra món khớp và khẩu phần trước khi lưu.',
+    usdaProviderNote:
+      'USDA FoodData Central dùng cơ sở dữ liệu theo 100 g và cần khóa API riêng tư. Hãy kiểm tra thực phẩm và khẩu phần trước khi lưu.',
+    reviewPlaceholder: 'Bữa ăn của bạn sẽ xuất hiện ở đây',
+    detectedIngredients: 'Nguyên liệu được nhận diện',
+    serving: 'Khẩu phần',
+    sourceAndReview: 'Nguồn và ghi chú xem lại',
+    conditionChecks: 'Kiểm tra theo tình trạng',
+    conditionChecksDescription:
+      'Các quy tắc theo dõi có phiên bản — không phải chẩn đoán hay lời khuyên y tế. Chúng không thay đổi giá trị dinh dưỡng ở trên.',
+    discard: 'Bỏ',
+    confirmAndSave: 'Xác nhận và lưu',
   },
   measurements: {
     eyebrow: 'Chỉ số',
@@ -288,6 +347,24 @@ const vietnameseCopy: ProductCopy = {
     dataPrivacy: 'Quyền riêng tư và dữ liệu',
     exportData: 'Xuất dữ liệu của tôi',
     deleteData: 'Xóa dữ liệu của tôi',
+    targetsDescription:
+      'Các mục tiêu này chỉ dùng cho bảng Hôm nay; chúng không phải lời khuyên y tế.',
+    targetSuffix: 'mục tiêu',
+    bloodPressure: 'Huyết áp',
+    bloodPressureDescription: 'Ưu tiên các kiểm tra liên quan đến natri.',
+    cholesterol: 'Cholesterol',
+    cholesterolDescription: 'Ưu tiên các kiểm tra theo xu hướng chất xơ.',
+    bloodGlucose: 'Đường huyết',
+    bloodGlucoseDescription:
+      'Được lưu ngay; các quy tắc an toàn về tập luyện và carbohydrate sẽ có sau.',
+    uricAcid: 'Axit uric / gout',
+    uricAcidDescription:
+      'Được lưu ngay; các quy tắc về nguy cơ purin sẽ có sau.',
+    addFocus: 'Thêm',
+    removeFocus: 'Bỏ',
+    focusSuffix: 'mối quan tâm sức khỏe',
+    sensitiveDataNotice:
+      'Chưa nhập thông tin thuốc, triệu chứng hoặc ghi chú của bác sĩ tại đây. Các dữ liệu này cần luồng hồ sơ sức khỏe mã hóa sắp tới.',
   },
   safety: {
     notMedicalAdvice:
