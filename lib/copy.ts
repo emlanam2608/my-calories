@@ -195,6 +195,10 @@ const englishCopy = {
     safetyLogNote:
       'Pain or concerning symptoms save this session as stopped for safety and pause future progression.',
     logHistory: 'Recent workout logs',
+    sets: 'Sets',
+    reps: 'Reps per set',
+    load: 'Load (optional)',
+    heartRate: 'Average heart rate (optional)',
   },
   settings: {
     eyebrow: 'Settings',
@@ -440,6 +444,10 @@ const vietnameseCopy: ProductCopy = {
     safetyLogNote:
       'Đau hoặc triệu chứng đáng lo sẽ lưu buổi tập là dừng vì an toàn và tạm dừng tăng tiến trong tương lai.',
     logHistory: 'Nhật ký tập gần đây',
+    sets: 'Số hiệp',
+    reps: 'Số lần mỗi hiệp',
+    load: 'Tải trọng (tùy chọn)',
+    heartRate: 'Nhịp tim trung bình (tùy chọn)',
   },
   settings: {
     eyebrow: 'Cài đặt',

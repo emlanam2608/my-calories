@@ -14,12 +14,27 @@ const baseLog = {
 
 describe('workout log contract', () => {
   it('accepts conservative completed-session feedback', () => {
-    expect(workoutLogRequestSchema.safeParse(baseLog).success).toBe(true);
+    expect(
+      workoutLogRequestSchema.safeParse({
+        ...baseLog,
+        setsCompleted: 3,
+        repsPerSet: 10,
+        load: 12.5,
+        loadUnit: 'kg',
+        averageHeartRate: 118,
+      }).success,
+    ).toBe(true);
   });
 
   it('does not accept high effort with reported pain', () => {
     expect(
       workoutLogRequestSchema.safeParse({ ...baseLog, pain: true, rpe: 8 }).success,
+    ).toBe(false);
+  });
+
+  it('requires reps whenever sets are entered', () => {
+    expect(
+      workoutLogRequestSchema.safeParse({ ...baseLog, setsCompleted: 3 }).success,
     ).toBe(false);
   });
 });

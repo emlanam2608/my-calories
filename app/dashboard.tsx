@@ -1292,6 +1292,11 @@ function WorkoutLogForm({
   const [durationMinutes, setDurationMinutes] = useState('20');
   const [rpe, setRpe] = useState('3');
   const [enjoyment, setEnjoyment] = useState('3');
+  const [setsCompleted, setSetsCompleted] = useState('');
+  const [repsPerSet, setRepsPerSet] = useState('');
+  const [load, setLoad] = useState('');
+  const [loadUnit, setLoadUnit] = useState<'kg' | 'lb'>('kg');
+  const [averageHeartRate, setAverageHeartRate] = useState('');
   const [pain, setPain] = useState(false);
   const [concerningSymptoms, setConcerningSymptoms] = useState(false);
   const [preGlucose, setPreGlucose] = useState('');
@@ -1305,6 +1310,10 @@ function WorkoutLogForm({
     const duration = Number(durationMinutes);
     const actualRpe = Number(rpe);
     const actualEnjoyment = Number(enjoyment);
+    const actualSets = setsCompleted ? Number(setsCompleted) : undefined;
+    const actualReps = repsPerSet ? Number(repsPerSet) : undefined;
+    const actualLoad = load ? Number(load) : undefined;
+    const actualHeartRate = averageHeartRate ? Number(averageHeartRate) : undefined;
     const before = preGlucose ? Number(preGlucose) : undefined;
     const after = postGlucose ? Number(postGlucose) : undefined;
     if (
@@ -1316,6 +1325,11 @@ function WorkoutLogForm({
       !Number.isInteger(actualEnjoyment) ||
       actualEnjoyment < 1 ||
       actualEnjoyment > 5 ||
+      ((actualSets === undefined) !== (actualReps === undefined)) ||
+      (actualSets !== undefined && (!Number.isInteger(actualSets) || actualSets < 1)) ||
+      (actualReps !== undefined && (!Number.isInteger(actualReps) || actualReps < 1)) ||
+      (actualLoad !== undefined && (!Number.isFinite(actualLoad) || actualLoad <= 0)) ||
+      (actualHeartRate !== undefined && (!Number.isInteger(actualHeartRate) || actualHeartRate < 20 || actualHeartRate > 260)) ||
       (before !== undefined && (!Number.isFinite(before) || before <= 0)) ||
       (after !== undefined && (!Number.isFinite(after) || after <= 0))
     ) {
@@ -1332,6 +1346,10 @@ function WorkoutLogForm({
         durationMinutes: duration,
         rpe: actualRpe,
         enjoyment: actualEnjoyment,
+        ...(actualSets === undefined ? {} : { setsCompleted: actualSets }),
+        ...(actualReps === undefined ? {} : { repsPerSet: actualReps }),
+        ...(actualLoad === undefined ? {} : { load: actualLoad, loadUnit }),
+        ...(actualHeartRate === undefined ? {} : { averageHeartRate: actualHeartRate }),
         pain,
         concerningSymptoms,
         ...(before === undefined ? {} : { preGlucose: before }),
@@ -1341,6 +1359,10 @@ function WorkoutLogForm({
       setConcerningSymptoms(false);
       setPreGlucose('');
       setPostGlucose('');
+      setSetsCompleted('');
+      setRepsPerSet('');
+      setLoad('');
+      setAverageHeartRate('');
     } catch (saveError) {
       setError(
         saveError instanceof Error
@@ -1389,6 +1411,30 @@ function WorkoutLogForm({
                 <Input className="mt-2 bg-white" type="number" min="1" max="5" value={enjoyment} onChange={(event) => setEnjoyment(event.target.value)} required />
               </label>
             </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <label className="text-sm font-medium">
+                {c.workouts.sets}
+                <Input className="mt-2 bg-white" type="number" min="1" value={setsCompleted} onChange={(event) => setSetsCompleted(event.target.value)} />
+              </label>
+              <label className="text-sm font-medium">
+                {c.workouts.reps}
+                <Input className="mt-2 bg-white" type="number" min="1" value={repsPerSet} onChange={(event) => setRepsPerSet(event.target.value)} />
+              </label>
+              <label className="text-sm font-medium">
+                {c.workouts.load}
+                <div className="mt-2 flex gap-1">
+                  <Input className="min-w-0 bg-white" type="number" min="0.1" step="0.1" value={load} onChange={(event) => setLoad(event.target.value)} />
+                  <select value={loadUnit} onChange={(event) => setLoadUnit(event.target.value as 'kg' | 'lb')} className="rounded-md border border-input bg-white px-2 text-sm">
+                    <option value="kg">kg</option>
+                    <option value="lb">lb</option>
+                  </select>
+                </div>
+              </label>
+              <label className="text-sm font-medium">
+                {c.workouts.heartRate}
+                <Input className="mt-2 bg-white" type="number" min="20" max="260" value={averageHeartRate} onChange={(event) => setAverageHeartRate(event.target.value)} />
+              </label>
+            </div>
             <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-3 text-sm">
               <input type="checkbox" checked={pain} onChange={(event) => setPain(event.target.checked)} className="mt-0.5 size-4 accent-rose-700" />
               {c.workouts.pain}
@@ -1428,6 +1474,7 @@ function WorkoutLogForm({
                 {log.durationMinutes} {c.workouts.minutes} · RPE {log.rpe}/10
                 {log.enjoyment === null ? '' : ` · ${c.workouts.enjoyment} ${log.enjoyment}/5`}
               </p>
+              {log.setsCompleted !== null && log.repsPerSet !== null ? <p className="mt-1 text-slate-600">{log.setsCompleted} × {log.repsPerSet}{log.load === null ? '' : ` · ${log.load} ${log.loadUnit}`}{log.averageHeartRate === null ? '' : ` · ${log.averageHeartRate} bpm`}</p> : log.averageHeartRate === null ? null : <p className="mt-1 text-slate-600">{log.averageHeartRate} bpm</p>}
               {log.requiresReview ? <p className="mt-2 text-xs font-medium text-rose-800">{c.workouts.safetyLogNote}</p> : null}
             </div>
           ))}

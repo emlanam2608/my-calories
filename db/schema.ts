@@ -104,6 +104,12 @@ export const workoutSessions = sqliteTable(
     durationMinutes: integer('duration_minutes'),
     rpe: integer('rpe'),
     enjoyment: integer('enjoyment'),
+    setsCompleted: integer('sets_completed'),
+    repsPerSet: integer('reps_per_set'),
+    loadScaled: integer('load_scaled'),
+    loadScale: integer('load_scale').notNull().default(10),
+    loadUnit: text('load_unit'),
+    averageHeartRate: integer('average_heart_rate'),
     pain: integer('pain', { mode: 'boolean' }).notNull().default(false),
     concerningSymptoms: integer('concerning_symptoms', { mode: 'boolean' })
       .notNull()

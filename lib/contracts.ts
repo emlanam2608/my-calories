@@ -294,6 +294,11 @@ export const workoutLogRequestSchema = z
     durationMinutes: z.number().int().min(1).max(300),
     rpe: z.number().int().min(1).max(10),
     enjoyment: z.number().int().min(1).max(5).optional(),
+    setsCompleted: z.number().int().min(1).max(100).optional(),
+    repsPerSet: z.number().int().min(1).max(1_000).optional(),
+    load: z.number().finite().positive().max(5_000).optional(),
+    loadUnit: z.enum(['kg', 'lb']).optional(),
+    averageHeartRate: z.number().int().min(20).max(260).optional(),
     pain: z.boolean(),
     concerningSymptoms: z.boolean(),
     preGlucose: z.number().finite().positive().max(40).optional(),
@@ -306,6 +311,24 @@ export const workoutLogRequestSchema = z
         path: ['rpe'],
         message: 'Use the actual effort, but do not continue a high-effort session with pain or concerning symptoms.',
       });
+    if ((value.setsCompleted === undefined) !== (value.repsPerSet === undefined))
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['setsCompleted'],
+        message: 'Enter both sets and reps, or leave both blank.',
+      });
+    if (value.load !== undefined && value.loadUnit === undefined)
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['loadUnit'],
+        message: 'Choose kg or lb when recording load.',
+      });
+    if (value.load === undefined && value.loadUnit !== undefined)
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['load'],
+        message: 'Enter a load when choosing a load unit.',
+      });
   });
 export const workoutLogSchema = z.object({
   id: z.string().uuid(),
@@ -315,6 +338,11 @@ export const workoutLogSchema = z.object({
   durationMinutes: z.number().int().min(1),
   rpe: z.number().int().min(1).max(10),
   enjoyment: z.number().int().min(1).max(5).nullable(),
+  setsCompleted: z.number().int().min(1).nullable(),
+  repsPerSet: z.number().int().min(1).nullable(),
+  load: z.number().finite().positive().nullable(),
+  loadUnit: z.enum(['kg', 'lb']).nullable(),
+  averageHeartRate: z.number().int().min(20).max(260).nullable(),
   pain: z.boolean(),
   concerningSymptoms: z.boolean(),
   preGlucose: z.number().finite().positive().nullable(),
