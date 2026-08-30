@@ -1,0 +1,34 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-geist-sans);
+  --font-heading: var(--font-geist-sans);
+  --radius: .875rem;
+}
+
+:root { --background: #f4f8f5; --foreground: #17231d; --card: #ffffff; --card-foreground: #17231d; --primary: #166534; --primary-foreground: #ffffff; --secondary: #edf5ef; --secondary-foreground: #173d2a; --muted: #eff3f0; --muted-foreground: #6d7a72; --accent: #e5f2e8; --accent-foreground: #174c2d; --destructive: #dc2626; --border: #dce6df; --input: #dce6df; --ring: #2f8f55; }
+
+* { @apply border-border; }
+html { @apply bg-background; }
+body { @apply bg-background text-foreground antialiased; font-family: var(--font-geist-sans), Arial, sans-serif; }
+button, input, textarea { font: inherit; }
