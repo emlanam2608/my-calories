@@ -102,6 +102,7 @@ This file tracks the gap between the current interactive prototype and the plann
 - [x] Log completion, sets, reps, load, duration, heart rate, RPE, pain, symptoms, enjoyment, and optional pre/post-workout glucose.
 - [x] Persist owner-scoped completion logs for confirmed-plan sessions with duration, RPE, enjoyment, pain, concerning-symptom flags, and optional pre/post-exercise glucose; sets, reps, load, and heart-rate capture remain to be added.
 - [ ] Adapt only at scheduled check-ins using adherence and recovery: progress, maintain, deload, or substitute.
+- [x] Add a persistent, user-triggered weekly check-in that uses logged adherence and safety flags to recommend hold, repeat, or maintain; it never mutates a plan automatically and progression/deload/substitution remain to be added.
 - [ ] Make equipment and environment changes regenerate safe equivalents only after user confirmation.
 - [ ] Replace the current fixed workout and completion toggle with persistent plan/session records.
 

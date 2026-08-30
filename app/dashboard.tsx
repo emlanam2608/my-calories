@@ -42,6 +42,7 @@ import type {
   WorkoutPlanResponse,
   WorkoutLog,
   WorkoutLogRequest,
+  WorkoutCheckin,
 } from '@/lib/contracts';
 import { getCopy, localeMetadata, type Locale } from '@/lib/copy';
 import { evaluateMealHealthFindings } from '@/lib/health-rule-engine';
@@ -117,6 +118,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
   const [exercises, setExercises] = useState<ExerciseCatalogEntry[]>([]);
   const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlanResponse | null>(null);
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
+  const [workoutCheckin, setWorkoutCheckin] = useState<WorkoutCheckin | null>(null);
   const [targetValues, setTargetValues] = useState<Record<TargetKey, number>>({
     calories: 1850,
     protein: 90,
@@ -535,6 +537,13 @@ export function Dashboard({ displayName }: { displayName: string }) {
     );
   }
 
+  async function runWorkoutCheckin(planId: string) {
+    const response = await fetch('/api/workout-checkins', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idempotencyKey: requestId(), planId }) });
+    const body = (await response.json()) as { error?: string; checkin?: WorkoutCheckin };
+    if (!response.ok || !body.checkin) throw new Error(body.error || 'We could not complete the recovery check-in.');
+    setWorkoutCheckin(body.checkin);
+  }
+
   async function changeLocale(nextLocale: Locale) {
     const previousLocale = locale;
     if (nextLocale === previousLocale) return;
@@ -703,10 +712,12 @@ export function Dashboard({ displayName }: { displayName: string }) {
             exercises={exercises}
             confirmedPlan={workoutPlan}
             logs={workoutLogs}
+            checkin={workoutCheckin}
             onSave={saveWorkoutReadiness}
             onPreview={previewWorkoutPlan}
             onConfirmPlan={confirmWorkoutPlan}
             onSaveLog={saveWorkoutLog}
+            onRunCheckin={runWorkoutCheckin}
             locale={locale}
           />
         ) : (
@@ -959,20 +970,24 @@ function WorkoutReadinessScreen({
   exercises,
   confirmedPlan,
   logs,
+  checkin,
   onSave,
   onPreview,
   onConfirmPlan,
   onSaveLog,
+  onRunCheckin,
   locale,
 }: {
   readiness: WorkoutReadiness | null;
   exercises: ExerciseCatalogEntry[];
   confirmedPlan: WorkoutPlanResponse | null;
   logs: WorkoutLog[];
+  checkin: WorkoutCheckin | null;
   onSave: (readiness: WorkoutReadinessRequest) => Promise<void>;
   onPreview: () => Promise<WorkoutPlanResponse>;
   onConfirmPlan: (plan: WorkoutPlanResponse['plan']) => Promise<void>;
   onSaveLog: (log: WorkoutLogRequest) => Promise<void>;
+  onRunCheckin: (planId: string) => Promise<void>;
   locale: Locale;
 }) {
   const [answers, setAnswers] = useState<
@@ -989,6 +1004,7 @@ function WorkoutReadinessScreen({
   const [previewPlan, setPreviewPlan] = useState<WorkoutPlanResponse | null>(null);
   const [generatingPlan, setGeneratingPlan] = useState(false);
   const [confirmingPlan, setConfirmingPlan] = useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
   const [error, setError] = useState('');
   const c = getCopy(locale);
   const labels: Record<WorkoutReadinessFlag, string> = {
@@ -1050,6 +1066,14 @@ function WorkoutReadinessScreen({
     } finally {
       setConfirmingPlan(false);
     }
+  }
+
+  async function runCheckin() {
+    if (!confirmedPlan?.id) return;
+    setCheckingIn(true); setError('');
+    try { await onRunCheckin(confirmedPlan.id); }
+    catch (checkinError) { setError(checkinError instanceof Error ? checkinError.message : 'We could not complete the recovery check-in.'); }
+    finally { setCheckingIn(false); }
   }
 
   const resultCopy =
@@ -1227,6 +1251,17 @@ function WorkoutReadinessScreen({
                 onSave={onSaveLog}
                 locale={locale}
               />
+            ) : null}
+            {confirmedPlan ? (
+              <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{c.workouts.checkinTitle}</p>
+                    <p className="mt-1 text-sm text-slate-600">{checkin ? (checkin.action === 'hold_for_review' ? c.workouts.checkinHold : checkin.action === 'repeat' ? c.workouts.checkinRepeat : c.workouts.checkinMaintain) : c.workouts.planPreviewNote}</p>
+                  </div>
+                  <Button type="button" variant="outline" disabled={checkingIn} onClick={() => void runCheckin()}>{checkingIn ? <LoaderCircle className="animate-spin" /> : <ClipboardCheck />} {c.workouts.checkin}</Button>
+                </div>
+              </div>
             ) : null}
           </section>
           <section>

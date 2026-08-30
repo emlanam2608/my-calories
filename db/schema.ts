@@ -194,6 +194,16 @@ export const workoutPlans = sqliteTable(
     index('idx_workout_plans_owner_created').on(table.ownerId, table.createdAt),
   ],
 );
+export const workoutCheckins = sqliteTable(
+  'workout_checkins',
+  {
+    id: text('id').primaryKey(), ownerId: text('owner_id').notNull(), planId: text('plan_id').notNull(),
+    action: text('action').notNull(), plannedSessions: integer('planned_sessions').notNull(),
+    completedSessions: integer('completed_sessions').notNull(), safetyFlag: integer('safety_flag', { mode: 'boolean' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [index('idx_workout_checkins_owner_plan').on(table.ownerId, table.planId, table.createdAt)],
+);
 export const reminders = sqliteTable(
   'reminders',
   {

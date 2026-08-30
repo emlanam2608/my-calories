@@ -199,6 +199,11 @@ const englishCopy = {
     reps: 'Reps per set',
     load: 'Load (optional)',
     heartRate: 'Average heart rate (optional)',
+    checkin: 'Run recovery check-in',
+    checkinTitle: 'Weekly check-in',
+    checkinMaintain: 'Maintain the current plan; no automatic progression is applied.',
+    checkinRepeat: 'Repeat the current plan before changing it; adherence is still building.',
+    checkinHold: 'Hold progression and review the reported safety concern with an appropriate clinician.',
   },
   settings: {
     eyebrow: 'Settings',
@@ -448,6 +453,11 @@ const vietnameseCopy: ProductCopy = {
     reps: 'Số lần mỗi hiệp',
     load: 'Tải trọng (tùy chọn)',
     heartRate: 'Nhịp tim trung bình (tùy chọn)',
+    checkin: 'Thực hiện đánh giá hồi phục',
+    checkinTitle: 'Đánh giá hằng tuần',
+    checkinMaintain: 'Duy trì kế hoạch hiện tại; không tự động tăng tiến.',
+    checkinRepeat: 'Lặp lại kế hoạch hiện tại trước khi thay đổi; mức tuân thủ vẫn đang xây dựng.',
+    checkinHold: 'Tạm dừng tăng tiến và trao đổi vấn đề an toàn đã báo cáo với chuyên gia phù hợp.',
   },
   settings: {
     eyebrow: 'Cài đặt',

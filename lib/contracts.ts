@@ -351,6 +351,8 @@ export const workoutLogSchema = z.object({
   requiresReview: z.boolean(),
 });
 export const workoutLogsResponseSchema = z.object({ logs: z.array(workoutLogSchema) });
+export const workoutCheckinRequestSchema = z.object({ idempotencyKey: z.string().uuid(), planId: z.string().uuid() });
+export const workoutCheckinSchema = z.object({ id: z.string().uuid(), planId: z.string().uuid(), action: z.enum(['hold_for_review', 'repeat', 'maintain']), plannedSessions: z.number().int().min(1), completedSessions: z.number().int().min(0), safetyFlag: z.boolean(), createdAt: z.string().datetime({ offset: true }) });
 export type FoodAnalysis = z.infer<typeof foodAnalysisSchema>;
 export type HealthFinding = z.infer<typeof healthFindingSchema>;
 export type HealthFocus = z.infer<typeof healthFocusSchema>;
@@ -368,3 +370,4 @@ export type WorkoutPlan = z.infer<typeof workoutPlanSchema>;
 export type WorkoutPlanResponse = z.infer<typeof workoutPlanResponseSchema>;
 export type WorkoutLog = z.infer<typeof workoutLogSchema>;
 export type WorkoutLogRequest = z.infer<typeof workoutLogRequestSchema>;
+export type WorkoutCheckin = z.infer<typeof workoutCheckinSchema>;
