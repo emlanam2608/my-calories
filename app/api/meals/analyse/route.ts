@@ -11,6 +11,7 @@ import { healthFocuses } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { manualProviderFallback } from '@/lib/provider-fallback';
 import { consumeRequestQuota } from '@/lib/request-quota';
+import { resolvePersonalFood } from '@/lib/saved-foods';
 
 export async function POST(request: Request) {
   const user = await getChatGPTUser();
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
         result = await resolveCachedFoodAnalysis('usda_foundation', input.query, () => lookupUsdaFoodData(input.query));
         break;
       case 'text':
-        result = analyseTypedFood(input.text);
+        result = (await resolvePersonalFood(user.userId, input.text)) ?? analyseTypedFood(input.text);
         break;
     }
   } catch {

@@ -1,7 +1,8 @@
 import { and, desc, eq, gte } from 'drizzle-orm';
+import { env } from 'cloudflare:workers';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { getDb } from '@/db';
-import { measurements, requestDeduplications } from '@/db/schema';
+import { measurements, requestDeduplications, uploads } from '@/db/schema';
 import {
   measurementCreateRequestSchema,
   measurementsResponseSchema,
@@ -25,6 +26,8 @@ function serializeMeasurement(row: typeof measurements.$inferSelect) {
     source: row.source,
     confirmationStatus: row.confirmationStatus,
     provenance: row.provenance,
+    sourceUploadId: row.sourceUploadId,
+    sourceImageRetained: row.sourceUploadId !== null,
   };
 }
 
@@ -76,6 +79,11 @@ export async function POST(request: Request) {
     : normalizeMeasurement({ metric: parsed.data.metric, value: parsed.data.value, ...(parsed.data.secondaryValue === undefined ? {} : { secondaryValue: parsed.data.secondaryValue }), unit: parsed.data.unit });
 
   const db = getDb();
+  const sourceUpload = parsed.data.sourceUploadId
+    ? (await db.select().from(uploads).where(and(eq(uploads.id, parsed.data.sourceUploadId), eq(uploads.ownerId, user.userId))).limit(1))[0]
+    : null;
+  if (parsed.data.source === 'report_photo' && (!sourceUpload || sourceUpload.kind !== 'measurement_report' || sourceUpload.status !== 'pending' || sourceUpload.expiresAt <= new Date()))
+    return Response.json({ error: 'That private report image is unavailable. Extract it again before confirming this value.' }, { status: 400 });
   const replay = await db
     .select({
       resourceId: requestDeduplications.resourceId,
@@ -121,7 +129,12 @@ export async function POST(request: Request) {
           unit: normalized.unit,
           source: parsed.data.source,
           confirmationStatus: 'confirmed',
-          provenance: 'user_entered',
+          provenance: parsed.data.source === 'report_photo'
+            ? parsed.data.retainSourceImage
+              ? 'user_confirmed_report_image_retained'
+              : 'user_confirmed_report'
+            : 'user_entered',
+          sourceUploadId: parsed.data.retainSourceImage ? sourceUpload?.id ?? null : null,
           occurredAt: new Date(parsed.data.occurredAt),
           createdAt: now,
         }),
@@ -164,6 +177,21 @@ export async function POST(request: Request) {
       { error: 'We could not save this measurement. Please try again.' },
       { status: 500 },
     );
+  }
+  if (sourceUpload) {
+    if (parsed.data.retainSourceImage) {
+      await db.update(uploads).set({
+        status: 'retained',
+        expiresAt: new Date(Date.now() + 10 * 365 * 86_400_000),
+      }).where(and(eq(uploads.id, sourceUpload.id), eq(uploads.ownerId, user.userId), eq(uploads.status, 'pending')));
+    } else {
+      try {
+        await env.FILES.delete(sourceUpload.storageKey);
+        await db.update(uploads).set({ status: 'deleted', deletedAt: new Date() }).where(and(eq(uploads.id, sourceUpload.id), eq(uploads.ownerId, user.userId), eq(uploads.status, 'pending')));
+      } catch {
+        // The upload remains pending and expires soon; the confirmed structured value is never rolled back.
+      }
+    }
   }
   return Response.json({ id, replayed: false }, { status: 201 });
 }

@@ -5,6 +5,7 @@ import { getDb } from '@/db';
 import { uploads } from '@/db/schema';
 import { uploadKindSchema, uploadResponseSchema } from '@/lib/contracts';
 import { imageDimensions, isSupportedImageType } from '@/lib/image-validation';
+import { cleanExpiredPrivateUploads } from '@/lib/upload-expiry-cleanup';
 
 const maxBytes = 10_000_000;
 const expiryMs = 24 * 60 * 60 * 1_000;
@@ -17,6 +18,7 @@ export async function POST(request: Request) {
   const user = await getChatGPTUser();
   if (!user)
     return Response.json({ error: 'Sign in is required.' }, { status: 401 });
+  await cleanExpiredPrivateUploads().catch(() => undefined);
   const formData = await request.formData().catch(() => null);
   const file = formData?.get('file');
   const kind = uploadKindSchema.safeParse(formData?.get('kind'));
@@ -46,6 +48,7 @@ export async function GET() {
   const user = await getChatGPTUser();
   if (!user)
     return Response.json({ error: 'Sign in is required.' }, { status: 401 });
+  await cleanExpiredPrivateUploads().catch(() => undefined);
   const rows = await getDb().select().from(uploads).where(eq(uploads.ownerId, user.userId));
   const now = new Date();
   return Response.json({ uploads: rows.filter((row) => row.status === 'pending' && row.expiresAt > now).map((row) => uploadResponseSchema.parse({ id: row.id, kind: row.kind, contentType: row.contentType, byteSize: row.byteSize, width: row.width, height: row.height, expiresAt: row.expiresAt.toISOString() })) }, { headers: { 'Cache-Control': 'no-store' } });

@@ -96,6 +96,27 @@ export const aiExecutions = sqliteTable(
     index('idx_ai_executions_upload').on(table.uploadId, table.createdAt),
   ],
 );
+export const savedFoods = sqliteTable(
+  'saved_foods',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id').notNull(),
+    kind: text('kind').notNull(),
+    name: text('name').notNull(),
+    nameVi: text('name_vi').notNull(),
+    normalizedName: text('normalized_name').notNull(),
+    nutritionSnapshot: text('nutrition_snapshot', { mode: 'json' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    uniqueIndex('idx_saved_foods_owner_normalized').on(
+      table.ownerId,
+      table.normalizedName,
+    ),
+    index('idx_saved_foods_owner_updated').on(table.ownerId, table.updatedAt),
+  ],
+);
 export const healthFocuses = sqliteTable(
   'health_focuses',
   {
@@ -146,6 +167,7 @@ export const measurements = sqliteTable(
     source: text('source').notNull(),
     confirmationStatus: text('confirmation_status').notNull(),
     provenance: text('provenance').notNull(),
+    sourceUploadId: text('source_upload_id'),
     occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   },
@@ -155,6 +177,7 @@ export const measurements = sqliteTable(
       table.metric,
       table.occurredAt,
     ),
+    index('idx_measurements_owner_source_upload').on(table.ownerId, table.sourceUploadId),
   ],
 );
 export const workoutSessions = sqliteTable(

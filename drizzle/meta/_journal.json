@@ -95,6 +95,12 @@
     { "idx": 15, "version": "6", "when": 1788028698060, "tag": "0015_uploads", "breakpoints": true
     },
     { "idx": 16, "version": "6", "when": 1788028698061, "tag": "0016_ai_executions", "breakpoints": true
+    },
+    { "idx": 17, "version": "6", "when": 1788028698062, "tag": "0017_saved_foods", "breakpoints": true
+    },
+    { "idx": 18, "version": "6", "when": 1788028698063, "tag": "0018_expand_starter_exercise_catalog", "breakpoints": true
+    },
+    { "idx": 19, "version": "6", "when": 1788028698064, "tag": "0019_measurement_source_upload", "breakpoints": true
     }
   ]
 }

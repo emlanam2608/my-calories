@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { measurementCreateRequestSchema, nutritionSnapshotSchema } from './contracts';
+import { accountDeletionRequestSchema, measurementCreateRequestSchema, nutritionSnapshotSchema } from './contracts';
 
 const baseMeasurement = {
   idempotencyKey: 'c1a239b1-6aec-4e9d-a6c8-c18ee8a5d0b4',
@@ -37,6 +37,30 @@ describe('measurement contracts', () => {
       }).success,
     ).toBe(false);
   });
+
+  it('requires a private upload reference for a confirmed report value', () => {
+    expect(
+      measurementCreateRequestSchema.safeParse({
+        ...baseMeasurement,
+        metric: 'custom_lab',
+        label: 'Vitamin D',
+        source: 'report_photo',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('accepts explicit source-image retention only for a report-derived value', () => {
+    expect(
+      measurementCreateRequestSchema.safeParse({
+        ...baseMeasurement,
+        metric: 'custom_lab',
+        label: 'Vitamin D',
+        source: 'report_photo',
+        sourceUploadId: 'c1a239b1-6aec-4e9d-a6c8-c18ee8a5d0b4',
+        retainSourceImage: true,
+      }).success,
+    ).toBe(true);
+  });
 });
 
 describe('additional nutrient contracts', () => {
@@ -64,5 +88,13 @@ describe('additional nutrient contracts', () => {
     });
     expect(parsed.additionalNutrients?.addedSugar?.value).toBe(0);
     expect(parsed.additionalNutrients?.alcohol?.value).toBeNull();
+  });
+});
+
+describe('account deletion contract', () => {
+  it('requires an exact deliberate confirmation phrase', () => {
+    const idempotencyKey = 'c1a239b1-6aec-4e9d-a6c8-c18ee8a5d0b4';
+    expect(accountDeletionRequestSchema.safeParse({ idempotencyKey, confirmation: 'DELETE' }).success).toBe(false);
+    expect(accountDeletionRequestSchema.safeParse({ idempotencyKey, confirmation: 'DELETE MY DATA' }).success).toBe(true);
   });
 });

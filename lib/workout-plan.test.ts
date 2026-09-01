@@ -17,6 +17,11 @@ describe('createStarterWorkoutPlan', () => {
     expect(plan.sessions).toHaveLength(3);
     expect(plan.sessions.every((session) => session.rpe <= 3)).toBe(true);
     expect(plan.sessions.flatMap((session) => session.exerciseIds)).toContain('sit-to-stand');
+    expect(plan.sessions.every((session) => session.warmup.en.length > 0)).toBe(true);
+    expect(plan.sessions.every((session) => session.cooldown.vi.length > 0)).toBe(true);
+    expect(plan.sessions.flatMap((session) => session.prescriptions)).toContainEqual(
+      expect.objectContaining({ exerciseId: 'sit-to-stand', sets: 2, reps: 8, restSeconds: 60 }),
+    );
   });
 
   it('does not generate a plan if a required catalog movement is unavailable', () => {

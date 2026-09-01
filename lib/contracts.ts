@@ -160,6 +160,28 @@ export const foodExtractionResponseSchema = z
     schemaVersion: z.string().trim().min(1).max(40),
   })
   .strict();
+export const savedFoodKindSchema = z.enum(['food', 'recipe']);
+export const savePersonalFoodRequestSchema = z
+  .object({
+    idempotencyKey: z.string().uuid(),
+    kind: savedFoodKindSchema,
+    name: z.string().trim().min(1).max(160),
+    nameVi: z.string().trim().min(1).max(160),
+    nutritionSnapshot: nutritionSnapshotSchema,
+  })
+  .strict();
+export const savedFoodSchema = z
+  .object({
+    id: z.string().uuid(),
+    kind: savedFoodKindSchema,
+    name: z.string().trim().min(1).max(160),
+    nameVi: z.string().trim().min(1).max(160),
+    nutritionSnapshot: nutritionSnapshotSchema,
+    updatedAt: z.string().datetime({ offset: true }),
+  })
+  .strict();
+export const savedFoodsResponseSchema = z.object({ savedFoods: z.array(savedFoodSchema).max(100) });
+export const deleteSavedFoodRequestSchema = z.object({ idempotencyKey: z.string().uuid() }).strict();
 export const createMealRequestSchema = z.object({
   idempotencyKey: z.string().uuid(),
   name: z.string().trim().min(1).max(160),
@@ -301,7 +323,12 @@ export const measurementMetricSchema = z.enum([
   'uric_acid',
   'custom_lab',
 ]);
-export const measurementSourceSchema = z.literal('manual');
+export const measurementSourceSchema = z.enum(['manual', 'report_photo']);
+export const measurementProvenanceSchema = z.enum([
+  'user_entered',
+  'user_confirmed_report',
+  'user_confirmed_report_image_retained',
+]);
 export const measurementCreateRequestSchema = z
   .object({
     idempotencyKey: z.string().uuid(),
@@ -312,6 +339,8 @@ export const measurementCreateRequestSchema = z
     unit: z.string().trim().min(1).max(16),
     occurredAt: z.string().datetime({ offset: true }),
     source: measurementSourceSchema,
+    sourceUploadId: z.string().uuid().optional(),
+    retainSourceImage: z.boolean().optional(),
   })
   .superRefine((value, context) => {
     if (
@@ -347,6 +376,18 @@ export const measurementCreateRequestSchema = z
         path: ['label'],
         message: 'Only custom lab results can have a custom label.',
       });
+    if (value.source === 'report_photo' && value.sourceUploadId === undefined)
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['sourceUploadId'],
+        message: 'A confirmed report image is required for report-derived values.',
+      });
+    if (value.source === 'manual' && (value.sourceUploadId !== undefined || value.retainSourceImage))
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['source'],
+        message: 'Only report-derived values can retain a source image.',
+      });
   });
 export const measurementSchema = z.object({
   id: z.string().uuid(),
@@ -358,11 +399,17 @@ export const measurementSchema = z.object({
   occurredAt: z.string().datetime({ offset: true }),
   source: measurementSourceSchema,
   confirmationStatus: z.literal('confirmed'),
-  provenance: z.literal('user_entered'),
+  provenance: measurementProvenanceSchema,
+  sourceUploadId: z.string().uuid().nullable(),
+  sourceImageRetained: z.boolean(),
 });
 export const measurementsResponseSchema = z.object({
   measurements: z.array(measurementSchema),
 });
+export const measurementExtractionItemSchema = z.object({ metric: measurementMetricSchema, label: z.string().trim().min(1).max(80).nullable(), value: z.number().finite().positive().max(100_000).nullable(), secondaryValue: z.number().finite().positive().max(100_000).nullable(), unit: z.string().trim().min(1).max(16).nullable(), occurredAt: z.string().datetime({ offset: true }).nullable(), context: z.enum(['fasting', 'post_meal', 'unknown']), confidence: z.number().int().min(0).max(100) }).strict();
+export const measurementExtractionProposalSchema = z.object({ measurements: z.array(measurementExtractionItemSchema).min(1).max(20), unresolvedQuestions: z.array(z.string().trim().min(1).max(180)).max(6), manualReviewRequired: z.boolean() }).strict();
+export const extractMeasurementRequestSchema = z.object({ uploadId: z.string().uuid() }).strict();
+export const measurementExtractionResponseSchema = z.object({ proposal: measurementExtractionProposalSchema, model: z.string().trim().min(1).max(100), promptVersion: z.string().trim().min(1).max(40), schemaVersion: z.string().trim().min(1).max(40) }).strict();
 export const workoutReadinessFlagSchema = z.enum(workoutReadinessFlagKeys);
 export const workoutReadinessRequestSchema = z.object({
   idempotencyKey: z.string().uuid(),
@@ -382,12 +429,33 @@ const localizedTextSchema = z.object({
   en: z.string().trim().min(1).max(500),
   vi: z.string().trim().min(1).max(500),
 });
+const workoutPrescriptionSchema = z
+  .object({
+    exerciseId: z.string().trim().min(1).max(80),
+    sets: z.number().int().min(1).max(10).optional(),
+    reps: z.number().int().min(1).max(100).optional(),
+    durationMinutes: z.number().int().min(1).max(180).optional(),
+    restSeconds: z.number().int().min(0).max(300).optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.sets === undefined && value.durationMinutes === undefined)
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Each prescription needs sets or a duration.',
+      });
+    if ((value.sets === undefined) !== (value.reps === undefined))
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Strength prescriptions need both sets and reps.',
+      });
+  });
 export const workoutPlanSchema = z.object({
   planVersion: z.literal('starter-plan-1'),
   periodStart: z.string().date(),
   sessions: z
     .array(
-      z.object({
+      z
+        .object({
         id: z.string().trim().min(1).max(80),
         dayOffset: z.number().int().min(0).max(6),
         title: localizedTextSchema,
@@ -396,7 +464,21 @@ export const workoutPlanSchema = z.object({
         rationale: localizedTextSchema,
         exerciseIds: z.array(z.string().trim().min(1).max(80)).min(1).max(8),
         safetyNote: localizedTextSchema,
-      }),
+        warmup: localizedTextSchema.optional(),
+        cooldown: localizedTextSchema.optional(),
+        prescriptions: z.array(workoutPrescriptionSchema).min(1).max(8).optional(),
+        progressionCriteria: localizedTextSchema.optional(),
+      })
+        .superRefine((session, context) => {
+          session.prescriptions?.forEach((prescription, index) => {
+            if (!session.exerciseIds.includes(prescription.exerciseId))
+              context.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['prescriptions', index, 'exerciseId'],
+                message: 'Each prescription must reference a session exercise.',
+              });
+          });
+        }),
     )
     .min(1)
     .max(7),
@@ -478,8 +560,41 @@ export const workoutLogSchema = z.object({
 export const workoutLogsResponseSchema = z.object({ logs: z.array(workoutLogSchema) });
 export const workoutCheckinRequestSchema = z.object({ idempotencyKey: z.string().uuid(), planId: z.string().uuid() });
 export const workoutCheckinSchema = z.object({ id: z.string().uuid(), planId: z.string().uuid(), action: z.enum(['hold_for_review', 'repeat', 'maintain']), plannedSessions: z.number().int().min(1), completedSessions: z.number().int().min(0), safetyFlag: z.boolean(), createdAt: z.string().datetime({ offset: true }) });
+export const analyticsResponseSchema = z.object({
+  periodDays: z.number().int().min(7).max(90),
+  dailyNutrition: z.array(z.object({ date: z.string().date(), calories: z.number().min(0), protein: z.number().min(0), fiber: z.number().min(0), sodium: z.number().min(0), mealCount: z.number().int().min(0) })),
+  measurementTrends: z.array(z.object({ metric: measurementMetricSchema, unit: z.string().trim().min(1).max(16), sampleSize: z.number().int().min(1), firstValue: z.number().finite().positive(), lastValue: z.number().finite().positive(), change: z.number().finite() })),
+  workout: z.object({ completedSessions: z.number().int().min(0), stoppedForSafety: z.number().int().min(0), totalMinutes: z.number().int().min(0) }),
+  completeness: z.object({ observedDays: z.number().int().min(0).max(90), coveragePercent: z.number().int().min(0).max(100) }),
+});
+export const reminderKindSchema = z.enum(['meal', 'workout', 'measurement', 'weekly_review']);
+const reminderDaySchema = z.enum(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']);
+const reminderTimeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+export const reminderScheduleSchema = z.object({
+  timezone: z.literal('Asia/Bangkok'),
+  time: reminderTimeSchema,
+  days: z.array(reminderDaySchema).min(1).max(7),
+  quietHours: z.object({ start: reminderTimeSchema, end: reminderTimeSchema }).strict().optional(),
+}).superRefine((value, context) => {
+  if (new Set(value.days).size !== value.days.length)
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['days'], message: 'Each reminder day can only be selected once.' });
+});
+export const reminderCreateRequestSchema = z.object({ idempotencyKey: z.string().uuid(), kind: reminderKindSchema, schedule: reminderScheduleSchema }).strict();
+export const reminderActionRequestSchema = z.discriminatedUnion('action', [
+  z.object({ idempotencyKey: z.string().uuid(), action: z.enum(['pause', 'resume', 'delete']) }).strict(),
+  z.object({ idempotencyKey: z.string().uuid(), action: z.literal('snooze'), minutes: z.union([z.literal(15), z.literal(30), z.literal(60), z.literal(180)]) }).strict(),
+  z.object({ idempotencyKey: z.string().uuid(), action: z.literal('reschedule'), schedule: reminderScheduleSchema }).strict(),
+]);
+export const reminderSchema = z.object({ id: z.string().uuid(), kind: reminderKindSchema, schedule: reminderScheduleSchema, nextDeliveryAt: z.string().datetime({ offset: true }), status: z.enum(['active', 'paused']) });
+export const remindersResponseSchema = z.object({ reminders: z.array(reminderSchema).max(50) });
+export const accountDeletionRequestSchema = z.object({
+  idempotencyKey: z.string().uuid(),
+  confirmation: z.literal('DELETE MY DATA'),
+}).strict();
 export type FoodAnalysis = z.infer<typeof foodAnalysisSchema>;
 export type FoodExtractionProposal = z.infer<typeof foodExtractionProposalSchema>;
+export type SavedFood = z.infer<typeof savedFoodSchema>;
+export type SavePersonalFoodRequest = z.infer<typeof savePersonalFoodRequestSchema>;
 export type HealthFinding = z.infer<typeof healthFindingSchema>;
 export type HealthFocus = z.infer<typeof healthFocusSchema>;
 export type MealCreateRequest = z.infer<typeof createMealRequestSchema>;
@@ -490,6 +605,7 @@ export type ProfileTargetsUpdateRequest = z.infer<
   typeof updateProfileTargetsRequestSchema
 >;
 export type Measurement = z.infer<typeof measurementSchema>;
+export type MeasurementExtractionProposal = z.infer<typeof measurementExtractionProposalSchema>;
 export type MeasurementCreateRequest = z.infer<
   typeof measurementCreateRequestSchema
 >;
@@ -500,3 +616,5 @@ export type WorkoutPlanResponse = z.infer<typeof workoutPlanResponseSchema>;
 export type WorkoutLog = z.infer<typeof workoutLogSchema>;
 export type WorkoutLogRequest = z.infer<typeof workoutLogRequestSchema>;
 export type WorkoutCheckin = z.infer<typeof workoutCheckinSchema>;
+export type Analytics = z.infer<typeof analyticsResponseSchema>;
+export type Reminder = z.infer<typeof reminderSchema>;

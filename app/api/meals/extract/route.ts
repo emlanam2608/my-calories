@@ -14,6 +14,7 @@ import {
   OpenAIExtractionError,
 } from '@/lib/openai-food-extraction';
 import { consumeRequestQuota } from '@/lib/request-quota';
+import { cleanExpiredPrivateUploads } from '@/lib/upload-expiry-cleanup';
 
 const feature = 'food_image_extraction';
 const fallbackModel = 'gpt-5.6-luna';
@@ -44,6 +45,7 @@ async function recordExecution(input: {
 export async function POST(request: Request) {
   const user = await getChatGPTUser();
   if (!user) return Response.json({ error: 'Sign in is required.' }, { status: 401 });
+  await cleanExpiredPrivateUploads().catch(() => undefined);
 
   const quota = consumeRequestQuota(feature, user.userId, {
     limit: 10,

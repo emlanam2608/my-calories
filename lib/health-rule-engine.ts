@@ -2,7 +2,7 @@ import type { FoodAnalysis, HealthFinding, HealthFocus } from './contracts';
 
 type NutrientTotals = { calories: number; protein: number; fiber: number; sodium: number };
 
-const ruleVersion = 'meal-starter-rules-3';
+const ruleVersion = 'meal-starter-rules-4';
 const source = 'Conservative personal-tracking starter rules';
 const highPurineSignals = [
   'organ meat', 'liver', 'kidney', 'gan', 'thận', 'red meat', 'beef', 'thịt bò',
@@ -78,6 +78,13 @@ export function evaluateMealHealthFindings(
     observedValue: totals.calories, observedUnit: 'kcal', targetValue: null, targetUnit: 'personal target needed', evidenceSource: source,
     text: 'This is an energy-dense serving. Its fit depends on your own daily target, hunger, activity, and clinician guidance.',
     suggestedActions: ['Check portion size and calorie-dense sauces or cooking oil.', 'If helpful, split the serving or pair it with lower-energy vegetables.'],
+  });
+
+  if (totals.protein < 15 && totals.calories >= 500) findings.push({
+    condition: 'weight_management', severity: 'info', ruleCode: 'meal-protein-under-15g', ruleVersion,
+    observedValue: totals.protein, observedUnit: 'g protein', targetValue: null, targetUnit: 'personal target needed', evidenceSource: source,
+    text: 'This serving has relatively little reported protein for its energy amount. Whether it fits your needs depends on your total day, preferences, activity, and clinician guidance.',
+    suggestedActions: ['If it suits your eating pattern, add a protein-rich food and check the serving size.', 'Review your daily protein target rather than judging one meal alone.'],
   });
 
   const purineMatches = highPurineSignals.filter((signal) => ingredients.some((ingredient) => ingredient.toLocaleLowerCase('vi-VN').includes(signal)));

@@ -16,7 +16,7 @@ describe('evaluateMealHealthFindings', () => {
       'meal-energy-750kcal',
     ]);
     expect(findings.map((finding) => finding.severity)).toEqual(['attention', 'info', 'info', 'info']);
-    expect(findings.every((finding) => finding.ruleVersion === 'meal-starter-rules-3')).toBe(true);
+    expect(findings.every((finding) => finding.ruleVersion === 'meal-starter-rules-4')).toBe(true);
   });
 
   it('does not treat an exact 3 g of fiber as low fiber', () => {
@@ -63,5 +63,16 @@ describe('evaluateMealHealthFindings', () => {
       'meal-added-sugar-20g',
       'meal-saturated-fat-5g',
     ]);
+  });
+
+  it('flags low protein only when the meal is energy substantial', () => {
+    expect(
+      evaluateMealHealthFindings({ calories: 500, protein: 14.9, fiber: 4, sodium: 0 })
+        .map((finding) => finding.ruleCode),
+    ).toContain('meal-protein-under-15g');
+    expect(
+      evaluateMealHealthFindings({ calories: 499, protein: 0, fiber: 4, sodium: 0 })
+        .map((finding) => finding.ruleCode),
+    ).not.toContain('meal-protein-under-15g');
   });
 });

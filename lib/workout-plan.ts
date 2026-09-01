@@ -9,6 +9,16 @@ export type WorkoutPlanSession = {
   rationale: { en: string; vi: string };
   exerciseIds: string[];
   safetyNote: { en: string; vi: string };
+  warmup: { en: string; vi: string };
+  cooldown: { en: string; vi: string };
+  prescriptions: Array<{
+    exerciseId: string;
+    sets?: number;
+    reps?: number;
+    durationMinutes?: number;
+    restSeconds?: number;
+  }>;
+  progressionCriteria: { en: string; vi: string };
 };
 
 export type WorkoutPlanDraft = {
@@ -27,6 +37,21 @@ export type WorkoutPlanPreferences = {
 const safetyNote = {
   en: 'Stop if you develop concerning symptoms. Do not progress this plan without a scheduled check-in.',
   vi: 'Dừng lại nếu xuất hiện triệu chứng đáng lo. Không tăng tiến kế hoạch này nếu chưa có lần đánh giá định kỳ.',
+};
+
+const starterProgression = {
+  en: 'Keep this prescription unchanged until a scheduled check-in confirms good adherence and no pain or concerning symptoms.',
+  vi: 'Giữ nguyên chỉ định này cho đến khi lần đánh giá định kỳ xác nhận tuân thủ tốt và không có đau hoặc triệu chứng đáng lo.',
+};
+
+const strengthWarmup = {
+  en: 'Warm up with 3 minutes of easy marching and comfortable joint movements.',
+  vi: 'Khởi động 3 phút đi tại chỗ nhẹ nhàng và vận động khớp thoải mái.',
+};
+
+const strengthCooldown = {
+  en: 'Cool down with 3 minutes of slow breathing and easy mobility.',
+  vi: 'Thả lỏng 3 phút bằng hít thở chậm và vận động linh hoạt nhẹ.',
 };
 
 function requireExercises(catalog: ExerciseCatalogEntry[], ids: string[]) {
@@ -51,7 +76,7 @@ export function selectableWorkoutExercises(
             : item === 'bodyweight'
               ? ['wall']
               : item === 'gym'
-                ? ['exercise mat', 'chair', 'wall', 'bicycle', 'mini treadmill', 'resistance band']
+                ? ['exercise mat', 'chair', 'wall', 'bicycle', 'mini treadmill', 'resistance band', 'dumbbells', 'gym', 'cable machine']
                 : [item],
     ),
   );
@@ -131,6 +156,13 @@ export function createStarterWorkoutPlan(
           },
           exerciseIds: requireExercises(selectedCatalog, [mobility, strength]),
           safetyNote: note,
+          warmup: strengthWarmup,
+          cooldown: strengthCooldown,
+          prescriptions: [
+            { exerciseId: mobility, durationMinutes: 4 },
+            { exerciseId: strength, sets: 2, reps: 8, restSeconds: 60 },
+          ],
+          progressionCriteria: starterProgression,
         },
         {
           id: 'starter-strength-b',
@@ -144,6 +176,13 @@ export function createStarterWorkoutPlan(
           },
           exerciseIds: requireExercises(selectedCatalog, [mobility, strength]),
           safetyNote: note,
+          warmup: strengthWarmup,
+          cooldown: strengthCooldown,
+          prescriptions: [
+            { exerciseId: mobility, durationMinutes: 4 },
+            { exerciseId: strength, sets: 2, reps: 8, restSeconds: 60 },
+          ],
+          progressionCriteria: starterProgression,
         },
       ]
     : [
@@ -159,6 +198,10 @@ export function createStarterWorkoutPlan(
           },
           exerciseIds: requireExercises(selectedCatalog, [mobility]),
           safetyNote: note,
+          warmup: strengthWarmup,
+          cooldown: strengthCooldown,
+          prescriptions: [{ exerciseId: mobility, durationMinutes: 10 }],
+          progressionCriteria: starterProgression,
         },
         {
           id: 'starter-mobility-b',
@@ -172,6 +215,10 @@ export function createStarterWorkoutPlan(
           },
           exerciseIds: requireExercises(selectedCatalog, [mobility]),
           safetyNote: note,
+          warmup: strengthWarmup,
+          cooldown: strengthCooldown,
+          prescriptions: [{ exerciseId: mobility, durationMinutes: 10 }],
+          progressionCriteria: starterProgression,
         },
       ];
   const aerobicSession: WorkoutPlanSession = {
@@ -186,6 +233,16 @@ export function createStarterWorkoutPlan(
     },
     exerciseIds: requireExercises(selectedCatalog, [aerobic]),
     safetyNote: note,
+    warmup: {
+      en: 'Start with 3 minutes at an easy pace before the main aerobic work.',
+      vi: 'Bắt đầu 3 phút ở nhịp độ nhẹ trước phần aerobic chính.',
+    },
+    cooldown: {
+      en: 'Finish with 3 minutes at an easy pace and slow breathing.',
+      vi: 'Kết thúc 3 phút ở nhịp độ nhẹ và hít thở chậm.',
+    },
+    prescriptions: [{ exerciseId: aerobic, durationMinutes: 14 }],
+    progressionCriteria: starterProgression,
   };
   const selectedSessions = [strengthSessions[0], aerobicSession, strengthSessions[1]]
     .slice(0, Math.min(preferences.availableDays?.length ?? 3, 3));

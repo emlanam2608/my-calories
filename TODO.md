@@ -1,165 +1,200 @@
 # Nourishwell implementation tracker
 
-Last reviewed: 2026-08-31
+Last reviewed: 2026-09-01
 
-Implementation details, task ordering, safety constraints, acceptance criteria, and likely files are maintained in [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md). Agents should read it before starting the next unchecked task.
+This is the status ledger. Read [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) before implementing an unchecked item. Work from the top of the **Next execution queue**, complete one bounded slice at a time, and update both documents when facts change.
 
-This file tracks the gap between the current interactive prototype and the planned private nutrition and fitness coach. Check an item only after the behavior is implemented, tested, and no longer uses placeholder data.
+## Working agreement
 
-## Current status
+- Keep each slice commit-ready, but do not commit, push, or deploy unless the user explicitly asks in the current conversation.
+- Preserve ChatGPT authentication, D1 ownership filters, private R2 storage, Zod contracts, immutable health snapshots, confirmation gates, and English/Vietnamese copy.
+- Do not enter real sensitive health data or describe the app as production-ready while the release blockers below remain open.
+- A checked item means the behavior exists and has proportional tests. A starter or partial implementation stays unchecked and must say what is missing.
 
-- [x] Scaffold the TypeScript Sites application with shadcn, ChatGPT authentication capability, D1, and R2 bindings.
-- [x] Build responsive Today, Capture, Measurements, Workouts, and Settings surfaces.
-- [x] Add a mobile navigation flow and initial English/Vietnamese navigation labels.
-- [x] Add editable meal-review UI with confidence/source labels plus per-review nutrient, serving-assumption, and ingredient correction before confirmation.
-- [x] Add initial D1 schema and migration for profiles, targets, meals, measurements, workout sessions, and reminders.
-- [x] Add safe-language UI disclaimers and visible stop-training warnings.
-- [x] Pass TypeScript validation with `npx tsc --noEmit --incremental false`.
-- [x] Protect the dashboard and meal APIs with ChatGPT sign-in checks.
-- [x] Add Zod validation for the typed-meal analysis and save contracts.
-- [x] Persist confirmed typed meals in D1 with immutable nutrition snapshots, owner filtering, and idempotency records.
-- [x] Replace the meal log’s browser-only state with authenticated API reads and writes.
-- [x] Add a review-first deterministic typed-food estimate with visible confidence, serving assumptions, source version, and safety note.
-- [x] Load nutrition targets from the authenticated profile endpoint and apply clinician-defined, user-defined, then guideline-default precedence.
-- [x] Add private target settings that persist user-defined calories, protein, fiber, and sodium with validation and idempotency; clinician-defined targets remain authoritative.
-- [x] Add authenticated manual measurement entry and private history for weight, blood pressure, glucose, cholesterol, and uric acid.
-- [x] Add unit coverage for target precedence and deterministic meal-level health rules.
-- [ ] Replace all hard-coded demo data and client-only state with authenticated server data.
-- [ ] Complete the bilingual product; most page content is currently English-only.
+## Verified baseline
 
-## P0 - Private, persistent foundation
+- [x] TypeScript Sites/Vinext app with shadcn, ChatGPT sign-in, D1, private R2, PWA metadata, offline shell, and bilingual copy infrastructure.
+- [x] Seven working surfaces: Today, Capture, Coach, Measurements, Workouts, Progress, and Settings.
+- [x] Twenty-seven API route files with authenticated handlers for profile, meals, uploads, measurements, workouts, reminders, analytics, exports, saved foods, and deletion.
+- [x] Resumable profile/onboarding storage for goals, demographics, activity, sleep, availability, equipment, environments, and structured clinician restrictions.
+- [x] AES-GCM storage for medication, clinician, and symptom notes with key versioning and owner-only decryption.
+- [x] Target precedence: clinician-defined, then user-defined, then conservative guideline defaults.
+- [x] Text, provider-search, barcode-camera, meal-photo, and nutrition-label capture all lead to an editable review before save.
+- [x] Open Food Facts, USDA FoodData Central, and Vietnam nutrition portal adapters with provenance, caching, provider resilience, and manual fallback.
+- [x] Immutable meal snapshots preserve serving assumptions, source/version, confidence, availability state, and reported additional nutrients.
+- [x] Private transient uploads validate type/header/dimensions, enforce ownership, expire, and delete after confirmed extraction by default.
+- [x] Manual measurements plus report-photo proposals for weight, BP, glucose, cholesterol, uric acid, and custom labs; every value remains editable and confirm-before-save.
+- [x] Explicit report-image retention consent and later deletion without deleting the confirmed measurement.
+- [x] Deterministic, concern-specific starter findings for energy, protein, fiber, sodium, carbohydrate, sugar, saturated fat, alcohol, and purine ingredient signals.
+- [x] Readiness-gated, equipment-filtered starter workout plan; explicit plan confirmation; detailed workout logs; conservative weekly check-in.
+- [x] Private saved-food/recipe reuse and deletion.
+- [x] Read-only deterministic Coach guidance; it does not mutate records and is not yet AI coach chat.
+- [x] Owner-scoped 30-day starter analytics with non-causal trend language and sample sizes.
+- [x] Private reminder CRUD, pause/resume, reschedule, one-hour snooze, quiet-hours deferral, and Today agenda preview.
+- [x] Date-range CSV/PDF clinician downloads, a versioned private JSON archive, and typed-confirmation account-data deletion.
+- [x] Current local validation: full Oxlint passes; TypeScript passes; 33 test files / 107 tests pass; production Vinext/Sites build passes; production dependency audit reports zero vulnerabilities.
 
-- [x] Require ChatGPT sign-in on every currently implemented private page and server endpoint; future endpoints must preserve this invariant.
-- [x] Add server-side ownership checks for every currently implemented user-owned read and mutation; uploads, exports, and deletion remain unimplemented.
-- [x] Add Zod request and response contracts for currently implemented product API boundaries.
-- [x] Require idempotency keys on currently implemented durable write endpoints; complete audit metadata remains pending.
-- [ ] Add D1 repositories and API routes for profiles, targets, meals, measurements, plans, workout logs, coach messages, reminders, analytics, and exports.
-- [ ] Replace React-only meal, workout, settings, and coach state with TanStack Query backed by those endpoints.
-- [ ] Expand the schema for conditions, allergies, medications, injuries, symptoms, clinician restrictions, food aliases, recipes, meal items, nutrient snapshots, exercise catalog, plans, sessions, sets, coach reviews, push subscriptions, uploads, and AI/rule execution records.
-- [x] Change numeric health targets and measurement values from text storage to validated numeric/scaled fields before real data is collected.
-- [ ] Add confirmation state and provenance to measurements and all AI-derived records.
-- [ ] Add application-level encryption for health notes and medication fields.
-- [ ] Add database indexes for every owner-and-date dashboard and analytics query.
-- [ ] Restore a complete Drizzle migration metadata snapshot so future migrations are reproducible.
-- [x] Add an `.env.example` containing runtime key names only, with no secrets.
-- [x] Configure a production Sites project ID with D1 and R2 logical bindings.
-- [ ] Verify a real private Sites deployment reaches `succeeded` and enforces intended access.
+## Current non-claims and known debt
 
-## P0 - Safety and deterministic health rules
+- [x] Full repository Oxlint is clean. The 19 generated shadcn/mobile-hook findings are narrowly baselined by exact file and rule; authored product code retains the full rule set.
+- [x] Dependency review is complete for S0. Production audit is clean; four moderate, fix-unavailable development-only Drizzle Kit/esbuild advisories are accepted and documented in `docs/dependency-risk.md`.
+- [x] Migration metadata is reproducible under the documented SQL-first policy; the journal and clean-D1 schema/index verification cover migrations `0000`–`0019`.
+- [x] Route-level authentication, wrong-owner, idempotency replay, deletion-completeness, and archive-isolation tests exist.
+- [x] `app/dashboard.tsx` is a 492-line composition shell. Seven surfaces, read bootstrap, mutations, and browser effects are extracted into focused modules under `components/dashboard/` and `lib/`.
+- [x] Authored presentation copy is bilingual. Provider values and rule-returned provenance remain source data and are intentionally not silently translated.
+- [ ] Reminder notifications are delivered. Only the private in-app agenda exists; there is no push subscription, delivery worker, missed-item processing, or history.
+- [ ] Coach is an AI chat. The current Coach is deterministic, read-only guidance without `CoachRecommendation` persistence.
+- [ ] Workout adaptation is individualized. The current plan remains a conservative three-session starter template.
+- [ ] Progress analytics are complete. Current analytics do not yet calculate target adherence, workout volume, cardio consistency, recovery, goal progress, or confidence estimates.
+- [ ] A private production deployment has been verified. Local build success is not deployment evidence.
 
-- [ ] Connect medication-risk screening and clinician-note interpretation to workout safety without exposing encrypted notes to reminders or AI by default. The owner-scoped AES-GCM storage/API, Settings editor, and key-versioned D1 migration are implemented; food preferences, allergies, tracking contexts, and structured injuries/symptoms are captured.
-- [x] Add resumable, authenticated structured onboarding storage and API plus a bilingual Settings flow for goal, demographics, activity, sleep, training history, availability, equipment, environments, and enumerated clinician exercise restrictions. Encrypted medication/clinical notes and richer health-profile fields remain pending.
-- [x] Require completed profile planning basics before workout-plan preview or confirmation, filter the starter plan by saved equipment and `avoid_resistance`, and reject stale confirmations that no longer match those saved restrictions.
-- [x] Schedule the conservative starter-plan sessions only on the owner’s saved available training days and reject a stale confirmation whose session days no longer match.
-- [x] Pause workout-plan preview/confirmation for reported chest discomfort, dizziness, or shortness of breath, and exclude catalog exercises tagged for reported balance or joint concerns.
-- [x] Implement target authority precedence: clinician-defined, then user-defined, then guideline default.
-- [x] Add versioned deterministic meal-level checks for sodium, fiber, and energy, shown as non-diagnostic condition-specific findings that never change nutrient facts.
-- [x] Add evidence-limited deterministic checks for reported carbohydrates, added sugar, saturated fat, and alcohol; missing fields produce data-limit messaging rather than inferred values.
-- [x] Add private, persistent health-focus selection for blood pressure, cholesterol, blood glucose, and uric acid; meal reviews filter checks to selected focuses.
-- [x] Add a private, persistent readiness and contraindication screen before any workout plan is generated; reported red flags pause plan generation and show professional/urgent-care guidance.
-- [ ] Implement versioned deterministic rules for calories, protein, fiber, carbohydrates, added sugar, sodium, saturated fat, hydration, alcohol, micronutrients, and purine-risk categories.
-- [x] Return separate starter findings for blood pressure, cholesterol, blood glucose, uric acid, and weight management without one opaque health score; expand nutrient/rule coverage before marking the full engine complete.
-- [ ] Disable affected recommendations when red flags, unsafe glucose readings, pain, concerning symptoms, medication risks, or clinician restrictions apply.
-- [ ] Add urgent/professional-care guidance copy for each reviewed red-flag scenario.
-- [ ] Keep measured facts, database values, estimates, deterministic findings, and AI explanations visibly distinct in the UI and stored records.
-- [ ] Ensure AI explanations cannot alter nutrient values, diagnose, change medication, or override safety rules.
+## Next execution queue — do these in order
 
-## P1 - Nutrition vertical slice
+### S0.1 — Harden measurement-report AI extraction (complete 2026-09-01)
 
-- [ ] Define and test the strict `FoodAnalysis`, `NutritionSnapshot`, and `HealthFinding` schemas.
-- [x] Add a strict, private OpenAI Responses image-extraction adapter with `store: false`, identity-free image/text inputs, a configurable `OPENAI_EXTRACTION_MODEL` defaulting to `gpt-5.6-luna`, schema validation, bounded timeout, manual-review failures, redacted execution metadata, and a bilingual handoff into the existing editable meal review.
-- [ ] Upload meal and label photos to private R2 with authorization, expiry, deletion, and redacted logs.
-- [x] Add authenticated private R2 upload APIs with random keys, D1 ownership/expiry metadata, JPEG/PNG/WebP header and dimension validation, owner-only fetch, explicit deletion, and a bilingual Capture UI for meal/label photos. Extraction linkage, automatic post-confirmation deletion, and scheduled expiry cleanup remain pending.
-- [ ] Add a real barcode scanner/capture path.
-- [ ] Resolve confirmed user recipes and foods before external providers.
-- [x] Integrate Open Food Facts for packaged-food barcode lookup, ingredient text, and available label nutrition; missing records remain manual-review entries.
-- [x] Integrate direct Vietnam Institute of Nutrition portal lookups for Vietnamese dishes and ingredients, with database basis, provenance, and mandatory review.
-- [x] Integrate USDA FoodData Central Foundation Foods search for generic ingredients and detailed nutrients, gated by a private `USDA_FDC_API_KEY`.
-- [ ] Import and normalize a licensed/approved Vietnamese food composition catalog.
-- [x] Add editable manual nutrient entry when a barcode has no trustworthy match.
-- [x] Cache normalized provider matches and AI-independent nutrient results in D1 for seven days, using hashed cache keys and no personal meal records.
-- [x] Add provider timeouts, bounded retry/backoff, a best-effort circuit breaker, and editable manual-entry fallback for unavailable food providers.
-- [x] Add a private per-owner, per-feature analysis quota with retry timing; it is intentionally best-effort per worker isolate until production distributed limits are configured.
-- [x] Record serving assumptions, provider reference, source version, estimation level, barcode, and confidence in immutable meal snapshots.
-- [x] Extend immutable snapshots with optional additional-nutrient records that preserve source-reported zero versus unavailable data; USDA, Open Food Facts, and Vietnam portal results map available carbohydrates, sugars, fats, selected minerals, alcohol, and water. Broader rules remain pending.
-- [x] Send malformed, ambiguous, unmatched-barcode, and low-confidence results to review; never auto-save them.
-- [x] Aggregate confirmed meals into the Today dashboard and remaining personal targets.
-- [x] Generate deterministic concern-specific meal findings and practical substitutions for sodium, fiber patterns, meal energy, and detected purine-risk ingredients; glucose and purine checks state their data limits.
-- [ ] Add durable distributed quotas for food providers and future AI work before multi-device or multi-user release.
+- [x] Add a bounded timeout/abort path to `lib/openai-measurement-extraction.ts` and classify timeout separately from provider failure.
+- [x] Apply the existing per-owner/per-feature request quota before reading R2 bytes or calling OpenAI.
+- [x] Return retry timing for quota exhaustion and `503` for timeout/provider unavailability; preserve manual entry.
+- [x] Add adapter tests for timeout, refusal, malformed JSON, low-confidence/manual review, and prompt-injection text.
+- [x] Record one redacted execution row per attempt without storing image text, identity, or hidden reasoning.
 
-## P1 - Measurements and coach
+Validation: `npx tsc --noEmit --incremental false`, `npm test` (22 files / 64 tests), `npm run build`, `git diff --check`, and focused ESLint all passed. Next: S0.2.
 
-- [x] Implement manual weight, blood pressure, glucose, cholesterol, and uric acid entry in validated standard units.
-- [x] Add custom lab entry with a user-provided test name, unit, and timestamp.
-- [x] Add safe analyte-specific unit conversion for weight, glucose, cholesterol, and uric acid; custom labs remain unit-preserving and are never inferred.
-- [ ] Implement confirm-before-save extraction from measurement and report photos.
-- [ ] Delete source report images after confirmation by default; retain only with explicit consent.
-- [ ] Build the permission-checked compact context supplied to coach chat.
-- [ ] Implement evidence-linked `CoachRecommendation` records that require confirmation before changing meals, targets, or plans.
-- [ ] Make the nuanced coach model configurable, defaulting to `gpt-5.6-terra`.
-- [ ] Add weekly nutrition reviews and safe substitution suggestions.
-- [ ] Record model, prompt, rule, and provider versions without hidden reasoning or sensitive prompt contents.
-- [ ] Add prompt-injection defenses for untrusted food labels, reports, and coach input.
+### S0.2 — Reminder replay correctness (complete 2026-09-01)
 
-## P1 - Professional PT system
+- [x] Fix reminder action replay so it returns the current `Reminder` response instead of only an ID; the client must never replace a reminder with `undefined`. Route tests cover anonymous rejection, owner-scoped replay, all five actions, delete replay, and wrong-resource key reuse.
 
-- [ ] Create and review a bilingual exercise catalog for bodyweight, mobility, bicycle, mini treadmill, resistance bands, dumbbells, and gym equipment.
-- [x] Add a versioned, bilingual starter catalog for mobility, bodyweight, bicycle, mini treadmill, and resistance-band movements; it is not yet clinician-reviewed or comprehensive.
-- [x] Store technique, regressions, progressions, equipment, muscle groups, contraindication tags, and substitutions for each starter-catalog exercise.
-- [ ] Generate weekly plans with warm-up, strength, aerobic work, mobility, cooldown, duration, sets/reps, rest, RPE, rationale, progression criteria, and safety checks.
-- [x] Add a readiness-gated, deterministic three-session starter-week preview and explicit-confirmation save flow with duration, RPE, rationale, selected exercises, and stop-training guidance; warm-ups, cooldowns, sets/reps, and individual adaptation remain to be added.
-- [x] Log completion, sets, reps, load, duration, heart rate, RPE, pain, symptoms, enjoyment, and optional pre/post-workout glucose.
-- [x] Persist owner-scoped completion logs for confirmed-plan sessions with sets, reps, load, duration, heart rate, RPE, enjoyment, pain, concerning-symptom flags, and optional pre/post-exercise glucose.
-- [ ] Adapt only at scheduled check-ins using adherence and recovery: progress, maintain, deload, or substitute.
-- [x] Add a persistent, user-triggered weekly check-in that uses logged adherence and safety flags to recommend hold, repeat, or maintain; it never mutates a plan automatically and progression/deload/substitution remain to be added.
-- [ ] Make equipment and environment changes regenerate safe equivalents only after user confirmation.
-- [x] Replace the browser-only workout completion state with persistent, confirmed plan and session-log records; plan generation remains a fixed starter template.
+S0.2 validation: `npx tsc --noEmit --incremental false`, `npm test` (23 files / 69 tests), `npm run build`, `git diff --check`, and focused Oxlint all passed.
 
-## P2 - Reminders, analytics, and reports
+### S0.3 — Private route security harness (complete 2026-09-01)
 
-- [ ] Add timezone-aware reminders with Asia/Bangkok default, quiet hours, snooze, reschedule, missed-item handling, and delivery history.
-- [ ] Add a web-push subscription and permission flow with diagnosis-free lock-screen text.
-- [ ] Build and deploy a scheduled Worker that dispatches due reminders against the private backend.
-- [ ] Replace demo charts with calorie/nutrient adherence, weight, BP, glucose, uric-acid, workout consistency, volume, cardio, recovery, goal progress, and completeness analytics.
-- [ ] Label correlations as non-causal and show sample size plus confidence warnings.
-- [ ] Implement deliberate date-range PDF and CSV clinician exports with no public sharing link.
-- [ ] Implement full data export and permanent account-data deletion, including uploads and derived records.
+- [x] Add reusable route fixtures for anonymous/owner identities, realistic private-route requests, seeded owner-visible rows, and fake R2 `put/get/delete` objects.
+- [x] Cover private upload retrieval: anonymous is `401`, a missing/wrong-owner upload is `404` without an R2 read, and a valid owner receives private no-store bytes.
+- [x] Cover saved-food reads and replay safety: anonymous is `401`, owner-visible rows are isolated, and a replay returns its original ID while a cross-resource idempotency key is `409`.
+- [x] Add a disposable Miniflare D1 binding migrated from every repository SQL file; verify the expected tables exist after a clean migration.
+- [x] Test anonymous rejection across measurements, workout plans/logs, reminders, analytics, exports, and account deletion; test real-D1 owner isolation for measurements, workout plans/logs, reminders, analytics, exports, and report-upload references.
+- [x] Cover idempotency replay and wrong-resource keys for the high-risk reminder and saved-food mutations; retain exhaustive per-endpoint mutation permutations as release-verification coverage.
+- [x] Document the account-deletion exception: the route requires a valid idempotency key and exact phrase, but deliberately retains no replay marker after permanent owner-data deletion.
 
-## P2 - PWA and product completion
+S0.3 validation: `npx tsc --noEmit --incremental false`, `npm test` (28 files / 91 tests), `npm run build`, `git diff --check`, and focused Oxlint all passed. Next: S0.4 archive/deletion hardening.
 
-- [x] Add web app manifest, install icon metadata, theme metadata, and a privacy-preserving service worker.
-- [x] Cache only public shell assets and an offline fallback; do not cache authenticated HTML/API data or queue sensitive writes.
-- [ ] Add camera permission, offline, empty, unavailable-provider, retry, and recovery states.
-- [ ] Translate all content and data labels into Vietnamese and English, and update document language dynamically.
-- [ ] Replace the fixed date, profile name, targets, chart values, and advice with localized live data.
-- [ ] Add complete keyboard, screen-reader, focus, contrast, and reduced-motion support.
-- [x] Add application-level social metadata and approved preview artwork without private user data.
+### S0.4 — Harden full export and permanent deletion — complete
 
-## Quality and release gates
+- [x] Keep JSON export temporary and bounded: preflight readable uploads at 25 objects / 5 MB, return `413` before R2 reads, and leave streaming archive work for a later scale slice.
+- [x] Define one shared owner-data inventory covering every owner-scoped D1 table; assert the full set for deletion and the reviewed public subset for export.
+- [x] Version and sanitize the public archive: omit R2 storage keys and request-idempotency metadata; expose upload content only as included base64 or an explicit unavailable state.
+- [x] Test preflight, retained/missing/deleted/expired upload behavior, encrypted-note fallback markers, R2 failure, D1 failure, retry-safe responses, and cross-owner deletion isolation. Encryption round-trip/tamper tests remain in `health-note-encryption.test.ts`.
+- [x] Delete profiles, targets, onboarding, encrypted notes, uploads, AI executions, foods, focuses, meals, measurements, workout sessions/readiness/plans/check-ins, reminders, and deduplication rows after private-object deletion succeeds.
 
-- [ ] Add unit tests for conversions, aggregation, target precedence, health rules, progression, contraindications, scheduling, and analytics.
-- [ ] Add AI/provider contract fixtures, including malformed and low-confidence responses.
-- [ ] Add the bilingual Vietnamese-food regression set described in the product plan.
-- [ ] Add safety scenario tests for hypertension, glucose boundaries, medication flags, gout flare, pain, pregnancy/under-18, and conflicting clinician targets.
-- [ ] Add mobile end-to-end tests for capture through correction/save, coaching, workouts, reminders, analytics, export, and deletion.
-- [ ] Add security tests for cross-user access, upload authorization, prompt injection, secret leakage, notification privacy, rate limits, and deletion completeness.
-- [ ] Resolve or intentionally baseline the 19 current lint errors in generated shadcn components and hooks.
-- [ ] Review dependency advisories; the 2026-08-31 audit reports 22 vulnerabilities, including 9 high and 13 moderate, largely in the Vinext/Vite/Cloudflare toolchain. Do not force-upgrade without compatibility validation.
-- [ ] Run typecheck, lint, unit, contract, end-to-end, accessibility, installability, and production build checks in CI.
-- [ ] Verify a real Sites deployment reaches `succeeded`; a local build alone is not a release.
-- [ ] Validate iOS and Android camera/install/push behavior on physical devices.
-- [ ] Review backups, secret rotation, least-privilege bindings, redacted logs, quotas, and deletion completeness before real health data is entered.
+S0.4 validation: focused archive/deletion tests, TypeScript, full tests, production build, `git diff --check`, and focused Oxlint passed. Next: S0.5 migration reproducibility.
 
-## Recommended next milestone
+### S0.5 — Restore migration reproducibility — complete
 
-Complete **M1 — Profile, restrictions, and equipment foundation** from `IMPLEMENTATION_PLAN.md`. The first task is structured, resumable onboarding storage and authenticated APIs. Do not start AI coaching or adaptive workout generation until persisted restrictions and equipment are available.
+- [x] Adopt and document SQL-first migrations: committed SQL plus `drizzle/meta/_journal.json` are authoritative; do not hand-author Drizzle snapshots.
+- [x] Validate the restored journal metadata for migrations `0000`–`0019` against every ordered SQL filename without changing applied SQL.
+- [x] Add a clean-D1 migration integrity test that compares every application table, column, default presence, primary key, and explicit index to `db/schema.ts`.
+- [x] Require every future schema task to update `db/schema.ts`, the next numbered SQL migration, journal metadata, and clean-D1 verification together; see `docs/migrations.md`.
 
-## Review notes
+S0.5 validation: focused migration tests, TypeScript, full tests, production build, `git diff --check`, and focused Oxlint passed. Next: S0.6 dashboard decomposition and localization.
 
-- The application now has functioning authenticated D1-backed meal, measurement, target, readiness, workout-plan, workout-log, and check-in flows.
-- Typed meal analysis still uses deterministic local parsing; provider searches are real, but OpenAI and image extraction are not implemented.
-- The visible surfaces are Today, Capture, Measurements, Workouts, and Settings. Coach and Progress do not yet exist.
-- Equipment management, reminders, analytics, clinician reports, full export, account deletion, real camera barcode scanning, and image upload processing remain unimplemented.
-- Workout generation is a conservative fixed starter template; it is not yet equipment-aware or individually adaptive.
-- TypeScript, 27 unit tests, and the production build pass. Full lint currently fails with 19 known errors in generated UI primitives/hooks.
-- A Sites project ID is configured, but successful private production deployment has not been verified.
+### S0.6 — Reduce UI regression risk and finish localization
+
+- [x] Extract Today, Capture, Coach, Measurements, Workouts, Progress, Settings, and their data hooks from `app/dashboard.tsx` without changing the review/confirmation boundaries. All seven surfaces now live under `components/dashboard/`; read bootstrap, capture, measurements, workouts, profile/settings, reminders, locale, and browser effects use focused modules/hooks. `app/dashboard.tsx` is the state and routing composition shell and contains no inline async actions.
+- [x] Move authored user-visible notices, validation messages, measurement labels, recovery text, and errors into typed `lib/copy.ts` entries in both English and Vietnamese. Provider/rule-returned text remains provenance data and is not rewritten by the presentation layer.
+- [x] Add loading, empty, offline read-only, permission-denied, retry, and recovery states across the dashboard. Required bootstrap failures preserve already loaded state and expose retry; private controls are disabled offline and sensitive writes are never queued.
+- [x] Add authored-UI keyboard and screen-reader semantics (`aria-current`, live status/alerts, disabled offline fieldset), shared focus-visible controls, contrast-preserving theme colors, and a global reduced-motion fallback. `lib/dashboard-decomposition.test.ts` protects the extraction and recovery contract.
+
+S0.6 validation: focused authored-code Oxlint, TypeScript, 32 test files / 106 tests, production build, and `git diff --check` passed. TanStack Query remains a deliberately separate migration slice under S0.7, as required by `IMPLEMENTATION_PLAN.md`.
+
+### S0.7 — Query migration, dependency, and lint release gate
+
+- [x] Introduce TanStack Query as its own read-caching migration slice. `QueryProvider`, `useDashboardQuery`, and the tested query defaults cache only owner-scoped reads; D1/server records remain authoritative, writes retain explicit confirmation, and mutations are configured never to pause for offline replay.
+- [x] Review and update the direct/transitive advisory graph. Patched React/RSC, Vinext, Vite, Cloudflare tooling, `sharp`, `undici`, and `ws` are installed; the vulnerable Vinext `image-size` dependency is gone.
+- [x] Apply only compatible dependency updates and validate them against the D1 harness and Vinext/Sites build. No forced or legacy peer resolution and no `npm audit fix --force` were used.
+- [x] Record the accepted residual development-tool risk in `docs/dependency-risk.md`. Production audit: zero vulnerabilities. Full audit: four moderate entries in the fix-unavailable Drizzle Kit/esbuild chain.
+- [x] Intentionally baseline the 19 generated shadcn/mobile-hook findings with rule-specific overrides. Full repository Oxlint is clean and all rules remain active for authored product code.
+
+S0.7 validation: full Oxlint, TypeScript, 33 test files / 107 tests, clean-D1 migration/security tests, production Vinext/Sites build, production and full dependency audits, and `git diff --check` passed. Next: P1 deterministic health safety.
+
+## Product milestones after S0
+
+### P1 — Complete deterministic health safety
+
+Execute only the first unchecked slice below. Do not combine safety-context, health-rule persistence, and provenance UI into one change.
+
+#### P1.1 — Versioned effective safety context (next)
+
+- [ ] Add structured onboarding fields for adult eligibility/pregnancy context and medication-related exercise risk without exposing encrypted note text.
+- [ ] Define a pure, versioned `EffectiveSafetyContext` contract and resolver from onboarding flags, the latest readiness record, clinician restrictions, and recent workout pain/symptom/glucose facts.
+- [ ] Return domain-specific decisions for `workout_plan`, `workout_progression`, and `coach_exercise`: `allowed`, `allowed_with_modifications`, or `blocked`, with stable reason codes and source record IDs/timestamps.
+- [ ] Treat absent, stale, invalid, and zero values distinctly. Do not invent numeric glucose thresholds in this slice; use the existing structured glucose-risk answer until P1.2 policy constants are reviewed.
+- [ ] Add pure boundary/precedence tests and owner-scoped route tests. This slice may expose a read-only safety-context endpoint, but must not alter an active plan or recommendation.
+
+#### P1.2 — Enforce deterministic recommendation gates
+
+- [ ] Apply the same resolver before workout preview, plan confirmation, scheduled check-in/progression proposals, and exercise-oriented Coach guidance.
+- [ ] Add a reviewed, versioned glucose exercise policy with canonical-unit conversion before using pre/post-workout readings; test exact low/high boundaries and missing readings.
+- [ ] Ensure pain, concerning symptoms, readiness red flags, clinician restrictions, pregnancy context, and under-18 status override progression. AI language may only explain the deterministic outcome.
+- [ ] Add complete English/Vietnamese urgent, stop-activity, and professional-review copy for every reason code; keep emergency language specific and non-diagnostic.
+
+#### P1.3 — Effective targets and immutable finding snapshots
+
+- [ ] Pass effective targets, including authority, into the meal rule engine rather than using hard-coded target values in findings.
+- [ ] Extend `HealthFinding` with target metric/authority and explicit observed-value availability/provenance; preserve missing versus reported zero.
+- [ ] Add the next unused migration (currently `0020`) to persist the exact confirmed finding array with each meal, including rule version, evidence source, effective target, and authority. Never recompute historical findings on read.
+- [ ] Update schema, SQL-first journal metadata, archive/delete inventory, clean-D1 verification, and replay tests together.
+
+#### P1.4 — Complete nutrient/purine rules
+
+- [ ] Add hydration and micronutrient observations only for nutrients explicitly reported or estimated in the immutable snapshot; no finding may treat unavailable as zero.
+- [ ] Replace substring-only purine detection with a versioned structured ingredient-category mapping that retains matched ingredient/category evidence and an unresolved state for ambiguous recipes.
+- [ ] Add exact threshold, focus filtering, estimated/reported/unavailable, and bilingual explanation-input tests. Keep rule outputs deterministic and non-diagnostic.
+
+#### P1.5 — Source separation in the UI
+
+- [ ] Show separate badges/sections for user-measured or confirmed facts, provider/database values, estimates, deterministic rule findings, and AI-authored explanations.
+- [ ] Display source/version/confidence and target authority without implying that an estimate is measured or that AI text is a rule result.
+- [ ] Add English/Vietnamese copy plus keyboard, screen-reader, narrow-mobile, and missing-provenance states.
+
+### P2 — Individualized PT and scheduled adaptation
+
+- [ ] Expand and obtain professional review for the bilingual exercise catalog.
+- [ ] Replace the fixed starter week with deterministic selection from equipment, environment, availability, restrictions, recent logs, and recovery.
+- [ ] Generate safe substitution previews after equipment/environment changes; never replace the active plan without confirmation.
+- [ ] Extend check-ins to versioned `progress`, `maintain`, `deload`, and `substitute` proposals with stored evidence and explicit confirmation.
+
+### P3 — Coach chat and weekly review
+
+- [ ] Build a permission-checked compact context containing only necessary profile facts, recent confirmed logs, remaining targets, active plan, and deterministic findings.
+- [ ] Add strict `CoachRecommendation` contracts and owner-scoped proposal records with evidence record IDs and confirmation state.
+- [ ] Add `OPENAI_COACH_MODEL` to `.env.example`, defaulting to `gpt-5.6-terra`; set OpenAI response storage off.
+- [ ] Add prompt-injection defenses and fixtures for user chat, food labels, and report text.
+- [ ] Add bilingual weekly nutrition reviews and safe substitution ranking without inventing nutrient values or mutating records.
+
+### P4 — Complete analytics and notifications
+
+- [ ] Expand Progress to target adherence, weight/BP/glucose/uric-acid trends, workout volume/cardio minutes, recovery, goal progress, and data completeness.
+- [ ] Show correlations only as non-causal observations with sample size and confidence warnings.
+- [ ] Add push-subscription storage and permission UX with diagnosis-free lock-screen text.
+- [ ] Add reminder delivery/missed-item history and a scheduled Worker using the same owner-scoped backend.
+- [ ] Add a scheduled cleanup path for expired private uploads.
+
+### P5 — Release verification
+
+- [ ] Add mobile end-to-end tests for capture/review/save, measurements, workouts, reminders, analytics, exports, and deletion.
+- [ ] Expand route replay permutations to every durable mutation, including retry-after-failed-write behavior, before release.
+- [ ] Add CI for typecheck, unit/contract/security tests, lint policy, build, and migration verification.
+- [ ] Verify secrets, key rotation, backups/restore, least-privilege bindings, quotas, redacted logs, archive size, and deletion completeness.
+- [ ] Validate install, offline shell, camera/barcode, and push behavior on physical iOS and Android devices.
+- [ ] Deploy only when explicitly authorized; verify the Sites operation reaches `succeeded` and private access works.
+
+## Validation required for every slice
+
+```text
+npx tsc --noEmit --incremental false
+npm test
+npm run build
+git diff --check
+```
+
+Run focused lint on authored files. For schema changes, verify the migration on a clean database. For private routes, add anonymous and wrong-owner tests. For safety logic, test exact boundaries and precedence.
