@@ -15,17 +15,58 @@ export const healthFindingSchema = z.object({
     'cholesterol',
     'blood_glucose',
     'uric_acid',
+    'general_nutrition',
   ]),
   severity: z.enum(['info', 'attention']),
   ruleCode: z.string().trim().min(1).max(80),
   ruleVersion: z.string().trim().min(1).max(40),
-  observedValue: z.number().finite().min(0),
+  observedValue: z.number().finite().min(0).nullable(),
   observedUnit: z.string().trim().min(1).max(16),
+  observedValueState: z.enum(['reported', 'estimated', 'unavailable']),
+  observedProvenance: z.enum([
+    'nutrition_snapshot_total',
+    'nutrition_snapshot_additional',
+    'ingredient_list',
+  ]),
+  targetMetric: z.enum(['calories', 'protein', 'fiber', 'sodium']).nullable(),
   targetValue: z.number().finite().min(0).nullable(),
-  targetUnit: z.string().trim().min(1).max(16),
+  targetUnit: z.string().trim().min(1).max(16).nullable(),
+  targetAuthority: z.enum([
+    'guideline_default',
+    'user_defined',
+    'clinician_defined',
+  ]).nullable(),
+  explanationInputs: z.discriminatedUnion('kind', [
+    z.object({
+      kind: z.literal('nutrient_observation'),
+      nutrientKey: z.enum(['water', 'potassium', 'calcium', 'iron']),
+      sourceState: z.enum(['reported', 'estimated']),
+      supportedUnit: z.string().trim().min(1).max(16),
+    }).strict(),
+    z.object({
+      kind: z.literal('purine_mapping'),
+      mappingVersion: z.string().trim().min(1).max(80),
+      state: z.enum(['matched', 'matched_with_unresolved', 'unresolved']),
+      matches: z.array(z.object({
+        normalizedIngredient: z.string().trim().min(1).max(120),
+        category: z.enum(['organ_meat', 'red_meat', 'small_oily_fish', 'shellfish', 'concentrated_meat_broth']),
+        categoryNameEn: z.string().trim().min(1).max(80),
+        categoryNameVi: z.string().trim().min(1).max(80),
+      }).strict()).max(24),
+      unresolvedIngredients: z.array(z.string().trim().min(1).max(120)).max(24),
+    }).strict(),
+  ]).optional(),
   evidenceSource: z.string().trim().min(1).max(160),
   text: z.string().trim().min(1).max(500),
   suggestedActions: z.array(z.string().trim().min(1).max(180)).min(1).max(3),
+}).superRefine((value, context) => {
+  if (value.observedValueState === 'unavailable' && value.observedValue !== null)
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['observedValue'], message: 'Unavailable findings must not contain an observed value.' });
+  if (value.observedValueState !== 'unavailable' && value.observedValue === null)
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['observedValue'], message: 'Available findings require an observed value.' });
+  const hasTarget = value.targetMetric !== null;
+  if (hasTarget !== (value.targetValue !== null && value.targetUnit !== null && value.targetAuthority !== null))
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['targetMetric'], message: 'Target metric, value, unit, and authority must be present or absent together.' });
 });
 export const healthFocusSchema = z.enum([
   'blood_pressure',
@@ -105,7 +146,7 @@ export const foodAnalysisSchema = z.object({
     severity: z.enum(['info', 'attention']),
     text: z.string().trim().min(1).max(500),
   }),
-  healthFindings: z.array(healthFindingSchema).max(6).optional(),
+  healthFindings: z.array(healthFindingSchema).max(16).optional(),
 });
 export const analyseFoodRequestSchema = z.discriminatedUnion('mode', [
   z.object({
@@ -196,7 +237,8 @@ export const createMealRequestSchema = z.object({
     'usda_fooddata_central',
   ]),
   nutritionSnapshot: nutritionSnapshotSchema,
-});
+  healthFindings: z.array(healthFindingSchema).max(16),
+}).strict();
 export const profileLocaleSchema = z.enum(['en', 'vi']);
 export const profileTargetsResponseSchema = z.object({
   locale: profileLocaleSchema,
@@ -253,12 +295,26 @@ export const profileLocaleResponseSchema = z.object({
   locale: profileLocaleSchema,
 });
 export const onboardingGoalSchema = z.enum(['weight_loss', 'maintain_weight', 'muscle_gain', 'fitness', 'health_tracking']);
+export const pregnancyContextSchema = z.enum([
+  'not_applicable',
+  'not_pregnant',
+  'pregnant',
+  'postpartum',
+  'unsure',
+  'prefer_not_to_say',
+]);
+export const medicationExerciseRiskSchema = z.enum([
+  'glucose_lowering_without_plan',
+  'dizziness_or_fainting_risk',
+  'other_exercise_restriction',
+]);
 export const onboardingDraftSchema = z.object({
   goal: onboardingGoalSchema.optional(),
   heightCm: z.number().int().min(80).max(250).optional(),
   weightKg: z.number().finite().positive().max(500).optional(),
-  ageYears: z.number().int().min(18).max(120).optional(),
+  ageYears: z.number().int().min(1).max(120).optional(),
   sexForMetabolicCalculation: z.enum(['female', 'male', 'not_specified']).optional(),
+  pregnancyContext: pregnancyContextSchema.optional(),
   activityLevel: z.enum(['sedentary', 'light', 'moderate', 'active', 'very_active']).optional(),
   foodPreferences: z.array(z.enum(['omnivore', 'vegetarian', 'vegan', 'pescatarian', 'halal', 'low_sodium', 'low_purine'])).max(7).optional(),
   allergies: z.array(z.enum(['milk', 'egg', 'fish', 'shellfish', 'peanut', 'tree_nut', 'soy', 'wheat', 'sesame'])).max(9).optional(),
@@ -271,8 +327,9 @@ export const onboardingDraftSchema = z.object({
   equipment: z.array(z.enum(['bodyweight', 'chair', 'exercise_mat', 'bicycle', 'mini_treadmill', 'resistance_band', 'dumbbells', 'gym'])).min(1).max(8).optional(),
   environments: z.array(z.enum(['home', 'outdoors', 'gym'])).min(1).max(3).optional(),
   clinicianRestrictionFlags: z.array(z.enum(['avoid_high_intensity', 'avoid_resistance', 'avoid_impact', 'monitor_glucose'])).max(4).optional(),
+  medicationExerciseRiskFlags: z.array(medicationExerciseRiskSchema).max(3).optional(),
 }).superRefine((value, context) => {
-  for (const key of ['foodPreferences', 'allergies', 'reportedContexts', 'injuryFlags', 'symptomFlags', 'availableDays', 'equipment', 'environments', 'clinicianRestrictionFlags'] as const) {
+  for (const key of ['foodPreferences', 'allergies', 'reportedContexts', 'injuryFlags', 'symptomFlags', 'availableDays', 'equipment', 'environments', 'clinicianRestrictionFlags', 'medicationExerciseRiskFlags'] as const) {
     const items = value[key];
     if (items && new Set(items).size !== items.length) context.addIssue({ code: z.ZodIssueCode.custom, path: [key], message: 'Each choice can only be selected once.' });
   }
@@ -425,6 +482,107 @@ export const workoutReadinessResponseSchema = z.object({
   flags: z.array(workoutReadinessFlagSchema),
   confirmedAt: z.string().datetime({ offset: true }).nullable(),
 });
+export const safetyDecisionDomainSchema = z.enum([
+  'workout_plan',
+  'workout_progression',
+  'coach_exercise',
+]);
+export const safetyDecisionStatusSchema = z.enum([
+  'allowed',
+  'allowed_with_modifications',
+  'blocked',
+]);
+export const safetyReasonCodeSchema = z.enum([
+  'age_unconfirmed',
+  'under_18',
+  'pregnancy_review',
+  'postpartum_review',
+  'pregnancy_context_unsure',
+  'medication_glucose_risk',
+  'medication_dizziness_risk',
+  'medication_other_restriction',
+  'readiness_missing',
+  'readiness_invalid',
+  'readiness_stale',
+  'readiness_chest_pain',
+  'readiness_fainting_or_dizziness',
+  'readiness_severe_shortness_of_breath',
+  'readiness_irregular_heartbeat',
+  'readiness_clinician_restriction',
+  'readiness_exercise_glucose_risk',
+  'reported_chest_discomfort',
+  'reported_dizziness',
+  'reported_shortness_of_breath',
+  'clinician_avoid_high_intensity',
+  'clinician_avoid_resistance',
+  'clinician_avoid_impact',
+  'clinician_monitor_glucose',
+  'recent_workout_pain',
+  'recent_workout_symptoms',
+  'glucose_value_invalid',
+  'pre_glucose_below_review_range',
+  'pre_glucose_above_review_range',
+  'post_glucose_recovery_review',
+  'post_glucose_above_review_range',
+]);
+const safetyReasonSchema = z.object({
+  code: safetyReasonCodeSchema,
+  copyKey: z.string().regex(/^safetyContext\.reasons\.[a-z0-9_]+$/),
+}).refine(
+  (reason) => reason.copyKey === `safetyContext.reasons.${reason.code}`,
+  { path: ['copyKey'], message: 'Safety reason copy key must match its reason code.' },
+);
+const safetyDecisionSchema = z.object({
+  status: safetyDecisionStatusSchema,
+  reasons: z.array(safetyReasonSchema).max(25),
+});
+const safetySourceSchema = z.object({
+  kind: z.enum(['onboarding', 'readiness', 'workout_log']),
+  recordId: z.string().min(1).max(100),
+  recordedAt: z.string().datetime({ offset: true }),
+});
+const glucoseFactSchema = z.object({
+  state: z.enum(['missing', 'reported', 'invalid']),
+  policyStatus: z.enum(['missing', 'invalid', 'within_reviewed_range', 'below_review_range', 'above_review_range', 'recovery_review']),
+  valueMmolL: z.number().finite().positive().max(40).nullable(),
+  sourceRecordId: z.string().min(1).max(100).nullable(),
+  recordedAt: z.string().datetime({ offset: true }).nullable(),
+});
+export const effectiveSafetyContextSchema = z.object({
+  contextVersion: z.literal('effective-safety-context-1'),
+  evaluatedAt: z.string().datetime({ offset: true }),
+  facts: z.object({
+    eligibility: z.object({
+      state: z.enum(['adult', 'under_18', 'unknown']),
+      ageYears: z.number().int().min(1).max(120).nullable(),
+    }),
+    pregnancyContext: pregnancyContextSchema.nullable(),
+    medicationExerciseRiskFlags: z.array(medicationExerciseRiskSchema).max(3),
+    readiness: z.object({
+      state: z.enum(['missing', 'invalid', 'stale', 'cleared', 'needs_review']),
+      flags: z.array(workoutReadinessFlagSchema).max(6),
+      confirmedAt: z.string().datetime({ offset: true }).nullable(),
+    }),
+    clinicianRestrictionFlags: z.array(z.enum(['avoid_high_intensity', 'avoid_resistance', 'avoid_impact', 'monitor_glucose'])).max(4),
+    recentWorkoutSafety: z.object({
+      pain: z.boolean(),
+      concerningSymptoms: z.boolean(),
+      sourceRecordIds: z.array(z.string().min(1).max(100)).max(20),
+    }),
+    glucose: z.object({
+      policyVersion: z.literal('ada-exercise-glucose-2026-1'),
+      evidenceSource: z.string().url(),
+      pre: glucoseFactSchema,
+      post: glucoseFactSchema,
+    }),
+  }),
+  decisions: z.object({
+    workout_plan: safetyDecisionSchema,
+    workout_progression: safetyDecisionSchema,
+    coach_exercise: safetyDecisionSchema,
+  }),
+  sources: z.array(safetySourceSchema).max(22),
+});
 const localizedTextSchema = z.object({
   en: z.string().trim().min(1).max(500),
   vi: z.string().trim().min(1).max(500),
@@ -559,7 +717,18 @@ export const workoutLogSchema = z.object({
 });
 export const workoutLogsResponseSchema = z.object({ logs: z.array(workoutLogSchema) });
 export const workoutCheckinRequestSchema = z.object({ idempotencyKey: z.string().uuid(), planId: z.string().uuid() });
-export const workoutCheckinSchema = z.object({ id: z.string().uuid(), planId: z.string().uuid(), action: z.enum(['hold_for_review', 'repeat', 'maintain']), plannedSessions: z.number().int().min(1), completedSessions: z.number().int().min(0), safetyFlag: z.boolean(), createdAt: z.string().datetime({ offset: true }) });
+export const workoutCheckinSchema = z.object({
+  id: z.string().uuid(),
+  planId: z.string().uuid(),
+  action: z.enum(['hold_for_review', 'repeat', 'maintain']),
+  plannedSessions: z.number().int().min(1),
+  completedSessions: z.number().int().min(0),
+  safetyFlag: z.boolean(),
+  safetyContextVersion: z.string().trim().min(1).max(80),
+  safetyDecision: safetyDecisionStatusSchema,
+  safetyReasonCodes: z.array(safetyReasonCodeSchema).max(25),
+  createdAt: z.string().datetime({ offset: true }),
+});
 export const analyticsResponseSchema = z.object({
   periodDays: z.number().int().min(7).max(90),
   dailyNutrition: z.array(z.object({ date: z.string().date(), calories: z.number().min(0), protein: z.number().min(0), fiber: z.number().min(0), sodium: z.number().min(0), mealCount: z.number().int().min(0) })),
@@ -611,6 +780,9 @@ export type MeasurementCreateRequest = z.infer<
 >;
 export type WorkoutReadiness = z.infer<typeof workoutReadinessResponseSchema>;
 export type WorkoutReadinessRequest = z.infer<typeof workoutReadinessRequestSchema>;
+export type EffectiveSafetyContext = z.infer<typeof effectiveSafetyContextSchema>;
+export type SafetyDecisionDomain = z.infer<typeof safetyDecisionDomainSchema>;
+export type SafetyReasonCode = z.infer<typeof safetyReasonCodeSchema>;
 export type WorkoutPlan = z.infer<typeof workoutPlanSchema>;
 export type WorkoutPlanResponse = z.infer<typeof workoutPlanResponseSchema>;
 export type WorkoutLog = z.infer<typeof workoutLogSchema>;

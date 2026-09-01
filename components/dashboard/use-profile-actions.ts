@@ -27,6 +27,7 @@ type Options = {
   setNotice: (message: string) => void;
   onTargetsSaved: () => void;
   resetAccountState: () => void;
+  reload: () => Promise<void>;
 };
 
 /** Owns profile/settings writes and leaves the dashboard responsible only for composition. */
@@ -47,6 +48,7 @@ export function useProfileActions(options: Options) {
     setNotice,
     onTargetsSaved,
     resetAccountState,
+    reload,
   } = options;
   const c = getCopy(locale);
 
@@ -81,6 +83,7 @@ export function useProfileActions(options: Options) {
             body.targets!.map((target) => [target.metric, target.value]),
           ),
         }));
+        await reload();
         setNotice(
           body.replayed ? c.feedback.targetsReplayed : c.feedback.targetsSaved,
         );
@@ -100,6 +103,7 @@ export function useProfileActions(options: Options) {
       setNotice,
       setSavingTargets,
       setTargets,
+      reload,
     ],
   );
 
@@ -163,6 +167,7 @@ export function useProfileActions(options: Options) {
           throw new Error(body.error || c.feedback.onboardingSaveError);
         setOnboarding(body.draft);
         setOnboardingStatus(body.status);
+        await reload();
         setNotice(
           body.replayed
             ? c.feedback.onboardingReplayed
@@ -186,6 +191,7 @@ export function useProfileActions(options: Options) {
       setNotice,
       setOnboarding,
       setOnboardingStatus,
+      reload,
       setSavingOnboarding,
     ],
   );

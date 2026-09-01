@@ -7,11 +7,12 @@ import { lookupUsdaFoodData } from '@/lib/usda-fooddata';
 import { resolveCachedFoodAnalysis } from '@/lib/food-lookup-cache';
 import { evaluateMealHealthFindings } from '@/lib/health-rule-engine';
 import { getDb } from '@/db';
-import { healthFocuses } from '@/db/schema';
+import { healthFocuses, healthTargets } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { manualProviderFallback } from '@/lib/provider-fallback';
 import { consumeRequestQuota } from '@/lib/request-quota';
 import { resolvePersonalFood } from '@/lib/saved-foods';
+import { selectTargets } from '@/lib/targets';
 
 export async function POST(request: Request) {
   const user = await getChatGPTUser();
@@ -48,8 +49,29 @@ export async function POST(request: Request) {
     if (input.mode === 'text') throw new Error('Typed meal analysis could not be completed.');
     result = manualProviderFallback(input);
   }
-  const focusRows = await getDb().select({ focus: healthFocuses.focus }).from(healthFocuses).where(eq(healthFocuses.ownerId, user.userId));
+  const db = getDb();
+  const [focusRows, targetRows] = await Promise.all([
+    db.select({ focus: healthFocuses.focus }).from(healthFocuses).where(eq(healthFocuses.ownerId, user.userId)),
+    db.select({
+      metric: healthTargets.metric,
+      valueScaled: healthTargets.valueScaled,
+      valueScale: healthTargets.valueScale,
+      unit: healthTargets.unit,
+      authority: healthTargets.authority,
+      updatedAt: healthTargets.updatedAt,
+    }).from(healthTargets).where(eq(healthTargets.ownerId, user.userId)),
+  ]);
   const focuses = focusRows.flatMap((row) => { const parsedFocus = healthFocusSchema.safeParse(row.focus); return parsedFocus.success ? [parsedFocus.data] : []; });
-  const analysis = foodAnalysisSchema.parse({ ...result, healthFindings: evaluateMealHealthFindings(result.snapshot.totals, focuses, result.snapshot.ingredients, result.snapshot.additionalNutrients) });
+  const analysis = foodAnalysisSchema.parse({
+    ...result,
+    healthFindings: evaluateMealHealthFindings(
+      result.snapshot.totals,
+      focuses,
+      result.snapshot.ingredients,
+      result.snapshot.additionalNutrients,
+      selectTargets(targetRows),
+      result.snapshot.estimationLevel,
+    ),
+  });
   return Response.json({ analysis }, { headers: { 'Cache-Control': 'no-store' } });
 }

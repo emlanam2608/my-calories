@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type {
   FoodAnalysis,
+  EffectiveSafetyContext,
   HealthFocus,
   Measurement,
   OnboardingDraft,
@@ -43,6 +44,7 @@ import {
 } from '@/lib/dashboard-model';
 import type { ExerciseCatalogEntry } from '@/lib/exercise-catalog';
 import type { DashboardBootstrap } from '@/lib/dashboard-bootstrap';
+import { defaultEffectiveTargets, type EffectiveTarget } from '@/lib/targets';
 
 export function Dashboard({ displayName }: { displayName: string }) {
   const [locale, setLocale] = useState<Locale>('en');
@@ -59,6 +61,8 @@ export function Dashboard({ displayName }: { displayName: string }) {
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [workoutReadiness, setWorkoutReadiness] =
     useState<WorkoutReadiness | null>(null);
+  const [safetyContext, setSafetyContext] =
+    useState<EffectiveSafetyContext | null>(null);
   const [exercises, setExercises] = useState<ExerciseCatalogEntry[]>([]);
   const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlanResponse | null>(
     null,
@@ -79,6 +83,9 @@ export function Dashboard({ displayName }: { displayName: string }) {
     fiber: 28,
     sodium: 2000,
   });
+  const [effectiveTargets, setEffectiveTargets] = useState<EffectiveTarget[]>(
+    defaultEffectiveTargets,
+  );
   const [healthFocuses, setHealthFocuses] = useState<HealthFocus[]>([]);
   const [onboarding, setOnboarding] = useState<OnboardingDraft>({});
   const [onboardingStatus, setOnboardingStatus] = useState<
@@ -118,13 +125,15 @@ export function Dashboard({ displayName }: { displayName: string }) {
   const applyDashboardData = useCallback((data: DashboardBootstrap) => {
     setMeals(data.meals);
     if (data.locale) setLocale(data.locale);
-    if (data.targets)
+    if (data.targets) {
+      setEffectiveTargets(data.targets);
       setTargetValues((current) => ({
         ...current,
         ...Object.fromEntries(
           data.targets!.map((target) => [target.metric, target.value]),
         ),
       }));
+    }
     if (data.focuses) setHealthFocuses(data.focuses);
     if (data.onboarding) {
       setOnboarding(data.onboarding.draft);
@@ -134,6 +143,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
     if (data.sensitiveNotes) setSensitiveNotes(data.sensitiveNotes);
     if (data.measurements) setMeasurements(data.measurements);
     if (data.readiness) setWorkoutReadiness(data.readiness);
+    if (data.safetyContext) setSafetyContext(data.safetyContext);
     if (data.exercises) setExercises(data.exercises);
     if (data.plan !== undefined) setWorkoutPlan(data.plan);
     if (data.logs) setWorkoutLogs(data.logs);
@@ -152,6 +162,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
     setMeals([]);
     setMeasurements([]);
     setWorkoutReadiness(null);
+    setSafetyContext(null);
     setExercises([]);
     setWorkoutPlan(null);
     setWorkoutLogs([]);
@@ -160,6 +171,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
     setSavedFoods([]);
     setReminders([]);
     setHealthFocuses([]);
+    setEffectiveTargets(defaultEffectiveTargets);
     setOnboarding({});
     setOnboardingStatus('in_progress');
     setSensitiveNotes({
@@ -192,6 +204,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
     setNotice,
     onTargetsSaved: () => setPage('today'),
     resetAccountState,
+    reload: loadMeals,
   });
   const { saveMeasurement, deleteMeasurementSourceImage } =
     useMeasurementActions({
@@ -214,6 +227,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
     setCheckin: setWorkoutCheckin,
     setError,
     setNotice,
+    reload: loadMeals,
   });
   const {
     analyseMeal,
@@ -230,6 +244,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
     draft,
     analysis,
     healthFocuses,
+    effectiveTargets,
     reload: loadMeals,
     setPage,
     setDraft,
@@ -438,6 +453,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
               targets={targetValues}
               healthFocuses={healthFocuses}
               workoutPlan={workoutPlan}
+              safetyContext={safetyContext}
               locale={locale}
             />
           ) : page === 'measurements' ? (
@@ -450,6 +466,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
           ) : page === 'workouts' ? (
             <WorkoutReadinessSurface
               readiness={workoutReadiness}
+              safetyContext={safetyContext}
               exercises={exercises}
               confirmedPlan={workoutPlan}
               logs={workoutLogs}

@@ -38,6 +38,7 @@ import {
   type DashboardTargetKey,
 } from '@/lib/dashboard-model';
 import type { CaptureSurfaceProps } from './capture-contract';
+import { MealFindingProvenance, MealProvenancePanel, ReviewNoteLabel } from './meal-provenance-panel';
 
 export function CaptureSurface(props: CaptureSurfaceProps) {
   const {
@@ -629,6 +630,7 @@ export function CaptureSurface(props: CaptureSurfaceProps) {
                 saving={saving}
                 savingPersonalFood={savingPersonalFood}
                 locale={locale}
+                aiAssistedInput={photoExtractionUsed}
               />
             ) : (
               <div className="grid min-h-80 place-items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
@@ -681,6 +683,7 @@ function Review({
   saving,
   savingPersonalFood,
   locale,
+  aiAssistedInput,
 }: {
   analysis: FoodAnalysis;
   onNutrientChange: CaptureSurfaceProps['onNutrientChange'];
@@ -691,6 +694,7 @@ function Review({
   saving: boolean;
   savingPersonalFood: boolean;
   locale: CaptureSurfaceProps['locale'];
+  aiAssistedInput: boolean;
 }) {
   const c = getCopy(locale);
   const labels: Record<DashboardTargetKey, string> = {
@@ -699,22 +703,6 @@ function Review({
     fiber: c.today.fiber,
     sodium: c.today.sodium,
   };
-  const extraLabels: Record<string, string> = {
-    carbohydrates: c.mealCapture.carbohydrates,
-    totalSugar: c.mealCapture.totalSugar,
-    addedSugar: c.mealCapture.addedSugar,
-    totalFat: c.mealCapture.totalFat,
-    saturatedFat: c.mealCapture.saturatedFat,
-    cholesterol: c.mealCapture.cholesterol,
-    potassium: c.mealCapture.potassium,
-    calcium: c.mealCapture.calcium,
-    iron: c.mealCapture.iron,
-    alcohol: c.mealCapture.alcohol,
-    water: c.mealCapture.water,
-  };
-  const extras = Object.entries(
-    analysis.snapshot.additionalNutrients ?? {},
-  ).filter(([, nutrient]) => nutrient?.value !== null);
   return (
     <>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -738,28 +726,7 @@ function Review({
           </label>
         ))}
       </div>
-      {extras.length ? (
-        <div className="mt-5 rounded-xl bg-slate-50 p-4">
-          <p className="text-sm font-semibold">
-            {c.mealCapture.additionalNutrients}
-          </p>
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {extras.map(([key, nutrient]) => (
-              <div key={key} className="rounded-lg bg-white p-3 text-sm">
-                <p className="text-xs text-slate-500">
-                  {extraLabels[key] ?? key}
-                </p>
-                <p className="mt-1 font-semibold">
-                  {nutrient!.value!.toLocaleString(locale)} {nutrient!.unit}
-                </p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-3 text-xs text-slate-500">
-            {c.mealCapture.additionalNutrientsSource}
-          </p>
-        </div>
-      ) : null}
+      <MealProvenancePanel analysis={analysis} locale={locale} aiAssistedInput={aiAssistedInput} />
       <div className="mt-5">
         <label className="block text-sm font-semibold">
           {c.mealCapture.servingAssumption}
@@ -797,29 +764,11 @@ function Review({
       <div
         className={`mt-5 rounded-xl p-4 text-sm leading-6 ${analysis.finding.severity === 'attention' ? 'bg-amber-50 text-amber-950' : 'bg-emerald-50 text-emerald-950'}`}
       >
-        <p className="font-semibold">{c.mealCapture.sourceAndReview}</p>
+        <ReviewNoteLabel analysis={analysis} locale={locale} />
         <p className="mt-1">{analysis.finding.text}</p>
       </div>
       {analysis.healthFindings?.map((finding) => (
-        <div
-          key={finding.ruleCode}
-          className={`mt-3 rounded-xl border p-4 text-sm ${finding.severity === 'attention' ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}
-        >
-          <p className="font-semibold">
-            {finding.condition.replace('_', ' ')} ·{' '}
-            {finding.observedValue.toLocaleString(locale)}{' '}
-            {finding.observedUnit}
-          </p>
-          <p className="mt-1">{finding.text}</p>
-          <ul className="mt-2 list-disc pl-5">
-            {finding.suggestedActions.map((action) => (
-              <li key={action}>{action}</li>
-            ))}
-          </ul>
-          <p className="mt-2 text-xs opacity-75">
-            {c.mealCapture.ruleLabel} {finding.ruleCode} · {finding.ruleVersion}
-          </p>
-        </div>
+        <MealFindingProvenance key={finding.ruleCode} finding={finding} locale={locale} />
       ))}
       {analysis.unresolvedQuestions.map((question) => (
         <p className="mt-3 text-sm text-slate-600" key={question}>

@@ -1,4 +1,5 @@
 import { archiveUploadLimitBytes } from './account-archive';
+import { evaluateMealHealthFindings } from './health-rule-engine';
 import { createMigratedRouteDb, privateRouteRequest, routeTestUsers } from './private-route-test-harness';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -91,6 +92,59 @@ describe('archive and account deletion safety', () => {
       if (priorKey === undefined) delete process.env.HEALTH_DATA_ENCRYPTION_KEY;
       else process.env.HEALTH_DATA_ENCRYPTION_KEY = priorKey;
     }
+  }), 60_000);
+
+  it('includes the immutable workout check-in safety decision in the owner archive', async () => withDatabase(async ({ database }) => {
+    await database.prepare(`
+      insert into workout_checkins (
+        id, owner_id, plan_id, action, planned_sessions, completed_sessions,
+        safety_flag, safety_context_version, safety_decision, safety_reason_codes, created_at
+      ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      '018e2aaa-6a86-4d9d-b36a-a3d96fd0d0d0',
+      routeTestUsers.ownerA.userId,
+      '018e2aaa-6a86-4d9d-b36a-a3d96fd0d0d1',
+      'hold_for_review',
+      3,
+      1,
+      1,
+      'effective-safety-context-1',
+      'blocked',
+      JSON.stringify(['pre_glucose_below_review_range']),
+      now,
+    ).run();
+
+    const archive = await (await getArchive()).json() as {
+      records: { workoutCheckins: Array<Record<string, unknown>> };
+    };
+    expect(archive.records.workoutCheckins).toEqual([
+      expect.objectContaining({
+        safetyContextVersion: 'effective-safety-context-1',
+        safetyDecision: 'blocked',
+        safetyReasonCodes: ['pre_glucose_below_review_range'],
+      }),
+    ]);
+  }), 60_000);
+
+  it('includes immutable meal findings in the owner archive', async () => withDatabase(async ({ database }) => {
+    const snapshot = {
+      totals: { calories: 800, protein: 20, fiber: 4, sodium: 900 },
+      servingDescription: '1 serving', source: 'manual_entry', sourceVersion: 'test-v1',
+      sourceReference: null, estimationLevel: 'user_confirmed' as const, ingredients: ['rice'],
+    };
+    const findings = evaluateMealHealthFindings(snapshot.totals, [], snapshot.ingredients, undefined, [
+      { metric: 'calories', value: 1700, unit: 'kcal', authority: 'clinician_defined' },
+      { metric: 'protein', value: 90, unit: 'g', authority: 'guideline_default' },
+      { metric: 'fiber', value: 28, unit: 'g', authority: 'guideline_default' },
+      { metric: 'sodium', value: 1500, unit: 'mg', authority: 'clinician_defined' },
+    ], snapshot.estimationLevel);
+    await database.prepare('insert into meal_entries (id, owner_id, occurred_at, meal_type, name, nutrition_snapshot, health_findings, analysis_source, confidence, created_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(
+      '018e2aaa-6a86-4d9d-b36a-a3d96fd0d0e0', routeTestUsers.ownerA.userId, now, 'lunch', 'Archived meal',
+      JSON.stringify(snapshot), JSON.stringify(findings), 'manual_entry', 100, now,
+    ).run();
+
+    const archive = await (await getArchive()).json() as { records: { meals: Array<{ healthFindings: unknown[] }> } };
+    expect(archive.records.meals[0].healthFindings).toEqual(findings);
   }), 60_000);
 
   it('does not report deletion when private-object deletion fails', async () => withDatabase(async ({ database }) => {

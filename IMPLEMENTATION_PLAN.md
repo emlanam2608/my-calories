@@ -1,6 +1,6 @@
 # Nourishwell execution plan
 
-Last reviewed: 2026-09-01
+Last reviewed: 2026-09-02
 
 This document is written for coding agents. [`TODO.md`](./TODO.md) is the status ledger; this file explains order, boundaries, acceptance criteria, and likely files. The current checkout contains a large uncommitted feature set, so preserve all existing changes and keep every new slice narrowly scoped.
 
@@ -37,11 +37,11 @@ The previous plan was stale. The following capabilities exist and should be exte
 Current local evidence:
 
 - `npx tsc --noEmit --incremental false`: passes.
-- `npm test`: 33 files and 107 tests pass.
-- `npm run build`: passes and emits 27 API route files.
+- `npm test`: 41 files and 160 tests pass.
+- `npm run build`: passes and emits 28 API route files.
 - `npm run lint`: passes. Nineteen generated shadcn/mobile-hook findings are narrowly baselined with exact rule/file overrides; authored product code keeps the full rules.
 - `npm audit --omit=dev`: zero vulnerabilities. Full audit retains four moderate, fix-unavailable development-only Drizzle Kit/esbuild advisories documented in `docs/dependency-risk.md`.
-- Clean-D1 migration verification covers every SQL migration through `0019` and compares tables, columns, defaults, primary keys, and explicit indexes with `db/schema.ts`.
+- Clean-D1 migration verification covers every SQL migration through `0021` and compares tables, columns, defaults, primary keys, and explicit indexes with `db/schema.ts`.
 - Git working tree: dirty with the accumulated feature set; user owns commit/push.
 - Deployment: configured but not verified; deployment remains out of scope until the user explicitly authorizes it.
 
@@ -228,6 +228,8 @@ The app has the necessary records, but it currently evaluates them in separate p
 
 Outcome: one pure resolver becomes the only source of recommendation eligibility. This slice creates the contract and read path; it does not change an active workout plan.
 
+Completion note (2026-09-01): `effective-safety-context-1` now resolves owner-scoped onboarding, readiness, and recent workout-log facts into separate plan/progression/Coach exercise decisions. Settings captures under-18, pregnancy, and structured medication-risk inputs without using encrypted note text; Workouts displays bilingual read-only reason copy. `/api/safety-context` rejects anonymous access and excludes cross-owner facts. Missing/future/stale readiness and missing/invalid/reported glucose remain distinct, and no numeric glucose threshold was introduced. P1.2 must consume this resolver at mutation/recommendation boundaries rather than reimplementing its logic.
+
 Required behavior:
 
 1. Extend `onboardingDraftSchema` with structured fields that can represent under-18 input, pregnancy context, and medication-related exercise risk. Keep medication names/details in encrypted notes; the resolver receives flags only.
@@ -278,7 +280,7 @@ Required behavior:
 4. Add a separately versioned glucose exercise policy only after its source and unit assumptions are reviewed. Normalize `mg/dL`/`mmol/L` before comparison, define exact inclusive/exclusive boundaries as named constants, and return a professional-review decision rather than medication or carbohydrate dosing advice.
 5. Every blocked response must expose a stable reason/copy key that the bilingual UI can render. AI is not involved in the decision.
 
-Schema note: if check-ins gain stored reason codes/context version, create migration `0020` here; otherwise reserve `0020` for P1.3. Update `db/schema.ts`, SQL, journal, clean-D1 verification, archive/delete inventory, and route isolation tests atomically.
+Completed 2026-09-02. Preview, confirmation, check-in, and Coach exercise guidance now use the same owner-scoped resolver. The reviewed `ada-exercise-glucose-2026-1` policy normalizes units and has exact boundary tests. Migration `0020` stores the safety context version, decision, and reason codes on check-ins; replay, archive, authentication, owner-isolation, and stale-preview tests protect the enforcement boundary. No AI or dosing logic participates in the decision.
 
 #### Slice P1.3 — Effective targets and immutable meal-finding snapshots
 
@@ -288,9 +290,11 @@ Required behavior:
 
 1. Reuse `selectTargets()` server-side and pass `{ metric, value, unit, authority }` into `evaluateMealHealthFindings()`; the rule engine must not query D1.
 2. Extend `HealthFinding` with `targetMetric`, `targetAuthority`, and explicit observed-value state/provenance. A missing value is not numeric zero.
-3. Add a `health_findings` JSON column to `meal_entries` in the next unused numbered SQL migration. Persist the reviewed finding array in the same batch as the immutable nutrient snapshot and idempotency row.
+3. Add a `health_findings` JSON column to `meal_entries` in migration `0021`, the next unused numbered SQL migration. Persist the reviewed finding array in the same batch as the immutable nutrient snapshot and idempotency row.
 4. Return persisted findings when historical meals are read. Never recompute history after target or rule changes.
 5. Include the public finding snapshot in the private archive and deletion inventory; add schema-drift, replay, malformed-stored-data, and owner-isolation tests.
+
+Completed 2026-09-02. Meal analysis now resolves effective targets with `selectTargets()` and records target metric/value/unit/authority plus observed availability and provenance in rule version `meal-starter-rules-5`. The editable review sends its exact finding array through confirmation; migration `0021` stores that array in the same batch as the immutable nutrition snapshot and idempotency row. Historical reads validate persisted data and never recompute it. Clean-D1, replay-after-target-change, malformed-data, owner-isolation, archive, reported-zero, and target-precedence tests protect the contract.
 
 #### Slice P1.4 — Hydration, micronutrients, and structured purine categories
 
@@ -303,6 +307,8 @@ Required behavior:
 3. Replace free-form substring-only purine checks with a versioned bilingual category map. Store the matched normalized ingredient, category, mapping version, and ambiguous/unresolved state in explanation inputs.
 4. Keep rule output deterministic. If a source lacks the nutrient or recipe detail, emit no numeric finding and surface an unresolved-data note instead.
 
+Completed 2026-09-02. `readNutrient()` now distinguishes reported or estimated values, explicit unavailability, reported zero, and unsupported units. Rule version `meal-starter-rules-6` emits serving-level water, potassium, calcium, and iron observations only for supported source units and makes no daily adequacy or deficiency claim. The versioned `purine-ingredient-categories-1` mapper uses phrase-safe bilingual categories, deduplicates normalized ingredients, and stores matched or unresolved evidence in typed explanation inputs. Capture always explains that missing/unsupported nutrients are unavailable rather than zero. Focus, boundary, unit, false-substring, bilingual evidence, and unresolved-recipe tests protect the behavior.
+
 #### Slice P1.5 — Provenance/source separation UI
 
 Outcome: the review screen makes the trust boundary obvious before save.
@@ -313,6 +319,8 @@ Required behavior:
 2. Show snapshot source/reference/version, estimation level, per-nutrient availability, confidence, rule/version/evidence, and target authority with bilingual labels.
 3. Do not relabel provider text as AI or deterministic rules as measured facts. Missing source metadata gets an explicit unavailable state.
 4. Preserve the existing editable review and confirmation gate; this is a presentation slice, not a capture-flow rewrite.
+
+Completed 2026-09-02. Capture now uses a five-concept provenance legend for user-confirmed facts, provider/database values, estimates, deterministic rules, and AI-written explanations. AI extraction is disclosed separately and cannot be mistaken for AI-authored health prose. The review exposes source/reference/version/confidence, snapshot basis, all supported nutrient availability states, rule/version/evidence, observed provenance, target authority, purine evidence, and explicit unavailable states. Semantic lists, definition lists, native keyboard-expandable details, focus-visible styling, responsive grids, and bilingual server-render tests protect accessibility and narrow-mobile behavior. The existing editable review and explicit confirmation action are unchanged.
 
 Do not send encrypted free-text notes to AI by default anywhere in P1. Use structured flags; add a separate explicit permission feature if free text is ever required.
 

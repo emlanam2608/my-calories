@@ -22,4 +22,22 @@ describe('onboarding', () => {
       symptomFlags: ['none', 'dizziness'],
     })).toThrow('No symptoms');
   });
+
+  it('accepts under-18 and structured pregnancy/medication context for safety gating', () => {
+    const draft = onboardingDraftSchema.parse({
+      ageYears: 17,
+      pregnancyContext: 'unsure',
+      medicationExerciseRiskFlags: ['glucose_lowering_without_plan'],
+    });
+    expect(draft).toMatchObject({ ageYears: 17, pregnancyContext: 'unsure' });
+  });
+
+  it('rejects duplicate medication-risk flags', () => {
+    expect(() => onboardingDraftSchema.parse({
+      medicationExerciseRiskFlags: [
+        'dizziness_or_fainting_risk',
+        'dizziness_or_fainting_risk',
+      ],
+    })).toThrow('Each choice');
+  });
 });

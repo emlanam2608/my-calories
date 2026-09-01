@@ -6,6 +6,7 @@ import type {
   WorkoutPlanResponse,
   WorkoutReadiness,
   WorkoutReadinessRequest,
+  SafetyReasonCode,
 } from '@/lib/contracts';
 import { getCopy, type Locale } from '@/lib/copy';
 import { createDashboardRequestId } from '@/lib/dashboard-client';
@@ -18,6 +19,7 @@ type Options = {
   setCheckin: Dispatch<SetStateAction<WorkoutCheckin | null>>;
   setError: (message: string) => void;
   setNotice: (message: string) => void;
+  reload: () => Promise<void>;
 };
 
 /** Keeps the workout safety and confirmation mutations outside the dashboard shell. */
@@ -30,8 +32,22 @@ export function useWorkoutActions(options: Options) {
     setCheckin,
     setError,
     setNotice,
+    reload,
   } = options;
   const c = getCopy(locale);
+  const safetyError = useCallback(
+    (body: {
+      error?: string;
+      errorCode?: string;
+      reasons?: Array<{ code: SafetyReasonCode }>;
+    }, fallback: string) => {
+      if (body.errorCode !== 'exercise_recommendation_blocked' || !body.reasons?.length)
+        return body.error || fallback;
+      const labels = c.safetyContext.reasons as Record<SafetyReasonCode, string>;
+      return body.reasons.map((reason) => labels[reason.code]).join(' ');
+    },
+    [c.safetyContext.reasons],
+  );
 
   const saveWorkoutReadiness = useCallback(
     async (readiness: WorkoutReadinessRequest) => {
@@ -49,13 +65,14 @@ export function useWorkoutActions(options: Options) {
       if (!response.ok)
         throw new Error(body.error || c.feedback.readinessSaveError);
       setReadiness(body);
+      await reload();
       setNotice(
         body.status === 'cleared'
           ? c.feedback.readinessCleared
           : c.feedback.readinessPaused,
       );
     },
-    [c.feedback, setError, setNotice, setReadiness],
+    [c.feedback, reload, setError, setNotice, setReadiness],
   );
 
   const previewWorkoutPlan = useCallback(async () => {
@@ -64,11 +81,13 @@ export function useWorkoutActions(options: Options) {
     });
     const body = (await response.json()) as WorkoutPlanResponse & {
       error?: string;
+      errorCode?: string;
+      reasons?: Array<{ code: SafetyReasonCode }>;
     };
     if (!response.ok)
-      throw new Error(body.error || c.feedback.planPreviewError);
+      throw new Error(safetyError(body, c.feedback.planPreviewError));
     return body;
-  }, [c.feedback.planPreviewError]);
+  }, [c.feedback.planPreviewError, safetyError]);
 
   const confirmWorkoutPlan = useCallback(
     async (plan: WorkoutPlanResponse['plan']) => {
@@ -82,17 +101,19 @@ export function useWorkoutActions(options: Options) {
       });
       const body = (await response.json()) as {
         error?: string;
+        errorCode?: string;
+        reasons?: Array<{ code: SafetyReasonCode }>;
         plan?: WorkoutPlanResponse;
         replayed?: boolean;
       };
       if (!response.ok || !body.plan)
-        throw new Error(body.error || c.feedback.planConfirmError);
+        throw new Error(safetyError(body, c.feedback.planConfirmError));
       setPlan(body.plan);
       setNotice(
         body.replayed ? c.feedback.planReplayed : c.feedback.planConfirmed,
       );
     },
-    [c.feedback, setNotice, setPlan],
+    [c.feedback, safetyError, setNotice, setPlan],
   );
 
   const saveWorkoutLog = useCallback(
@@ -110,13 +131,14 @@ export function useWorkoutActions(options: Options) {
       if (!response.ok || !body.log)
         throw new Error(body.error || c.feedback.workoutLogSaveError);
       setLogs((current) => [body.log!, ...current]);
+      await reload();
       setNotice(
         body.log.requiresReview
           ? c.feedback.workoutLogReview
           : c.feedback.workoutLogSaved,
       );
     },
-    [c.feedback, setLogs, setNotice],
+    [c.feedback, reload, setLogs, setNotice],
   );
 
   const runWorkoutCheckin = useCallback(

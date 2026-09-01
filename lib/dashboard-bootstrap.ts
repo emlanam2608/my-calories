@@ -1,5 +1,6 @@
 import type {
   Analytics,
+  EffectiveSafetyContext,
   HealthFocus,
   Measurement,
   OnboardingDraft,
@@ -14,17 +15,19 @@ import type {
 import type { Locale } from './copy';
 import type { ExerciseCatalogEntry } from './exercise-catalog';
 import type { DashboardMeal, DashboardTargetKey } from './dashboard-model';
+import type { EffectiveTarget } from './targets';
 
 export type DashboardBootstrap = {
   meals: DashboardMeal[];
   locale?: Locale;
-  targets?: Array<{ metric: DashboardTargetKey; value: number }>;
+  targets?: EffectiveTarget[];
   focuses?: HealthFocus[];
   onboarding?: { draft: OnboardingDraft; status: 'in_progress' | 'complete' };
   sensitiveNotes?: SensitiveNotes;
   sensitiveNotesAvailable: boolean;
   measurements?: Measurement[];
   readiness?: WorkoutReadiness;
+  safetyContext?: EffectiveSafetyContext;
   exercises?: ExerciseCatalogEntry[];
   plan?: WorkoutPlanResponse | null;
   logs?: WorkoutLog[];
@@ -78,6 +81,7 @@ export async function loadDashboardBootstrap(
     sensitiveNotes,
     measurements,
     readiness,
+    safetyContext,
     exercises,
     plan,
     logs,
@@ -88,7 +92,7 @@ export async function loadDashboardBootstrap(
   ] = await Promise.all([
     read<{
       locale?: Locale;
-      targets?: Array<{ metric: DashboardTargetKey; value: number }>;
+      targets?: Array<EffectiveTarget & { metric: DashboardTargetKey }>;
     }>('/api/profile'),
     read<{ focuses?: HealthFocus[] }>('/api/profile/health-focuses'),
     read<{ draft?: OnboardingDraft; status?: 'in_progress' | 'complete' }>(
@@ -97,6 +101,7 @@ export async function loadDashboardBootstrap(
     read<{ notes?: SensitiveNotes }>('/api/profile/sensitive-notes'),
     read<{ measurements?: Measurement[] }>('/api/measurements?days=90'),
     read<WorkoutReadiness>('/api/workouts/readiness'),
+    read<{ context?: EffectiveSafetyContext }>('/api/safety-context'),
     read<{ exercises?: ExerciseCatalogEntry[] }>('/api/exercises'),
     read<{ plan?: WorkoutPlanResponse | null }>('/api/workout-plans'),
     read<{ logs?: WorkoutLog[] }>('/api/workout-logs'),
@@ -112,6 +117,7 @@ export async function loadDashboardBootstrap(
     sensitiveNotes,
     measurements,
     readiness,
+    safetyContext,
     exercises,
     plan,
     logs,
@@ -133,6 +139,7 @@ export async function loadDashboardBootstrap(
     onboarding,
     measurements,
     readiness,
+    safetyContext,
     exercises,
     plan,
     logs,
@@ -160,6 +167,7 @@ export async function loadDashboardBootstrap(
     sensitiveNotesAvailable: sensitiveNotes.ok,
     measurements: measurements.ok ? measurements.body.measurements : undefined,
     readiness: readiness.ok ? readiness.body : undefined,
+    safetyContext: safetyContext.ok ? safetyContext.body.context : undefined,
     exercises: exercises.ok ? exercises.body.exercises : undefined,
     plan: plan.ok ? (plan.body.plan ?? null) : undefined,
     logs: logs.ok ? logs.body.logs : undefined,

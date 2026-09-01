@@ -7,8 +7,19 @@ export const defaultTargets = [
 
 export type TargetMetric = (typeof defaultTargets)[number]['metric'];
 export type TargetAuthority = 'guideline_default' | 'user_defined' | 'clinician_defined';
+export type EffectiveTarget = {
+  metric: TargetMetric;
+  value: number;
+  unit: string;
+  authority: TargetAuthority;
+};
 
-export function selectTargets(rows: Array<{ metric: string; valueScaled: number; valueScale: number; unit: string; authority: string; updatedAt: Date }>) {
+export const defaultEffectiveTargets: EffectiveTarget[] = defaultTargets.map((target) => ({
+  ...target,
+  authority: 'guideline_default',
+}));
+
+export function selectTargets(rows: Array<{ metric: string; valueScaled: number; valueScale: number; unit: string; authority: string; updatedAt: Date }>): EffectiveTarget[] {
   const rank: Record<TargetAuthority, number> = { guideline_default: 1, user_defined: 2, clinician_defined: 3 };
   return defaultTargets.map((fallback) => {
     const candidates = rows.filter((row) => row.metric === fallback.metric && isAuthority(row.authority) && Number.isSafeInteger(row.valueScaled) && Number.isSafeInteger(row.valueScale) && row.valueScaled >= 0 && row.valueScale > 0).sort((a, b) => rank[b.authority as TargetAuthority] - rank[a.authority as TargetAuthority] || b.updatedAt.getTime() - a.updatedAt.getTime());

@@ -1,6 +1,6 @@
 import { and, desc, eq, gte, lt } from 'drizzle-orm';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
-import { createMealRequestSchema, nutritionSnapshotSchema } from '@/lib/contracts';
+import { createMealRequestSchema, healthFindingSchema, nutritionSnapshotSchema } from '@/lib/contracts';
 import { getDb } from '@/db';
 import { mealEntries, requestDeduplications } from '@/db/schema';
 
@@ -19,7 +19,10 @@ export async function GET(request: Request) {
   const rows = await getDb().select().from(mealEntries).where(and(eq(mealEntries.ownerId, user.userId), gte(mealEntries.occurredAt, start), lt(mealEntries.occurredAt, end))).orderBy(desc(mealEntries.occurredAt));
   const meals = rows.flatMap((row) => {
     const snapshot = nutritionSnapshotSchema.safeParse(row.nutritionSnapshot);
-    return snapshot.success ? [{ ...row, nutritionSnapshot: snapshot.data }] : [];
+    const findings = healthFindingSchema.array().max(16).safeParse(row.healthFindings);
+    return snapshot.success && findings.success
+      ? [{ ...row, nutritionSnapshot: snapshot.data, healthFindings: findings.data }]
+      : [];
   });
   return Response.json({ meals }, { headers: { 'Cache-Control': 'no-store' } });
 }
@@ -42,7 +45,7 @@ export async function POST(request: Request) {
   const now = new Date();
   try {
     await db.batch([
-      db.insert(mealEntries).values({ id, ownerId: user.userId, occurredAt: new Date(parsed.data.occurredAt), mealType: parsed.data.mealType, name: parsed.data.name, nutritionSnapshot: parsed.data.nutritionSnapshot, analysisSource: parsed.data.analysisSource, confidence: parsed.data.confidence, createdAt: now }),
+      db.insert(mealEntries).values({ id, ownerId: user.userId, occurredAt: new Date(parsed.data.occurredAt), mealType: parsed.data.mealType, name: parsed.data.name, nutritionSnapshot: parsed.data.nutritionSnapshot, healthFindings: parsed.data.healthFindings, analysisSource: parsed.data.analysisSource, confidence: parsed.data.confidence, createdAt: now }),
       db.insert(requestDeduplications).values({ id: crypto.randomUUID(), ownerId: user.userId, idempotencyKey: parsed.data.idempotencyKey, resourceType: 'meal', resourceId: id, createdAt: now }),
     ]);
   } catch {

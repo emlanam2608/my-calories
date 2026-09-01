@@ -1,6 +1,6 @@
 # Nourishwell implementation tracker
 
-Last reviewed: 2026-09-01
+Last reviewed: 2026-09-02
 
 This is the status ledger. Read [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) before implementing an unchecked item. Work from the top of the **Next execution queue**, complete one bounded slice at a time, and update both documents when facts change.
 
@@ -15,7 +15,7 @@ This is the status ledger. Read [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN
 
 - [x] TypeScript Sites/Vinext app with shadcn, ChatGPT sign-in, D1, private R2, PWA metadata, offline shell, and bilingual copy infrastructure.
 - [x] Seven working surfaces: Today, Capture, Coach, Measurements, Workouts, Progress, and Settings.
-- [x] Twenty-seven API route files with authenticated handlers for profile, meals, uploads, measurements, workouts, reminders, analytics, exports, saved foods, and deletion.
+- [x] Twenty-eight API route files with authenticated handlers for profile, meals, uploads, measurements, safety context, workouts, reminders, analytics, exports, saved foods, and deletion.
 - [x] Resumable profile/onboarding storage for goals, demographics, activity, sleep, availability, equipment, environments, and structured clinician restrictions.
 - [x] AES-GCM storage for medication, clinician, and symptom notes with key versioning and owner-only decryption.
 - [x] Target precedence: clinician-defined, then user-defined, then conservative guideline defaults.
@@ -32,13 +32,13 @@ This is the status ledger. Read [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN
 - [x] Owner-scoped 30-day starter analytics with non-causal trend language and sample sizes.
 - [x] Private reminder CRUD, pause/resume, reschedule, one-hour snooze, quiet-hours deferral, and Today agenda preview.
 - [x] Date-range CSV/PDF clinician downloads, a versioned private JSON archive, and typed-confirmation account-data deletion.
-- [x] Current local validation: full Oxlint passes; TypeScript passes; 33 test files / 107 tests pass; production Vinext/Sites build passes; production dependency audit reports zero vulnerabilities.
+- [x] Current local validation: full Oxlint passes; TypeScript passes; 41 test files / 160 tests pass; production Vinext/Sites build passes; production dependency audit reports zero vulnerabilities.
 
 ## Current non-claims and known debt
 
 - [x] Full repository Oxlint is clean. The 19 generated shadcn/mobile-hook findings are narrowly baselined by exact file and rule; authored product code retains the full rule set.
 - [x] Dependency review is complete for S0. Production audit is clean; four moderate, fix-unavailable development-only Drizzle Kit/esbuild advisories are accepted and documented in `docs/dependency-risk.md`.
-- [x] Migration metadata is reproducible under the documented SQL-first policy; the journal and clean-D1 schema/index verification cover migrations `0000`–`0019`.
+- [x] Migration metadata is reproducible under the documented SQL-first policy; the journal and clean-D1 schema/index verification cover migrations `0000`–`0021`.
 - [x] Route-level authentication, wrong-owner, idempotency replay, deletion-completeness, and archive-isolation tests exist.
 - [x] `app/dashboard.tsx` is a 492-line composition shell. Seven surfaces, read bootstrap, mutations, and browser effects are extracted into focused modules under `components/dashboard/` and `lib/`.
 - [x] Authored presentation copy is bilingual. Provider values and rule-returned provenance remain source data and are intentionally not silently translated.
@@ -122,39 +122,49 @@ S0.7 validation: full Oxlint, TypeScript, 33 test files / 107 tests, clean-D1 mi
 
 Execute only the first unchecked slice below. Do not combine safety-context, health-rule persistence, and provenance UI into one change.
 
-#### P1.1 — Versioned effective safety context (next)
+#### P1.1 — Versioned effective safety context (complete 2026-09-01)
 
-- [ ] Add structured onboarding fields for adult eligibility/pregnancy context and medication-related exercise risk without exposing encrypted note text.
-- [ ] Define a pure, versioned `EffectiveSafetyContext` contract and resolver from onboarding flags, the latest readiness record, clinician restrictions, and recent workout pain/symptom/glucose facts.
-- [ ] Return domain-specific decisions for `workout_plan`, `workout_progression`, and `coach_exercise`: `allowed`, `allowed_with_modifications`, or `blocked`, with stable reason codes and source record IDs/timestamps.
-- [ ] Treat absent, stale, invalid, and zero values distinctly. Do not invent numeric glucose thresholds in this slice; use the existing structured glucose-risk answer until P1.2 policy constants are reviewed.
-- [ ] Add pure boundary/precedence tests and owner-scoped route tests. This slice may expose a read-only safety-context endpoint, but must not alter an active plan or recommendation.
+- [x] Add structured onboarding fields for adult eligibility/pregnancy context and medication-related exercise risk without exposing encrypted note text.
+- [x] Define a pure, versioned `EffectiveSafetyContext` contract and resolver from onboarding flags, the latest readiness record, clinician restrictions, and recent workout pain/symptom/glucose facts.
+- [x] Return domain-specific decisions for `workout_plan`, `workout_progression`, and `coach_exercise`: `allowed`, `allowed_with_modifications`, or `blocked`, with stable reason codes and source record IDs/timestamps.
+- [x] Treat absent, stale, invalid, and zero values distinctly. No numeric glucose thresholds were added; P1.1 uses the existing structured glucose-risk answer and records pre/post values only as facts.
+- [x] Add pure boundary/precedence tests, anonymous rejection, and real-D1 owner-isolation coverage. `/api/safety-context` is read-only and no active plan or recommendation is mutated.
+
+P1.1 validation: full Oxlint, TypeScript, 34 test files / 130 tests, production Vinext/Sites build, and `git diff --check` passed. No schema migration was required because the new structured fields use the existing onboarding JSON record. Next: P1.2 deterministic enforcement.
 
 #### P1.2 — Enforce deterministic recommendation gates
 
-- [ ] Apply the same resolver before workout preview, plan confirmation, scheduled check-in/progression proposals, and exercise-oriented Coach guidance.
-- [ ] Add a reviewed, versioned glucose exercise policy with canonical-unit conversion before using pre/post-workout readings; test exact low/high boundaries and missing readings.
-- [ ] Ensure pain, concerning symptoms, readiness red flags, clinician restrictions, pregnancy context, and under-18 status override progression. AI language may only explain the deterministic outcome.
-- [ ] Add complete English/Vietnamese urgent, stop-activity, and professional-review copy for every reason code; keep emergency language specific and non-diagnostic.
+- [x] Apply the same resolver before workout preview, plan confirmation, scheduled check-in/progression proposals, and exercise-oriented Coach guidance.
+- [x] Add a reviewed, versioned glucose exercise policy with canonical-unit conversion before using pre/post-workout readings; test exact low/high boundaries and missing readings.
+- [x] Ensure pain, concerning symptoms, readiness red flags, clinician restrictions, pregnancy context, and under-18 status override progression. AI language may only explain the deterministic outcome.
+- [x] Add complete English/Vietnamese urgent, stop-activity, and professional-review copy for every reason code; keep emergency language specific and non-diagnostic.
+
+P1.2 validation: the shared owner-scoped resolver is enforced at preview, confirmation, check-in, and Coach exercise boundaries; migration `0020` persists each check-in's safety version, decision, and reason codes; unit, boundary, stale-preview, replay, archive, authentication, and owner-isolation tests pass. Full validation: Oxlint, TypeScript, 36 test files / 140 tests, production build, and `git diff --check`. Next: P1.3 immutable finding snapshots.
 
 #### P1.3 — Effective targets and immutable finding snapshots
 
-- [ ] Pass effective targets, including authority, into the meal rule engine rather than using hard-coded target values in findings.
-- [ ] Extend `HealthFinding` with target metric/authority and explicit observed-value availability/provenance; preserve missing versus reported zero.
-- [ ] Add the next unused migration (currently `0020`) to persist the exact confirmed finding array with each meal, including rule version, evidence source, effective target, and authority. Never recompute historical findings on read.
-- [ ] Update schema, SQL-first journal metadata, archive/delete inventory, clean-D1 verification, and replay tests together.
+- [x] Pass effective targets, including authority, into the meal rule engine rather than using hard-coded target values in findings.
+- [x] Extend `HealthFinding` with target metric/authority and explicit observed-value availability/provenance; preserve missing versus reported zero.
+- [x] Add migration `0021` to persist the exact confirmed finding array with each meal, including rule version, evidence source, effective target, and authority. Historical reads validate and return the stored array without recomputation.
+- [x] Update schema, SQL-first journal metadata, archive/delete coverage, clean-D1 verification, and replay tests together.
+
+P1.3 validation: owner-scoped analysis resolves clinician/user/default target precedence server-side; edited reviews use the same effective-target snapshot; confirmation persists findings in the meal/idempotency batch. Tests cover authority and provenance, reported zero, target changes after save, replay immutability, malformed stored data, private archive inclusion, owner isolation, and migration drift. Full validation: Oxlint, TypeScript, 37 test files / 144 tests, production build, and `git diff --check`. Next: P1.4 nutrient availability and structured purine categories.
 
 #### P1.4 — Complete nutrient/purine rules
 
-- [ ] Add hydration and micronutrient observations only for nutrients explicitly reported or estimated in the immutable snapshot; no finding may treat unavailable as zero.
-- [ ] Replace substring-only purine detection with a versioned structured ingredient-category mapping that retains matched ingredient/category evidence and an unresolved state for ambiguous recipes.
-- [ ] Add exact threshold, focus filtering, estimated/reported/unavailable, and bilingual explanation-input tests. Keep rule outputs deterministic and non-diagnostic.
+- [x] Add hydration and micronutrient observations only for nutrients explicitly reported or estimated in supported units from the immutable snapshot; reported zero stays zero and unavailable/unsupported values produce no numeric finding.
+- [x] Replace substring-only purine detection with versioned bilingual ingredient categories that retain normalized ingredient/category evidence and an unresolved state for ambiguous recipes.
+- [x] Add exact threshold, focus filtering, estimated/reported/unavailable, supported-unit, false-substring, duplicate-normalization, and bilingual explanation-input tests. Rule outputs remain deterministic and non-diagnostic.
+
+P1.4 validation: `readNutrient()` centralizes availability semantics; rule version `meal-starter-rules-6` adds serving-level water/potassium/calcium/iron observations without daily adequacy or deficiency claims. `purine-ingredient-categories-1` records bilingual matched evidence and unresolved recipe detail. Full validation: Oxlint, TypeScript, 39 test files / 154 tests, production build, and `git diff --check`. Next: P1.5 provenance/source separation UI.
 
 #### P1.5 — Source separation in the UI
 
-- [ ] Show separate badges/sections for user-measured or confirmed facts, provider/database values, estimates, deterministic rule findings, and AI-authored explanations.
-- [ ] Display source/version/confidence and target authority without implying that an estimate is measured or that AI text is a rule result.
-- [ ] Add English/Vietnamese copy plus keyboard, screen-reader, narrow-mobile, and missing-provenance states.
+- [x] Show separate statuses for user-confirmed facts, provider/database values, estimates, deterministic rule findings, and AI-authored explanations. AI-assisted extraction is disclosed separately and AI explanations are explicitly absent from the current review contract.
+- [x] Display source/reference/version/confidence, value basis, per-nutrient availability, observed provenance, rule/version/evidence, and effective target authority without implying that an estimate is measured or that provider text is AI/rule output.
+- [x] Add English/Vietnamese copy plus semantic lists/definition lists, keyboard-expandable nutrient details, screen-reader labels, narrow-mobile layouts, and explicit missing-provenance states.
+
+P1.5 validation: `reviewProvenanceStates()` protects the five-concept trust boundary and the Capture review renders it through focused provenance components. Bilingual server-render tests cover missing references, reported zero, AI extraction disclosure, deterministic evidence, clinician authority, keyboard semantics, responsive classes, and the unchanged editable confirmation gate. Full validation: Oxlint, TypeScript, 41 test files / 160 tests, production build, and `git diff --check`. P1 deterministic health safety is complete. Next: P2 individualized PT.
 
 ### P2 — Individualized PT and scheduled adaptation
 

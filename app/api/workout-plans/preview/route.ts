@@ -1,10 +1,12 @@
 import { asc, eq } from 'drizzle-orm';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { getDb } from '@/db';
-import { exerciseCatalog, profileOnboarding, workoutReadiness } from '@/db/schema';
+import { exerciseCatalog, profileOnboarding } from '@/db/schema';
 import { exerciseCatalogEntrySchema } from '@/lib/exercise-catalog';
 import { onboardingDraftSchema, workoutPlanResponseSchema } from '@/lib/contracts';
 import { createStarterWorkoutPlan } from '@/lib/workout-plan';
+import { resolveEffectiveSafetyContextForOwner } from '@/lib/effective-safety-context-server';
+import { recommendationBlockedResponse } from '@/lib/safety-enforcement';
 
 function bangkokDate() {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -22,16 +24,9 @@ export async function POST() {
   const user = await getChatGPTUser();
   if (!user)
     return Response.json({ error: 'Sign in is required.' }, { status: 401 });
-  const readiness = await getDb()
-    .select({ status: workoutReadiness.status })
-    .from(workoutReadiness)
-    .where(eq(workoutReadiness.ownerId, user.userId))
-    .limit(1);
-  if (readiness[0]?.status !== 'cleared')
-    return Response.json(
-      { error: 'Complete a cleared workout-readiness screen before generating a plan.' },
-      { status: 422 },
-    );
+  const safetyContext = await resolveEffectiveSafetyContextForOwner(user.userId);
+  if (safetyContext.decisions.workout_plan.status === 'blocked')
+    return recommendationBlockedResponse(safetyContext, 'workout_plan');
   const onboarding = await getDb()
     .select({ draft: profileOnboarding.draft, status: profileOnboarding.status })
     .from(profileOnboarding)
@@ -48,16 +43,6 @@ export async function POST() {
       { error: 'Review your saved equipment before generating a plan.' },
       { status: 422 },
     );
-  if (
-    onboardingDraft.data.symptomFlags?.some((flag) =>
-      ['chest_discomfort', 'dizziness', 'shortness_of_breath'].includes(flag),
-    )
-  )
-    return Response.json(
-      { error: 'Workout-plan generation is paused because you reported a concerning symptom. Review this with an appropriate clinician before starting a plan.' },
-      { status: 422 },
-    );
-
   const rows = await getDb()
     .select({
       id: exerciseCatalog.id,

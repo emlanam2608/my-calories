@@ -13,6 +13,7 @@ import type {
 import { getCopy, type Locale } from '@/lib/copy';
 import { createDashboardRequestId } from '@/lib/dashboard-client';
 import { evaluateMealHealthFindings } from '@/lib/health-rule-engine';
+import type { EffectiveTarget } from '@/lib/targets';
 
 export type CaptureMode =
   | 'text'
@@ -29,6 +30,7 @@ type Options = {
   draft: string;
   analysis: FoodAnalysis | null;
   healthFocuses: HealthFocus[];
+  effectiveTargets: EffectiveTarget[];
   reload: () => Promise<void>;
   setPage: (page: 'today' | 'capture') => void;
   setDraft: Dispatch<SetStateAction<string>>;
@@ -52,6 +54,7 @@ export function useCaptureActions(options: Options) {
     draft,
     analysis,
     healthFocuses,
+    effectiveTargets,
     reload,
     setPage,
     setDraft,
@@ -134,11 +137,13 @@ export function useCaptureActions(options: Options) {
             healthFocuses,
             current.snapshot.ingredients,
             current.snapshot.additionalNutrients,
+            effectiveTargets,
+            current.snapshot.estimationLevel,
           ),
         };
       });
     },
-    [healthFocuses, setAnalysis],
+    [effectiveTargets, healthFocuses, setAnalysis],
   );
 
   const updateAnalysisDetails = useCallback(
@@ -163,11 +168,13 @@ export function useCaptureActions(options: Options) {
             healthFocuses,
             ingredients,
             current.snapshot.additionalNutrients,
+            effectiveTargets,
+            current.snapshot.estimationLevel,
           ),
         };
       });
     },
-    [healthFocuses, setAnalysis],
+    [effectiveTargets, healthFocuses, setAnalysis],
   );
 
   const confirmMeal = useCallback(async () => {
@@ -185,6 +192,7 @@ export function useCaptureActions(options: Options) {
         ...analysis.snapshot,
         estimationLevel: 'user_confirmed',
       },
+      healthFindings: analysis.healthFindings ?? [],
     };
     try {
       const response = await fetch('/api/meals', {
@@ -318,11 +326,13 @@ export function useCaptureActions(options: Options) {
           healthFocuses,
           snapshot.ingredients,
           snapshot.additionalNutrients,
+          effectiveTargets,
+          snapshot.estimationLevel,
         ),
       });
       setCaptureMode('text');
     },
-    [c.feedback.personalFoodReview, healthFocuses, setAnalysis, setCaptureMode],
+    [c.feedback.personalFoodReview, effectiveTargets, healthFocuses, setAnalysis, setCaptureMode],
   );
 
   const deleteSavedFood = useCallback(

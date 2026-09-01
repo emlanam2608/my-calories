@@ -1,5 +1,6 @@
 import {
   Activity,
+  ShieldAlert,
   Flame,
   LoaderCircle,
   Plus,
@@ -17,6 +18,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import type {
   Analytics,
+  EffectiveSafetyContext,
   HealthFocus,
   Reminder,
   WorkoutPlanResponse,
@@ -39,12 +41,14 @@ export function CoachSurface({
   targets,
   healthFocuses,
   workoutPlan,
+  safetyContext,
   locale,
 }: {
   totals: Totals;
   targets: Totals;
   healthFocuses: HealthFocus[];
   workoutPlan: WorkoutPlanResponse | null;
+  safetyContext: EffectiveSafetyContext | null;
   locale: Locale;
 }) {
   const c = getCopy(locale);
@@ -60,6 +64,8 @@ export function CoachSurface({
     health_focus: c.coach.priorities.healthFocus,
     balanced: c.coach.priorities.balanced,
   };
+  const exerciseDecision = safetyContext?.decisions.coach_exercise;
+  const safetyReasons = c.safetyContext.reasons as Record<string, string>;
   return (
     <section className="mx-auto max-w-4xl">
       <p className="text-sm font-medium text-slate-500">
@@ -125,7 +131,12 @@ export function CoachSurface({
             <CardDescription>{c.coach.planDescription}</CardDescription>
           </CardHeader>
           <CardContent>
-            {workoutPlan?.plan.sessions?.length ? (
+            {exerciseDecision?.status === 'blocked' ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-950">
+                <p className="flex items-center gap-2 font-semibold"><ShieldAlert className="size-4" />{c.safetyContext.blocked}</p>
+                <ul className="mt-2 list-disc pl-5">{exerciseDecision.reasons.map((reason) => <li key={reason.code}>{safetyReasons[reason.code]}</li>)}</ul>
+              </div>
+            ) : workoutPlan?.plan.sessions?.length ? (
               <p className="text-sm leading-6 text-slate-700">
                 {c.coach.planAvailable.replace(
                   '{count}',
@@ -137,6 +148,7 @@ export function CoachSurface({
                 {c.coach.noPlan}
               </p>
             )}
+            {exerciseDecision?.status === 'allowed_with_modifications' ? <ul className="mt-3 list-disc pl-5 text-sm leading-6 text-sky-900">{exerciseDecision.reasons.map((reason) => <li key={reason.code}>{safetyReasons[reason.code]}</li>)}</ul> : null}
           </CardContent>
         </Card>
       </div>

@@ -1,7 +1,7 @@
 import { and, asc, desc, eq } from 'drizzle-orm';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { getDb } from '@/db';
-import { exerciseCatalog, profileOnboarding, requestDeduplications, workoutPlans, workoutReadiness } from '@/db/schema';
+import { exerciseCatalog, profileOnboarding, requestDeduplications, workoutPlans } from '@/db/schema';
 import {
   confirmWorkoutPlanRequestSchema,
   onboardingDraftSchema,
@@ -9,6 +9,8 @@ import {
 } from '@/lib/contracts';
 import { exerciseCatalogEntrySchema } from '@/lib/exercise-catalog';
 import { selectableWorkoutExercises } from '@/lib/workout-plan';
+import { resolveEffectiveSafetyContextForOwner } from '@/lib/effective-safety-context-server';
+import { recommendationBlockedResponse } from '@/lib/safety-enforcement';
 
 async function currentPlanForOwner(ownerId: string) {
   const row = await getDb()
@@ -44,16 +46,9 @@ export async function POST(request: Request) {
   );
   if (!parsed.success)
     return Response.json({ error: 'Review a valid plan before confirming it.' }, { status: 400 });
-  const readiness = await getDb()
-    .select({ status: workoutReadiness.status })
-    .from(workoutReadiness)
-    .where(eq(workoutReadiness.ownerId, user.userId))
-    .limit(1);
-  if (readiness[0]?.status !== 'cleared')
-    return Response.json(
-      { error: 'Workout plan confirmation is paused by your readiness screen.' },
-      { status: 422 },
-    );
+  const safetyContext = await resolveEffectiveSafetyContextForOwner(user.userId);
+  if (safetyContext.decisions.workout_plan.status === 'blocked')
+    return recommendationBlockedResponse(safetyContext, 'workout_plan');
   const onboarding = await getDb()
     .select({ status: profileOnboarding.status, draft: profileOnboarding.draft })
     .from(profileOnboarding)
@@ -69,15 +64,6 @@ export async function POST(request: Request) {
   if (!onboardingDraft.success || !onboardingDraft.data.equipment)
     return Response.json(
       { error: 'Review your saved equipment before confirming a plan.' },
-      { status: 422 },
-    );
-  if (
-    onboardingDraft.data.symptomFlags?.some((flag) =>
-      ['chest_discomfort', 'dizziness', 'shortness_of_breath'].includes(flag),
-    )
-  )
-    return Response.json(
-      { error: 'Workout plan confirmation is paused because you reported a concerning symptom. Review this with an appropriate clinician first.' },
       { status: 422 },
     );
   const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];

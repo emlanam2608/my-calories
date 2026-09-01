@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import type {
+  EffectiveSafetyContext,
   WorkoutCheckin,
   WorkoutLog,
   WorkoutLogRequest,
@@ -32,11 +33,13 @@ import {
   type WorkoutReadinessFlag,
 } from '@/lib/dashboard-model';
 import type { ExerciseCatalogEntry } from '@/lib/exercise-catalog';
+import { SafetyContextSummary } from './safety-context-summary';
 
 const requestId = createDashboardRequestId;
 
 export function WorkoutReadinessSurface({
   readiness,
+  safetyContext,
   exercises,
   confirmedPlan,
   logs,
@@ -49,6 +52,7 @@ export function WorkoutReadinessSurface({
   locale,
 }: {
   readiness: WorkoutReadiness | null;
+  safetyContext: EffectiveSafetyContext | null;
   exercises: ExerciseCatalogEntry[];
   confirmedPlan: WorkoutPlanResponse | null;
   logs: WorkoutLog[];
@@ -188,6 +192,9 @@ export function WorkoutReadinessSurface({
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
           {c.workouts.description}
         </p>
+      </div>
+      <div className="mt-7">
+        <SafetyContextSummary context={safetyContext} locale={locale} />
       </div>
       <div className="mt-7 grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
         <Card className="border-none shadow-sm">
@@ -422,6 +429,7 @@ export function WorkoutReadinessSurface({
                             : c.workouts.checkinMaintain
                         : c.workouts.planPreviewNote}
                     </p>
+                    {checkin?.safetyReasonCodes.length ? <ul className="mt-2 list-disc pl-5 text-sm leading-5 text-amber-900">{checkin.safetyReasonCodes.map((code) => <li key={code}>{(c.safetyContext.reasons as Record<string, string>)[code]}</li>)}</ul> : null}
                   </div>
                   <Button
                     type="button"
