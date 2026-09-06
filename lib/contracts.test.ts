@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accountDeletionRequestSchema, measurementCreateRequestSchema, nutritionSnapshotSchema } from './contracts';
+import { accountDeletionRequestSchema, createMealRequestSchema, measurementCreateRequestSchema, nutritionSnapshotSchema } from './contracts';
 
 const baseMeasurement = {
   idempotencyKey: 'c1a239b1-6aec-4e9d-a6c8-c18ee8a5d0b4',
@@ -88,6 +88,22 @@ describe('additional nutrient contracts', () => {
     });
     expect(parsed.additionalNutrients?.addedSugar?.value).toBe(0);
     expect(parsed.additionalNutrients?.alcohol?.value).toBeNull();
+  });
+});
+
+describe('meal confirmation contract', () => {
+  it('accepts only a server review reference and rejects client-authored meal facts', () => {
+    const confirmation = {
+      idempotencyKey: 'c1a239b1-6aec-4e9d-a6c8-c18ee8a5d0b4',
+      reviewId: 'e1a239b1-6aec-4e9d-a6c8-c18ee8a5d0b4',
+      occurredAt: '2026-09-02T08:00:00.000Z',
+    };
+    expect(createMealRequestSchema.safeParse(confirmation).success).toBe(true);
+    expect(createMealRequestSchema.safeParse({
+      ...confirmation,
+      name: 'Client-authored meal',
+      healthFindings: [],
+    }).success).toBe(false);
   });
 });
 

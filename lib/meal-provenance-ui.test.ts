@@ -6,6 +6,7 @@ import { MealFindingProvenance, MealProvenancePanel } from '@/components/dashboa
 import type { FoodAnalysis } from './contracts';
 import { getCopy } from './copy';
 import { evaluateMealHealthFindings } from './health-rule-engine';
+import { healthFindingSchema } from './contracts';
 
 function fixture(): FoodAnalysis {
   const snapshot: FoodAnalysis['snapshot'] = {
@@ -58,8 +59,22 @@ describe('meal provenance review UI', () => {
       expect(html).toContain(c.clinicianDefined);
       expect(html).toContain(c.evidenceSource);
       expect(html).toContain('meal-sodium-800mg');
-      expect(html).toContain('meal-starter-rules-6');
+      expect(html).toContain('meal-starter-rules-7');
+      expect(html).toContain(locale === 'vi' ? 'Khẩu phần này có lượng natri' : 'This single serving has a substantial amount of sodium');
     }
+  });
+
+  it('keeps historical English-only findings readable and discloses the Vietnamese fallback', () => {
+    const current = fixture().healthFindings![0];
+    const legacy = healthFindingSchema.parse({
+      ...current,
+      presentationVersion: undefined,
+      text: 'Original historical explanation.',
+      suggestedActions: ['Original historical action.'],
+    });
+    const html = renderToStaticMarkup(createElement(MealFindingProvenance, { finding: legacy, locale: 'vi' }));
+    expect(html).toContain('Original historical explanation.');
+    expect(html).toContain(getCopy('vi').mealCapture.legacyEnglishFinding);
   });
 
   it('preserves the existing editable review and explicit confirmation boundary', () => {

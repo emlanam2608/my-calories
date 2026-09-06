@@ -1,7 +1,38 @@
 import { describe, expect, it } from 'vitest';
+import { healthFindingSchema } from './contracts';
 import { evaluateMealHealthFindings } from './health-rule-engine';
+import { presentHealthFinding } from './health-finding-presentation';
 
 describe('evaluateMealHealthFindings', () => {
+  it('emits schema-valid bilingual presentation snapshots for every triggered rule', () => {
+    const findings = evaluateMealHealthFindings(
+      { calories: 800, protein: 10, fiber: 2, sodium: 900 },
+      [],
+      ['beef', 'broth'],
+      {
+        carbohydrates: { value: 65, unit: 'g', state: 'reported' },
+        addedSugar: { value: 20, unit: 'g', state: 'reported' },
+        saturatedFat: { value: 5, unit: 'g', state: 'reported' },
+        water: { value: 250, unit: 'ml', state: 'reported' },
+        potassium: { value: 400, unit: 'mg', state: 'reported' },
+        calcium: { value: 100, unit: 'mg', state: 'reported' },
+        iron: { value: 3, unit: 'mg', state: 'reported' },
+        alcohol: { value: 5, unit: 'g', state: 'reported' },
+      },
+    );
+
+    expect(() => healthFindingSchema.array().parse(findings)).not.toThrow();
+    expect(findings).toHaveLength(13);
+    for (const finding of findings) {
+      expect(finding).toMatchObject({
+        presentationVersion: 'health-finding-presentation-1',
+        text: { en: expect.any(String), vi: expect.any(String) },
+      });
+      expect(presentHealthFinding(finding, 'en').usedLegacyEnglishFallback).toBe(false);
+      expect(presentHealthFinding(finding, 'vi').usedLegacyEnglishFallback).toBe(false);
+    }
+  });
+
   it('returns no finding when all rule thresholds are avoided', () => {
     expect(evaluateMealHealthFindings({ calories: 299, protein: 20, fiber: 3, sodium: 799 })).toEqual([]);
   });
@@ -16,7 +47,8 @@ describe('evaluateMealHealthFindings', () => {
       'meal-energy-750kcal',
     ]);
     expect(findings.map((finding) => finding.severity)).toEqual(['attention', 'info', 'info', 'info']);
-    expect(findings.every((finding) => finding.ruleVersion === 'meal-starter-rules-6')).toBe(true);
+    expect(findings.every((finding) => finding.ruleVersion === 'meal-starter-rules-7')).toBe(true);
+    expect(findings.every((finding) => 'presentationVersion' in finding)).toBe(true);
   });
 
   it('does not treat an exact 3 g of fiber as low fiber', () => {
@@ -104,7 +136,7 @@ describe('evaluateMealHealthFindings', () => {
       observedValue: 420, observedValueState: 'estimated',
       explanationInputs: { kind: 'nutrient_observation', nutrientKey: 'potassium', sourceState: 'estimated', supportedUnit: 'mg' },
     });
-    expect(findings.every((finding) => !/deficient|deficiency diagnosed/i.test(finding.text))).toBe(true);
+    expect(findings.every((finding) => !/deficient|deficiency diagnosed/i.test(presentHealthFinding(finding, 'en').text))).toBe(true);
   });
 
   it('surfaces unresolved purine recipe data only for the active uric-acid concern', () => {

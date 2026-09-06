@@ -1,18 +1,14 @@
 import { getChatGPTUser } from '@/app/chatgpt-auth';
-import { analyseFoodRequestSchema, foodAnalysisSchema, healthFocusSchema, type FoodAnalysis } from '@/lib/contracts';
+import { analyseFoodRequestSchema, mealReviewDraftSchema, type FoodAnalysis } from '@/lib/contracts';
 import { analyseTypedFood } from '@/lib/food-analysis';
 import { lookupOpenFoodFacts } from '@/lib/open-food-facts';
 import { lookupVietnamNutrition } from '@/lib/vietnam-nutrition';
 import { lookupUsdaFoodData } from '@/lib/usda-fooddata';
 import { resolveCachedFoodAnalysis } from '@/lib/food-lookup-cache';
-import { evaluateMealHealthFindings } from '@/lib/health-rule-engine';
-import { getDb } from '@/db';
-import { healthFocuses, healthTargets } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 import { manualProviderFallback } from '@/lib/provider-fallback';
 import { consumeRequestQuota } from '@/lib/request-quota';
 import { resolvePersonalFood } from '@/lib/saved-foods';
-import { selectTargets } from '@/lib/targets';
+import { issueMealAnalysisReview } from '@/lib/meal-analysis-review-server';
 
 export async function POST(request: Request) {
   const user = await getChatGPTUser();
@@ -49,29 +45,17 @@ export async function POST(request: Request) {
     if (input.mode === 'text') throw new Error('Typed meal analysis could not be completed.');
     result = manualProviderFallback(input);
   }
-  const db = getDb();
-  const [focusRows, targetRows] = await Promise.all([
-    db.select({ focus: healthFocuses.focus }).from(healthFocuses).where(eq(healthFocuses.ownerId, user.userId)),
-    db.select({
-      metric: healthTargets.metric,
-      valueScaled: healthTargets.valueScaled,
-      valueScale: healthTargets.valueScale,
-      unit: healthTargets.unit,
-      authority: healthTargets.authority,
-      updatedAt: healthTargets.updatedAt,
-    }).from(healthTargets).where(eq(healthTargets.ownerId, user.userId)),
-  ]);
-  const focuses = focusRows.flatMap((row) => { const parsedFocus = healthFocusSchema.safeParse(row.focus); return parsedFocus.success ? [parsedFocus.data] : []; });
-  const analysis = foodAnalysisSchema.parse({
-    ...result,
-    healthFindings: evaluateMealHealthFindings(
-      result.snapshot.totals,
-      focuses,
-      result.snapshot.ingredients,
-      result.snapshot.additionalNutrients,
-      selectTargets(targetRows),
-      result.snapshot.estimationLevel,
-    ),
-  });
+  let analysis;
+  try {
+    analysis = await issueMealAnalysisReview(
+      user.userId,
+      mealReviewDraftSchema.parse(result),
+    );
+  } catch {
+    return Response.json(
+      { error: 'The private server review could not be created. No meal was saved; please try again.' },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
   return Response.json({ analysis }, { headers: { 'Cache-Control': 'no-store' } });
 }

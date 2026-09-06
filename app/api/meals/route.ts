@@ -1,8 +1,9 @@
-import { and, desc, eq, gte, lt } from 'drizzle-orm';
+import { and, desc, eq, gte, isNull, lt } from 'drizzle-orm';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
-import { createMealRequestSchema, healthFindingSchema, nutritionSnapshotSchema } from '@/lib/contracts';
+import { createMealRequestSchema, healthFindingSchema, nutritionSnapshotSchema, reviewedMealAnalysisSchema } from '@/lib/contracts';
 import { getDb } from '@/db';
-import { mealEntries, requestDeduplications } from '@/db/schema';
+import { mealAnalysisReviews, mealEntries, requestDeduplications } from '@/db/schema';
+import { resolveMealReviewContext } from '@/lib/meal-analysis-review-server';
 
 function dayBounds(value: string | null) {
   const day = value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : new Date().toISOString().slice(0, 10);
@@ -41,17 +42,65 @@ export async function POST(request: Request) {
     return Response.json({ id: existing[0].resourceId, replayed: true });
   }
 
-  const id = crypto.randomUUID();
+  const reviewRows = await db.select().from(mealAnalysisReviews).where(and(
+    eq(mealAnalysisReviews.id, parsed.data.reviewId),
+    eq(mealAnalysisReviews.ownerId, user.userId),
+  )).limit(1);
+  const review = reviewRows[0];
+  if (!review)
+    return Response.json({ error: 'The server meal review was not found.' }, { status: 404 });
+  if (review.consumedAt)
+    return Response.json({ error: 'This server meal review has already been confirmed.' }, { status: 409 });
   const now = new Date();
+  if (review.expiresAt.getTime() <= now.getTime())
+    return Response.json({ error: 'This server meal review expired. Review the meal again before saving.' }, { status: 410 });
+  const reviewedAnalysis = reviewedMealAnalysisSchema.safeParse(review.analysis);
+  if (!reviewedAnalysis.success)
+    return Response.json({ error: 'The server meal review is invalid. Review the meal again before saving.' }, { status: 409 });
+  let currentContext;
+  try {
+    currentContext = await resolveMealReviewContext(user.userId);
+  } catch {
+    return Response.json(
+      { error: 'The server could not revalidate this meal review. No meal was saved; please try again.' },
+      { status: 503 },
+    );
+  }
+  if (currentContext.fingerprint !== review.contextFingerprint)
+    return Response.json({ error: 'Your health focuses or targets changed. Review the meal again before saving.' }, { status: 409 });
+
+  const id = crypto.randomUUID();
+  const analysis = reviewedAnalysis.data;
   try {
     await db.batch([
-      db.insert(mealEntries).values({ id, ownerId: user.userId, occurredAt: new Date(parsed.data.occurredAt), mealType: parsed.data.mealType, name: parsed.data.name, nutritionSnapshot: parsed.data.nutritionSnapshot, healthFindings: parsed.data.healthFindings, analysisSource: parsed.data.analysisSource, confidence: parsed.data.confidence, createdAt: now }),
+      db.insert(mealEntries).values({
+        id,
+        ownerId: user.userId,
+        occurredAt: new Date(parsed.data.occurredAt),
+        mealType: analysis.mealType,
+        name: analysis.name,
+        nutritionSnapshot: analysis.snapshot,
+        healthFindings: analysis.healthFindings,
+        analysisSource: analysis.snapshot.source,
+        confidence: analysis.confidence,
+        reviewId: review.id,
+        createdAt: now,
+      }),
+      db.update(mealAnalysisReviews).set({ consumedAt: now }).where(and(
+        eq(mealAnalysisReviews.id, review.id),
+        eq(mealAnalysisReviews.ownerId, user.userId),
+        isNull(mealAnalysisReviews.consumedAt),
+      )),
       db.insert(requestDeduplications).values({ id: crypto.randomUUID(), ownerId: user.userId, idempotencyKey: parsed.data.idempotencyKey, resourceType: 'meal', resourceId: id, createdAt: now }),
     ]);
   } catch {
     const replay = await db.select({ resourceId: requestDeduplications.resourceId, resourceType: requestDeduplications.resourceType }).from(requestDeduplications).where(and(eq(requestDeduplications.ownerId, user.userId), eq(requestDeduplications.idempotencyKey, parsed.data.idempotencyKey))).limit(1);
     if (replay[0]?.resourceType === 'meal') return Response.json({ id: replay[0].resourceId, replayed: true });
     if (replay[0]) return Response.json({ error: 'This idempotency key has already been used for a different request.' }, { status: 409 });
+    const confirmedReview = await db.select({ id: mealEntries.id }).from(mealEntries)
+      .where(and(eq(mealEntries.ownerId, user.userId), eq(mealEntries.reviewId, review.id))).limit(1);
+    if (confirmedReview[0])
+      return Response.json({ error: 'This server meal review has already been confirmed.' }, { status: 409 });
     return Response.json({ error: 'We could not save this meal. Please try again.' }, { status: 500 });
   }
   return Response.json({ id, replayed: false }, { status: 201 });

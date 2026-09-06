@@ -55,6 +55,7 @@ export function CaptureSurface(props: CaptureSurfaceProps) {
     onAnalyse,
     onNutrientChange,
     onReviewDetailsChange,
+    onRefreshReview,
     onDiscard,
     onConfirm,
     onSavePersonalFood,
@@ -624,6 +625,7 @@ export function CaptureSurface(props: CaptureSurfaceProps) {
                 analysis={analysis}
                 onNutrientChange={onNutrientChange}
                 onReviewDetailsChange={onReviewDetailsChange}
+                onRefreshReview={onRefreshReview}
                 onDiscard={onDiscard}
                 onConfirm={confirmMealAndRemoveSource}
                 onSavePersonalFood={onSavePersonalFood}
@@ -677,6 +679,7 @@ function Review({
   analysis,
   onNutrientChange,
   onReviewDetailsChange,
+  onRefreshReview,
   onDiscard,
   onConfirm,
   onSavePersonalFood,
@@ -688,6 +691,7 @@ function Review({
   analysis: FoodAnalysis;
   onNutrientChange: CaptureSurfaceProps['onNutrientChange'];
   onReviewDetailsChange: CaptureSurfaceProps['onReviewDetailsChange'];
+  onRefreshReview: CaptureSurfaceProps['onRefreshReview'];
   onDiscard: () => void;
   onConfirm: () => Promise<boolean>;
   onSavePersonalFood: CaptureSurfaceProps['onSavePersonalFood'];
@@ -770,6 +774,29 @@ function Review({
       {analysis.healthFindings?.map((finding) => (
         <MealFindingProvenance key={finding.ruleCode} finding={finding} locale={locale} />
       ))}
+      <div className={`mt-4 rounded-xl border p-3 text-sm ${analysis.serverReview ? 'border-emerald-200 bg-emerald-50 text-emerald-950' : 'border-amber-200 bg-amber-50 text-amber-950'}`}>
+        <p className="font-semibold">
+          {analysis.serverReview
+            ? c.mealCapture.serverReviewReady
+            : c.mealCapture.serverReviewRequired}
+        </p>
+        <p className="mt-1 text-xs leading-5">
+          {analysis.serverReview
+            ? c.mealCapture.serverReviewReadyDescription
+            : c.mealCapture.serverReviewRequiredDescription}
+        </p>
+        {!analysis.serverReview ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-3"
+            onClick={() => void onRefreshReview()}
+            disabled={saving}
+          >
+            <ClipboardCheck /> {c.mealCapture.refreshServerReview}
+          </Button>
+        ) : null}
+      </div>
       {analysis.unresolvedQuestions.map((question) => (
         <p className="mt-3 text-sm text-slate-600" key={question}>
           {question}
@@ -811,7 +838,7 @@ function Review({
         <Button
           className="flex-1 bg-emerald-800 hover:bg-emerald-900"
           onClick={onConfirm}
-          disabled={saving}
+          disabled={saving || !analysis.serverReview}
         >
           {saving ? <LoaderCircle className="animate-spin" /> : <Check />}{' '}
           {saving ? c.common.saving : c.mealCapture.confirmAndSave}

@@ -15,7 +15,7 @@ This is the status ledger. Read [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN
 
 - [x] TypeScript Sites/Vinext app with shadcn, ChatGPT sign-in, D1, private R2, PWA metadata, offline shell, and bilingual copy infrastructure.
 - [x] Seven working surfaces: Today, Capture, Coach, Measurements, Workouts, Progress, and Settings.
-- [x] Twenty-eight API route files with authenticated handlers for profile, meals, uploads, measurements, safety context, workouts, reminders, analytics, exports, saved foods, and deletion.
+- [x] Twenty-nine API route files with authenticated handlers for profile, meal analysis/review, meals, uploads, measurements, safety context, workouts, reminders, analytics, exports, saved foods, and deletion.
 - [x] Resumable profile/onboarding storage for goals, demographics, activity, sleep, availability, equipment, environments, and structured clinician restrictions.
 - [x] AES-GCM storage for medication, clinician, and symptom notes with key versioning and owner-only decryption.
 - [x] Target precedence: clinician-defined, then user-defined, then conservative guideline defaults.
@@ -32,7 +32,7 @@ This is the status ledger. Read [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN
 - [x] Owner-scoped 30-day starter analytics with non-causal trend language and sample sizes.
 - [x] Private reminder CRUD, pause/resume, reschedule, one-hour snooze, quiet-hours deferral, and Today agenda preview.
 - [x] Date-range CSV/PDF clinician downloads, a versioned private JSON archive, and typed-confirmation account-data deletion.
-- [x] Current local validation: full Oxlint passes; TypeScript passes; 41 test files / 160 tests pass; production Vinext/Sites build passes; production dependency audit reports zero vulnerabilities.
+- [x] Current local validation: full Oxlint passes; TypeScript passes; 43 test files / 170 tests pass; production Vinext/Sites build passes; production dependency audit reports zero vulnerabilities.
 
 ## Current non-claims and known debt
 
@@ -166,12 +166,84 @@ P1.4 validation: `readNutrient()` centralizes availability semantics; rule versi
 
 P1.5 validation: `reviewProvenanceStates()` protects the five-concept trust boundary and the Capture review renders it through focused provenance components. Bilingual server-render tests cover missing references, reported zero, AI extraction disclosure, deterministic evidence, clinician authority, keyboard semantics, responsive classes, and the unchanged editable confirmation gate. Full validation: Oxlint, TypeScript, 41 test files / 160 tests, production build, and `git diff --check`. P1 deterministic health safety is complete. Next: P2 individualized PT.
 
+#### P1.6 — Bilingual deterministic finding snapshots (complete 2026-09-02)
+
+- [x] Store every new deterministic rule explanation and suggested action as an immutable English/Vietnamese presentation snapshot with version `health-finding-presentation-1`.
+- [x] Render the saved language selected by the profile locale. Historical English-only findings remain readable without rewriting their snapshot and disclose the fallback when Vietnamese is selected.
+- [x] Keep rule facts, evidence, targets, and localized presentation in one validated `HealthFinding`; rule version `meal-starter-rules-7` identifies the new output.
+
+P1.6 validation: localized and legacy schema paths, both locale renderings, historical fallback disclosure, every triggered rule output, immutable persistence/replay, TypeScript, full Oxlint, 42 test files / 164 tests, production Vinext/Sites build, and `git diff --check` pass. No migration was required because `health_findings` is an existing versioned JSON snapshot.
+
+#### P1.7 — Bind meal confirmation to a server-issued review (complete 2026-09-06)
+
+- [x] Issue an owner-scoped, 30-minute D1 review from initial analysis and edited-fact re-review. Client-supplied findings are stripped and recomputed from current server targets/focuses.
+- [x] Confirm meals only with `{ reviewId, occurredAt, idempotencyKey }`; persist the exact reviewed nutrition snapshot and findings, consume the review once, and use the review ID as the stable retry key.
+- [x] Reject missing/wrong-owner, expired, already-consumed, malformed, or target/focus-stale reviews without saving. Editing nutrients, serving, or ingredients invalidates the UI review and disables confirmation until refreshed.
+- [x] Keep pending reviews private and deletable with account data; omit operational review IDs and pending reviews from the portable archive.
+
+P1.7 validation: migration `0022`, schema/journal/clean-D1 parity, client-finding rejection, server recomputation, authentication, owner isolation, expiry, stale context, single consumption, replay, archive sanitization, deletion completeness, bilingual UI state, TypeScript, full Oxlint, 43 test files / 170 tests, production Vinext/Sites build, and `git diff --check` pass. P1 review debt is closed; next is P2.1.
+
 ### P2 — Individualized PT and scheduled adaptation
 
-- [ ] Expand and obtain professional review for the bilingual exercise catalog.
-- [ ] Replace the fixed starter week with deterministic selection from equipment, environment, availability, restrictions, recent logs, and recovery.
-- [ ] Generate safe substitution previews after equipment/environment changes; never replace the active plan without confirmation.
-- [ ] Extend check-ins to versioned `progress`, `maintain`, `deload`, and `substitute` proposals with stored evidence and explicit confirmation.
+Execute only the first unchecked slice. P2 is deterministic; do not call AI to select exercises, calculate progression, or override the effective safety context.
+
+#### P2.1 — Catalog governance and deterministic eligibility
+
+- [ ] Version the exercise-catalog contract and add environment compatibility plus review metadata (`review_status`, reviewed version/date/reference). Never fabricate a PT/clinician approval; seed rows remain explicitly `unreviewed` until real sign-off is supplied.
+- [ ] Replace ad-hoc equipment aliases with one typed capability resolver. Represent no-equipment/bodyweight, wall, chair, anchor, bicycle, mini treadmill, bands, dumbbells, and gym capabilities explicitly.
+- [ ] Add pure candidate filtering for equipment/capabilities, environment, injury tags, clinician restrictions, and effective-safety modifications. Return stable exclusion reason codes and unresolved substitution IDs.
+- [ ] Add catalog integrity tests for bilingual fields, known equipment/environment/tag values, dangling/self substitutions, deterministic ordering, and every supported onboarding setup having either a candidate or an explicit unresolved result.
+- [ ] If schema changes are required, use migration `0023` and update schema, journal, clean-D1, archive/delete inventory, and route fixtures together.
+
+Stop: do not generate a new plan, change the active plan, or mark content professionally reviewed in P2.1.
+
+#### P2.2 — Versioned planning context and pure weekly planner
+
+- [ ] Define a server-built `WorkoutPlanningContext` containing onboarding goal/training history, available days, equipment capabilities, environments, effective safety decision/reasons, current plan ID/version, and a bounded recovery/adherence summary with source record IDs.
+- [ ] Implement a pure, deterministic planner that returns warm-up, strength/aerobic/mobility/cooldown prescriptions, duration, sets/reps/rest, RPE, rationale copy keys, progression criteria, substitutions, and unresolved questions.
+- [ ] Record `planner_version`, `catalog_version`, catalog review status, safety-context version, and input digest in every draft. Stable input must produce stable output; no timestamps or random IDs inside the pure planner.
+- [ ] Apply `allowed_with_modifications` constraints as hard filters/caps. `blocked` returns no plan. Missing capability or unresolved substitution returns a reviewable incomplete draft, never a guessed exercise.
+- [ ] Test equipment/environment/availability combinations, goal and experience variants, all restriction precedence, zero/one/seven available days, deterministic ordering, and no eligible exercise paths.
+
+Stop: P2.2 returns pure drafts/fixtures only. Do not persist previews or alter the existing API/UI yet.
+
+#### P2.3 — Persisted previews and active-plan lifecycle
+
+- [ ] Persist owner-scoped, expiring workout-plan previews with their exact planning context/digest and immutable generated plan. Confirmation accepts a `previewId`, not an editable plan body.
+- [ ] On confirmation, re-resolve safety and planning inputs; reject expired or stale previews with `409/422` and require regeneration.
+- [ ] In one D1 batch, create the new active plan, supersede the prior active plan, and write the idempotency record. Enforce at most one active plan per owner in application logic and tests.
+- [ ] Preserve completed historical plans/logs. Replay must return the originally confirmed plan, not whichever plan is newest.
+- [ ] Add migration `0024` plus anonymous, wrong-owner, stale-preview, double-confirmation, cross-resource idempotency, partial-failure, archive/delete, and clean-migration tests.
+
+Stop: do not create automatic replacement or adaptation proposals in P2.3.
+
+#### P2.4 — Exercise-level completion and recovery evidence
+
+- [ ] Extend workout logging with per-prescription results: exercise ID, completed/modified/skipped state, actual sets/reps/duration/load, and selected substitution ID. Keep pain/concerning symptoms and glucose facts at their current safety boundary.
+- [ ] Add a short scheduled-check-in input for recovery (`good`, `some_fatigue`, `poor`) and optional structured soreness/pain flags; do not collect new free-text health notes.
+- [ ] Validate every result against the immutable active-plan prescription and catalog snapshot. Preserve reported zero/missing distinctions where applicable and reject exercises not in the session.
+- [ ] Add migration `0025`, immutable response contracts, replay isolation, archive/delete coverage, and tests for mixed completed/skipped sessions, substitutions, load units, safety stops, and malformed plan references.
+
+Stop: logging evidence must not mutate or progress a plan.
+
+#### P2.5 — Versioned adaptation and substitution proposals
+
+- [ ] Replace the starter check-in result with a pure, versioned proposal engine whose actions are `hold_for_review`, `maintain`, `progress`, `deload`, or `substitute`.
+- [ ] Use only confirmed plan prescriptions, completed exercise results, adherence, RPE/recovery, current capabilities/environment, and the freshly resolved safety context. Store evidence record IDs, rule reasons, before/after prescriptions, confidence/data-completeness, and unresolved questions.
+- [ ] Precedence is: blocked/concerning safety -> hold; incompatible equipment/environment -> substitute; poor recovery/excess effort -> deload or maintain; insufficient evidence -> maintain; reviewed progression criteria met -> progress. Exact thresholds live in one reviewed policy module with boundary tests.
+- [ ] Persist proposals without changing the active plan. Confirmation re-resolves safety/context and, if still valid, creates a new active plan and supersedes the prior plan atomically.
+- [ ] Add migration `0026` and tests for every action, exact thresholds, sparse/duplicate logs, stale proposals, restriction changes, owner isolation, replay, and no mutation before confirmation.
+
+Stop: no AI-generated progression and no direct mutation from a workout log or check-in POST.
+
+#### P2.6 — Workouts UI and professional-review gate
+
+- [ ] Replace the starter-only Workouts UI with bilingual plan context, review-status disclosure, weekly schedule, prescription details, substitutions/unresolved questions, exercise-level logging, recovery check-in, and before/after adaptation preview.
+- [ ] Require explicit confirmation for initial activation, replacement, substitution, progression, and deload. A dismiss action leaves the active plan unchanged.
+- [ ] Add mobile, keyboard, screen-reader, loading/empty/offline/recovery, stale-preview, and safety-blocked component coverage without queueing sensitive writes offline.
+- [ ] Obtain and record real qualified review of catalog and progression-policy versions before checking the professional-review item complete. Until then, label the content unreviewed and do not claim individualized professional PT.
+
+P2 is complete only after P2.1–P2.6 pass the repository validation protocol and the external professional-review evidence is real. Engineering may finish while that final external gate remains open.
 
 ### P3 — Coach chat and weekly review
 
@@ -187,7 +259,7 @@ P1.5 validation: `reviewProvenanceStates()` protects the five-concept trust boun
 - [ ] Show correlations only as non-causal observations with sample size and confidence warnings.
 - [ ] Add push-subscription storage and permission UX with diagnosis-free lock-screen text.
 - [ ] Add reminder delivery/missed-item history and a scheduled Worker using the same owner-scoped backend.
-- [ ] Add a scheduled cleanup path for expired private uploads.
+- [ ] Add a scheduled cleanup path for expired private uploads and unconsumed meal-analysis reviews.
 
 ### P5 — Release verification
 

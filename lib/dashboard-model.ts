@@ -1,4 +1,4 @@
-import type { FoodAnalysis, HealthFinding, MealCreateRequest } from './contracts';
+import type { FoodAnalysis, HealthFinding } from './contracts';
 
 export const dashboardTargets = [
   { key: 'calories', label: 'Calories', target: 1850, unit: 'kcal', color: 'bg-orange-400' },
@@ -12,7 +12,7 @@ export type DashboardTargetKey = (typeof dashboardTargets)[number]['key'];
 export type DashboardMeal = {
   id: string;
   name: string;
-  mealType: MealCreateRequest['mealType'];
+  mealType: FoodAnalysis['mealType'];
   occurredAt: string;
   confidence: number;
   nutritionSnapshot: FoodAnalysis['snapshot'];

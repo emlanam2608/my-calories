@@ -233,6 +233,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
     analyseMeal,
     updateAnalysis,
     updateAnalysisDetails,
+    refreshMealReview,
     confirmMeal,
     savePersonalFood,
     reviewSavedFood,
@@ -438,6 +439,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
               onAnalyse={analyseMeal}
               onNutrientChange={updateAnalysis}
               onReviewDetailsChange={updateAnalysisDetails}
+              onRefreshReview={refreshMealReview}
               onDiscard={() => setAnalysis(null)}
               onConfirm={confirmMeal}
               onSavePersonalFood={savePersonalFood}

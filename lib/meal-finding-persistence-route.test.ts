@@ -47,7 +47,7 @@ describe('immutable meal finding snapshots', () => {
       body: JSON.stringify({ mode: 'text', text: 'pho bo' }),
     }));
     expect(analysisResponse.status).toBe(200);
-    const analysisBody = await analysisResponse.json() as { analysis: { name: string; mealType: string; confidence: number; snapshot: Record<string, unknown>; healthFindings: Array<Record<string, unknown>> } };
+    const analysisBody = await analysisResponse.json() as { analysis: { serverReview: { id: string }; healthFindings: Array<Record<string, unknown>> } };
     expect(analysisBody.analysis.healthFindings).toEqual([
       expect.objectContaining({
         ruleCode: 'meal-sodium-800mg',
@@ -55,6 +55,8 @@ describe('immutable meal finding snapshots', () => {
         targetValue: 1500,
         targetUnit: 'mg',
         targetAuthority: 'clinician_defined',
+        presentationVersion: 'health-finding-presentation-1',
+        text: expect.objectContaining({ en: expect.any(String), vi: expect.any(String) }),
       }),
     ]);
 
@@ -62,13 +64,8 @@ describe('immutable meal finding snapshots', () => {
     const reviewedFindings = analysisBody.analysis.healthFindings;
     const payload = {
       idempotencyKey,
-      name: analysisBody.analysis.name,
-      mealType: analysisBody.analysis.mealType,
+      reviewId: analysisBody.analysis.serverReview.id,
       occurredAt: '2026-09-01T05:00:00.000Z',
-      confidence: analysisBody.analysis.confidence,
-      analysisSource: 'manual_estimate',
-      nutritionSnapshot: { ...analysisBody.analysis.snapshot, estimationLevel: 'user_confirmed' },
-      healthFindings: reviewedFindings,
     };
     const saved = await postMeal(privateRouteRequest('/api/meals', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
@@ -80,7 +77,7 @@ describe('immutable meal finding snapshots', () => {
     const replay = await postMeal(privateRouteRequest('/api/meals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...payload, healthFindings: [] }),
+      body: JSON.stringify(payload),
     }));
     await expect(replay.json()).resolves.toEqual({ id: savedBody.id, replayed: true });
 

@@ -58,6 +58,16 @@ describe('dashboard decomposition regression contract', () => {
         expect(feedback[key].trim().length).toBeGreaterThan(10);
     }
   });
+
+  it('invalidates edited meal reviews and disables confirmation until server review', () => {
+    const actions = source('components/dashboard/use-capture-actions.ts');
+    const capture = source('components/dashboard/capture-surface.tsx');
+    expect(actions).toContain('serverReview: null');
+    expect(actions).toContain("fetch('/api/meals/review'");
+    expect(actions).toContain('reviewId: analysis.serverReview.id');
+    expect(capture).toContain('disabled={saving || !analysis.serverReview}');
+    expect(capture).toContain('onRefreshReview');
+  });
 });
 
 describe('dashboard bootstrap access recovery', () => {

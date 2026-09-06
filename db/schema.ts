@@ -133,6 +133,24 @@ export const healthFocuses = sqliteTable(
     ),
   ],
 );
+export const mealAnalysisReviews = sqliteTable(
+  'meal_analysis_reviews',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id').notNull(),
+    analysis: text('analysis', { mode: 'json' }).notNull(),
+    contextFingerprint: text('context_fingerprint').notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    consumedAt: integer('consumed_at', { mode: 'timestamp_ms' }),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    index('idx_meal_analysis_reviews_owner_expires').on(
+      table.ownerId,
+      table.expiresAt,
+    ),
+  ],
+);
 export const mealEntries = sqliteTable(
   'meal_entries',
   {
@@ -145,6 +163,7 @@ export const mealEntries = sqliteTable(
     healthFindings: text('health_findings', { mode: 'json' }).notNull().default([]),
     analysisSource: text('analysis_source').notNull(),
     confidence: integer('confidence').notNull(),
+    reviewId: text('review_id'),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   },
   (table) => [
@@ -152,6 +171,7 @@ export const mealEntries = sqliteTable(
       table.ownerId,
       table.occurredAt,
     ),
+    uniqueIndex('idx_meal_entries_review_id').on(table.reviewId),
   ],
 );
 export const measurements = sqliteTable(

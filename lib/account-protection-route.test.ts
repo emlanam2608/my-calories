@@ -138,13 +138,14 @@ describe('archive and account deletion safety', () => {
       { metric: 'fiber', value: 28, unit: 'g', authority: 'guideline_default' },
       { metric: 'sodium', value: 1500, unit: 'mg', authority: 'clinician_defined' },
     ], snapshot.estimationLevel);
-    await database.prepare('insert into meal_entries (id, owner_id, occurred_at, meal_type, name, nutrition_snapshot, health_findings, analysis_source, confidence, created_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(
+    await database.prepare('insert into meal_entries (id, owner_id, occurred_at, meal_type, name, nutrition_snapshot, health_findings, analysis_source, confidence, review_id, created_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(
       '018e2aaa-6a86-4d9d-b36a-a3d96fd0d0e0', routeTestUsers.ownerA.userId, now, 'lunch', 'Archived meal',
-      JSON.stringify(snapshot), JSON.stringify(findings), 'manual_entry', 100, now,
+      JSON.stringify(snapshot), JSON.stringify(findings), 'manual_entry', 100, '018e2aaa-6a86-4d9d-b36a-a3d96fd0d099', now,
     ).run();
 
-    const archive = await (await getArchive()).json() as { records: { meals: Array<{ healthFindings: unknown[] }> } };
+    const archive = await (await getArchive()).json() as { records: { meals: Array<{ healthFindings: unknown[]; reviewId?: string }> } };
     expect(archive.records.meals[0].healthFindings).toEqual(findings);
+    expect(archive.records.meals[0]).not.toHaveProperty('reviewId');
   }), 60_000);
 
   it('does not report deletion when private-object deletion fails', async () => withDatabase(async ({ database }) => {
@@ -179,6 +180,10 @@ describe('archive and account deletion safety', () => {
   it('permanently deletes only the confirmed owner D1 records after private-object deletion succeeds', async () => withDatabase(async ({ database }) => {
     await database.prepare('insert into profiles (id, owner_id, locale, timezone, created_at, updated_at) values (?, ?, ?, ?, ?, ?)').bind('018e2aaa-6a86-4d9d-b36a-a3d96fd0d0c4', routeTestUsers.ownerA.userId, 'vi', 'Asia/Bangkok', now, now).run();
     await database.prepare('insert into profiles (id, owner_id, locale, timezone, created_at, updated_at) values (?, ?, ?, ?, ?, ?)').bind('018e2aaa-6a86-4d9d-b36a-a3d96fd0d0c5', routeTestUsers.ownerB.userId, 'vi', 'Asia/Bangkok', now, now).run();
+    await database.prepare('insert into meal_analysis_reviews (id, owner_id, analysis, context_fingerprint, expires_at, created_at) values (?, ?, ?, ?, ?, ?)')
+      .bind('018e2aaa-6a86-4d9d-b36a-a3d96fd0d0c7', routeTestUsers.ownerA.userId, '{}', 'owner-a-context', now + 60_000, now).run();
+    await database.prepare('insert into meal_analysis_reviews (id, owner_id, analysis, context_fingerprint, expires_at, created_at) values (?, ?, ?, ?, ?, ?)')
+      .bind('018e2aaa-6a86-4d9d-b36a-a3d96fd0d0c9', routeTestUsers.ownerB.userId, '{}', 'owner-b-context', now + 60_000, now).run();
     const response = await deleteAccount(privateRouteRequest('/api/account', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -187,5 +192,7 @@ describe('archive and account deletion safety', () => {
     expect(response.status).toBe(204);
     expect((await database.prepare('select count(*) as count from profiles where owner_id = ?').bind(routeTestUsers.ownerA.userId).first<{ count: number }>())?.count).toBe(0);
     expect((await database.prepare('select count(*) as count from profiles where owner_id = ?').bind(routeTestUsers.ownerB.userId).first<{ count: number }>())?.count).toBe(1);
+    expect((await database.prepare('select count(*) as count from meal_analysis_reviews where owner_id = ?').bind(routeTestUsers.ownerA.userId).first<{ count: number }>())?.count).toBe(0);
+    expect((await database.prepare('select count(*) as count from meal_analysis_reviews where owner_id = ?').bind(routeTestUsers.ownerB.userId).first<{ count: number }>())?.count).toBe(1);
   }), 60_000);
 });

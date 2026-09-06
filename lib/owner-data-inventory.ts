@@ -7,6 +7,7 @@ export const ownerDataInventory = [
   'aiExecutions',
   'savedFoods',
   'healthFocuses',
+  'mealAnalysisReviews',
   'meals',
   'measurements',
   'workoutSessions',

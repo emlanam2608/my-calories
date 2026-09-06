@@ -131,6 +131,7 @@ export function useCaptureActions(options: Options) {
         const totals = { ...current.snapshot.totals, [field]: numeric };
         return {
           ...current,
+          serverReview: null,
           snapshot: { ...current.snapshot, totals },
           healthFindings: evaluateMealHealthFindings(
             totals,
@@ -162,6 +163,7 @@ export function useCaptureActions(options: Options) {
         };
         return {
           ...current,
+          serverReview: null,
           snapshot,
           healthFindings: evaluateMealHealthFindings(
             snapshot.totals,
@@ -177,22 +179,52 @@ export function useCaptureActions(options: Options) {
     [effectiveTargets, healthFocuses, setAnalysis],
   );
 
+  const refreshMealReview = useCallback(async () => {
+    if (!analysis) return false;
+    setAnalysing(true);
+    setError('');
+    try {
+      const {
+        healthFindings: _healthFindings,
+        serverReview: _serverReview,
+        ...reviewDraft
+      } = analysis;
+      const response = await fetch('/api/meals/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ analysis: reviewDraft }),
+      });
+      const body = (await response.json()) as {
+        error?: string;
+        analysis?: FoodAnalysis;
+      };
+      if (!response.ok || !body.analysis)
+        throw new Error(body.error || c.feedback.mealReviewError);
+      setAnalysis(body.analysis);
+      setNotice(c.feedback.mealServerReviewReady);
+      return true;
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : c.feedback.mealReviewError,
+      );
+      return false;
+    } finally {
+      setAnalysing(false);
+    }
+  }, [analysis, c.feedback, setAnalysing, setAnalysis, setError, setNotice]);
+
   const confirmMeal = useCallback(async () => {
     if (!analysis) return false;
+    if (!analysis.serverReview) {
+      setError(c.feedback.mealReviewRefreshRequired);
+      return false;
+    }
     setSaving(true);
     setError('');
     const payload: MealCreateRequest = {
-      idempotencyKey: createDashboardRequestId(),
-      name: analysis.name,
-      mealType: analysis.mealType,
+      idempotencyKey: analysis.serverReview.id,
+      reviewId: analysis.serverReview.id,
       occurredAt: new Date().toISOString(),
-      confidence: analysis.confidence,
-      analysisSource: analysis.snapshot.source,
-      nutritionSnapshot: {
-        ...analysis.snapshot,
-        estimationLevel: 'user_confirmed',
-      },
-      healthFindings: analysis.healthFindings ?? [],
     };
     try {
       const response = await fetch('/api/meals', {
@@ -204,7 +236,13 @@ export function useCaptureActions(options: Options) {
         error?: string;
         replayed?: boolean;
       };
-      if (!response.ok) throw new Error(body.error || c.feedback.mealSaveError);
+      if (!response.ok) {
+        if ([404, 409, 410].includes(response.status))
+          setAnalysis((current) => current
+            ? { ...current, serverReview: null }
+            : current);
+        throw new Error(body.error || c.feedback.mealSaveError);
+      }
       setAnalysis(null);
       setDraft('');
       setNotice(body.replayed ? c.feedback.mealReplayed : c.feedback.mealSaved);
@@ -329,6 +367,7 @@ export function useCaptureActions(options: Options) {
           effectiveTargets,
           snapshot.estimationLevel,
         ),
+        serverReview: null,
       });
       setCaptureMode('text');
     },
@@ -369,6 +408,7 @@ export function useCaptureActions(options: Options) {
     analyseMeal,
     updateAnalysis,
     updateAnalysisDetails,
+    refreshMealReview,
     confirmMeal,
     savePersonalFood,
     reviewSavedFood,

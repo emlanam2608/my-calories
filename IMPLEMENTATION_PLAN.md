@@ -324,13 +324,153 @@ Completed 2026-09-02. Capture now uses a five-concept provenance legend for user
 
 Do not send encrypted free-text notes to AI by default anywhere in P1. Use structured flags; add a separate explicit permission feature if free text is ever required.
 
+#### Slice P1.6 — Bilingual deterministic finding snapshots — complete
+
+Completed 2026-09-02. New deterministic findings store exact English and Vietnamese explanation/action snapshots under `health-finding-presentation-1`; `meal-starter-rules-7` identifies the new rule output. Locale-aware presentation selects the saved language rather than translating at read time. The contract remains backward-compatible with historical English-only JSON snapshots, which are preserved unchanged and show an explicit fallback notice when the interface is Vietnamese. No D1 migration was needed. Contract, rule, persistence/replay, and bilingual server-render tests pass.
+
+#### Slice P1.7 — Server-bound meal confirmation — complete
+
+Completed 2026-09-06. Initial analysis and edited-fact refreshes now create owner-scoped, 30-minute reviews in `meal_analysis_reviews`. The server strips any submitted findings, resolves the current owner targets/focuses, recomputes deterministic findings, and stores the exact review plus a context fingerprint. Confirmation accepts only the review ID and occurrence time, rejects missing/wrong-owner, expired, consumed, malformed, or context-stale reviews, then atomically writes the meal, consumes the review, and records idempotency. The review ID is also the client retry key, so a lost response replays the original meal rather than creating another. Migration `0022` adds the review lifecycle and a unique nullable `meal_entries.review_id`; account deletion includes pending reviews and the portable archive omits review-operational data. Edited Capture facts invalidate the review and disable save until a fresh server review is displayed.
+
 ### P2 — Individualized PT
 
-1. Expand the exercise catalog, but keep it marked unreviewed until a qualified PT/clinician approves it.
-2. Select exercises deterministically from equipment, environment, available days, restrictions, readiness, and recent safety logs.
-3. Save a plan preview with catalog/rule versions and unresolved substitutions.
-4. Require confirmation before replacing an active plan.
-5. Extend check-ins to `progress`, `maintain`, `deload`, and `substitute` proposals; never mutate a plan directly from a workout log.
+P1 review closure (2026-09-06): the effective-safety resolver, mutation-boundary enforcement, immutable bilingual finding snapshots, nutrient availability rules, provenance UI, and server-bound meal confirmation are implemented and validated. P2.1 is the next slice.
+
+P2 replaces `starter-plan-1` in six dependency-ordered slices. The selection and adaptation core is deterministic. AI may later explain an already-decided proposal, but it may never choose exercises, calculate progression, relax restrictions, or activate a plan.
+
+#### Slice P2.1 — Catalog governance and deterministic eligibility
+
+Outcome: a versioned catalog can answer whether an exercise is eligible and why, without pretending draft content has professional approval.
+
+Required behavior:
+
+1. Extend `ExerciseCatalogEntry` with environment compatibility and review metadata. Use bounded enums, for example `reviewStatus: unreviewed | professionally_reviewed`; a reviewed row also needs a review date and non-secret reference. Do not store a reviewer name unless the user deliberately supplies it.
+2. Replace `selectableWorkoutExercises()` equipment string aliases with a typed capability resolver. `bodyweight` means no handheld equipment; wall/chair/band anchor are separate capabilities. Gym may add declared capabilities, but it must not silently imply every future machine.
+3. Return an eligibility result per exercise: `eligible`, stable exclusion reason codes, and unresolved requirements/substitutions. Environment, equipment, injury/contraindication tags, clinician restrictions, and `allowed_with_modifications` constraints are all inputs.
+4. Validate the catalog as a graph: every bilingual field is present; every equipment/environment/tag is known; every substitution ID resolves; self references are rejected; output order is stable. Cycles may exist only if the resolver has a visited set and terminates deterministically.
+5. Add migration `0023` only if the catalog table changes. Follow SQL-first rules and update `db/schema.ts`, journal metadata, clean-D1 verification, archive/delete behavior, and seed fixtures together.
+
+Likely files:
+
+- `lib/exercise-catalog.ts` and tests
+- new `lib/exercise-eligibility.ts` and tests
+- `lib/contracts.ts`
+- `db/schema.ts`, `drizzle/0023_*.sql`, and `drizzle/meta/_journal.json`
+- `app/api/exercises/route.ts` and route tests
+- migration/archive/deletion fixtures
+
+Acceptance tests:
+
+- bodyweight-only does not require a wall; wall/chair/anchor remain explicit;
+- home, outdoors, and gym compatibility is enforced;
+- each injury and clinician restriction has deterministic exclusion/modification reasons;
+- dangling/self substitutions and unknown tags fail catalog validation;
+- unreviewed content is clearly returned as unreviewed and never upgraded by inference;
+- anonymous access and owner-data boundaries remain unchanged.
+
+Stop condition: no new weekly plan is generated or persisted. Do not mark professional review complete without real evidence.
+
+#### Slice P2.2 — Versioned planning context and pure weekly planner
+
+Outcome: identical reviewed inputs produce an identical, inspectable weekly draft.
+
+Required behavior:
+
+1. Build `WorkoutPlanningContext` server-side from the completed onboarding record, effective safety context, current active-plan reference, and a bounded recent adherence/recovery summary. Include source IDs/timestamps; exclude encrypted notes and account identity.
+2. Define `WorkoutPlanV2` separately from the legacy literal `starter-plan-1`. It includes `plannerVersion`, `catalogVersion`, catalog review status, safety-context version, input digest, period/timezone, session schedule, warm-up, exercise prescriptions, aerobic work, mobility, cooldown, RPE, rests, rationale copy keys, progression criteria, substitutions, and unresolved questions.
+3. Make the planner pure. Pass the planning date/timezone as input; do not call `new Date()`, D1, providers, or random-ID APIs inside it. Derive stable session IDs from plan position/purpose.
+4. Select only eligible exercises. Apply safety modifications and clinician restrictions as hard constraints. A blocked context returns no draft. A missing capability or unresolved substitution produces an incomplete review result rather than a guessed exercise.
+5. Keep prescription and progression constants in a separately versioned policy module whose evidence/review status is visible. Until qualified review, use conservative draft status and never describe it as professional PT.
+
+Acceptance tests:
+
+- stable output for identical input and stable change for one changed input;
+- equipment, environment, available-day, goal, and training-history matrices;
+- zero/one/seven-day and insufficient-catalog behavior;
+- every safety decision and clinician restriction takes precedence over goal-driven selection;
+- every prescription references an eligible catalog row and fits session duration;
+- no AI/network/database dependency in the pure planner.
+
+Stop condition: only pure modules/contracts/fixtures change. Keep the existing starter route/UI active until P2.3.
+
+#### Slice P2.3 — Persisted preview and active-plan lifecycle
+
+Outcome: confirmation activates the exact server preview the user reviewed, and only one plan is active.
+
+Required behavior:
+
+1. Add owner-scoped persisted previews with expiry, planning-context digest, complete V2 plan, and preview status. `POST /api/workout-plans/preview` creates the server draft; confirmation submits `{ idempotencyKey, previewId }`, not a client-editable plan.
+2. Re-resolve safety and rebuild/digest material planning inputs at confirmation. Expired/already-consumed previews or changed safety/equipment/environment/availability return a stable stale-preview response and do not activate anything.
+3. Use explicit lifecycle statuses such as `preview`, `active`, `superseded`, and `expired`. In one batch, activate the preview, supersede the prior active plan, and insert idempotency metadata. Preserve historical plans and logs.
+4. Replay by idempotency resource ID and return that exact plan. Never implement replay as “return latest plan.”
+5. Add migration `0024`, owner/date/status indexes, archive/delete updates, and strict parsing for legacy `starter-plan-1` versus V2 plans.
+
+Acceptance tests:
+
+- anonymous/wrong-owner access, preview expiry, stale input digest, changed safety, and changed catalog version;
+- two concurrent confirmations cannot leave two active plans;
+- replay after a later plan returns the original confirmed plan;
+- failed batches do not supersede the old active plan;
+- legacy plans/logs remain readable and clean-D1 migration passes.
+
+Stop condition: only user-confirmed initial/replacement activation exists. No automatic substitution or progression yet.
+
+#### Slice P2.4 — Exercise-level completion and recovery evidence
+
+Outcome: adaptation uses actual prescription-level evidence instead of one aggregate sets/reps pair for the whole session.
+
+Required behavior:
+
+1. Extend the workout-log request/response with `exerciseResults[]`: planned exercise ID, `completed | modified | skipped`, actual sets/reps/duration/load, and optional catalog-approved substitution ID. Keep the current session RPE, enjoyment, heart rate, pain, symptoms, and canonical glucose facts.
+2. Validate results against the immutable plan: no unknown/duplicate exercise IDs; substitutions must be eligible and linked; actual values need bounded units; a stopped-for-safety log cannot be counted as successful adherence.
+3. Add a structured recovery input at the scheduled check-in: `good | some_fatigue | poor`, with optional bounded soreness/pain flags. Do not add free-text medical notes.
+4. Persist immutable evidence in normalized rows or a queryable versioned JSON snapshot. Migration `0025` must preserve old aggregate logs and expose their lower data-completeness explicitly.
+5. Return a specific original log on replay rather than the current list of logs.
+
+Acceptance tests:
+
+- completed, modified, skipped, and mixed sessions;
+- duplicate/foreign exercise IDs, invalid substitutions, kg/lb, duration-only and sets/reps prescriptions;
+- safety-stop behavior and glucose availability semantics remain unchanged;
+- legacy aggregate log reads, replay isolation, wrong-owner access, archive/delete, and migration drift.
+
+Stop condition: saving evidence never changes a prescription, proposal, or active plan.
+
+#### Slice P2.5 — Versioned adaptation and substitution proposals
+
+Outcome: a scheduled check-in creates an evidence-backed proposal, and a second explicit action applies it.
+
+Required behavior:
+
+1. Define `WorkoutAdaptationProposal` with action `hold_for_review | maintain | progress | deload | substitute`, base plan ID/version, policy/catalog/safety versions, evidence record IDs, data completeness, reason codes, before/after prescriptions, unresolved questions, creation/expiry, and confirmation state.
+2. Implement a pure policy with strict precedence: blocked or concerning safety facts -> hold; incompatible current capability/environment -> substitute; poor recovery or excess actual effort -> reviewed deload/maintain rule; insufficient evidence -> maintain; only reviewed progression criteria with adequate adherence/recovery -> progress.
+3. Store exact thresholds and adjustment bounds in one versioned policy. Do not scatter percentages across routes. Test both sides of every threshold and do not progress from a single ambiguous/legacy aggregate.
+4. Proposal creation never changes the active plan. Confirmation re-resolves safety and planning inputs, rejects stale proposals, then creates a new active plan and supersedes the base plan atomically. Dismissal changes only proposal status.
+5. Add migration `0026`, owner/base-plan/status indexes, archive/delete coverage, and replay isolation.
+
+Acceptance tests:
+
+- every action and precedence collision;
+- sparse, duplicate, stopped, and legacy logs;
+- equipment/environment changes with valid and unresolved substitutions;
+- stale safety/context/catalog/base plan, concurrent confirmation, wrong owner, and partial failure;
+- no active-plan mutation from log creation or proposal generation.
+
+Stop condition: deterministic proposal lifecycle is complete; AI is absent.
+
+#### Slice P2.6 — Workouts surface and external review gate
+
+Outcome: the mobile user can understand, perform, review, and explicitly accept every plan change.
+
+Required behavior:
+
+1. Render plan provenance and review status, schedule, warm-up/main work/cooldown, prescriptions, rationale, progression criteria, substitutions, and unresolved questions in English and Vietnamese.
+2. Add low-friction prescription-level logging and a structured recovery check-in. Safety stop controls and reason copy remain visually dominant.
+3. Show before/after proposal differences and evidence summary. Initial activation, replacement, progression, deload, and substitution each require explicit confirmation; dismissing or going offline preserves the current active plan.
+4. Cover narrow mobile layout, keyboard and screen-reader semantics, loading/empty/error/recovery, stale preview/proposal, safety block, and offline read-only mode. Never queue health writes offline.
+5. Qualified review is external, not a code checkbox. Record the exact catalog and progression-policy versions, review date/reference, and resulting approved scope only after real review is supplied. Until then, disclose `unreviewed` and do not claim professional or clinician-approved PT.
+
+Stop condition: P2 engineering is complete when P2.1-P2.6 validation passes. The product milestone remains externally gated until professional review evidence exists.
 
 ### P3 — Coach chat
 

@@ -17,6 +17,7 @@ export type CaptureSurfaceProps = {
   onAnalyse: (event: SyntheticEvent<HTMLFormElement>) => void;
   onNutrientChange: (field: keyof FoodAnalysis['snapshot']['totals'], value: string) => void;
   onReviewDetailsChange: (servingDescription: string, ingredientsText: string) => void;
+  onRefreshReview: () => Promise<boolean>;
   onDiscard: () => void;
   onConfirm: () => Promise<boolean>;
   onSavePersonalFood: (kind: 'food' | 'recipe') => Promise<void>;

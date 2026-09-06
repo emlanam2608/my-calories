@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import type { FoodAnalysis, HealthFinding } from '@/lib/contracts';
 import { getCopy, type Locale } from '@/lib/copy';
+import { presentHealthFinding } from '@/lib/health-finding-presentation';
 import { reviewNoteOrigin, reviewProvenanceStates, snapshotValueState } from '@/lib/meal-provenance';
 
 const additionalKeys = [
@@ -121,6 +122,7 @@ export function MealProvenancePanel({
 
 export function MealFindingProvenance({ finding, locale }: { finding: HealthFinding; locale: Locale }) {
   const c = getCopy(locale).mealCapture;
+  const presentation = presentHealthFinding(finding, locale);
   const conditionLabels = {
     weight_management: c.weightManagementFinding,
     blood_pressure: c.bloodPressureFinding,
@@ -148,8 +150,9 @@ export function MealFindingProvenance({ finding, locale }: { finding: HealthFind
         <Badge variant="outline">{c.deterministicRuleResults}</Badge>
       </div>
       <p className="mt-2 text-xs font-semibold uppercase tracking-wide opacity-70">{c.deterministicExplanation}</p>
-      <p className="mt-1 leading-6">{finding.text}</p>
-      <ul className="mt-2 list-disc pl-5">{finding.suggestedActions.map((action) => <li key={action}>{action}</li>)}</ul>
+      <p className="mt-1 leading-6">{presentation.text}</p>
+      <ul className="mt-2 list-disc pl-5">{presentation.suggestedActions.map((action) => <li key={action}>{action}</li>)}</ul>
+      {presentation.usedLegacyEnglishFallback ? <p className="mt-2 text-xs opacity-75">{c.legacyEnglishFinding}</p> : null}
       <dl className="mt-3 grid gap-x-4 gap-y-1 border-t border-current/10 pt-3 text-xs sm:grid-cols-[minmax(9rem,auto)_1fr]">
         <dt className="opacity-70">{c.ruleLabel}</dt><dd className="break-all">{finding.ruleCode} · {finding.ruleVersion}</dd>
         <dt className="opacity-70">{c.observedProvenance}</dt><dd>{observedLabels[finding.observedProvenance]} · {stateLabels[finding.observedValueState]}</dd>

@@ -98,10 +98,11 @@ export async function GET() {
         : { state: 'unavailable', reason: unavailableReason },
     };
   }));
+  const portableMeals = meals.map(({ reviewId: _reviewId, ...meal }) => meal);
   const records = {
     profile, healthTargets: targets, onboarding, uploads: archiveUploads,
     aiExecutions: executions, savedFoods: foods, healthFocuses: focuses,
-    meals, measurements: values, workoutSessions: sessions, workoutReadiness: readiness,
+    meals: portableMeals, measurements: values, workoutSessions: sessions, workoutReadiness: readiness,
     workoutPlans: plans, workoutCheckins: checkins, reminders: ownerReminders,
   };
   assertPublicArchiveOwnerDataInventory([

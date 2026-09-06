@@ -8,7 +8,7 @@ export const nutrientTotalsSchema = z.object({
   fiber: z.number().finite().min(0).max(1_000),
   sodium: z.number().finite().min(0).max(100_000),
 });
-export const healthFindingSchema = z.object({
+const healthFindingBaseShape = {
   condition: z.enum([
     'weight_management',
     'blood_pressure',
@@ -57,9 +57,30 @@ export const healthFindingSchema = z.object({
     }).strict(),
   ]).optional(),
   evidenceSource: z.string().trim().min(1).max(160),
+};
+const legacyHealthFindingSchema = z.object({
+  ...healthFindingBaseShape,
   text: z.string().trim().min(1).max(500),
   suggestedActions: z.array(z.string().trim().min(1).max(180)).min(1).max(3),
-}).superRefine((value, context) => {
+});
+const localizedFindingTextSchema = z.object({
+  en: z.string().trim().min(1).max(500),
+  vi: z.string().trim().min(1).max(500),
+}).strict();
+const localizedFindingActionSchema = z.object({
+  en: z.string().trim().min(1).max(180),
+  vi: z.string().trim().min(1).max(180),
+}).strict();
+const localizedHealthFindingSchema = z.object({
+  ...healthFindingBaseShape,
+  presentationVersion: z.literal('health-finding-presentation-1'),
+  text: localizedFindingTextSchema,
+  suggestedActions: z.array(localizedFindingActionSchema).min(1).max(3),
+});
+export const healthFindingSchema = z.union([
+  localizedHealthFindingSchema,
+  legacyHealthFindingSchema,
+]).superRefine((value, context) => {
   if (value.observedValueState === 'unavailable' && value.observedValue !== null)
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['observedValue'], message: 'Unavailable findings must not contain an observed value.' });
   if (value.observedValueState !== 'unavailable' && value.observedValue === null)
@@ -134,6 +155,10 @@ export const nutritionSnapshotSchema = z.object({
   additionalNutrients: additionalNutrientsSchema,
 });
 export const mealTypeSchema = z.enum(['breakfast', 'lunch', 'dinner', 'snack']);
+export const mealServerReviewSchema = z.object({
+  id: z.string().uuid(),
+  expiresAt: z.string().datetime({ offset: true }),
+}).strict();
 export const foodAnalysisSchema = z.object({
   name: z.string().trim().min(1).max(160),
   nameVi: z.string().trim().min(1).max(160),
@@ -147,7 +172,19 @@ export const foodAnalysisSchema = z.object({
     text: z.string().trim().min(1).max(500),
   }),
   healthFindings: z.array(healthFindingSchema).max(16).optional(),
+  serverReview: mealServerReviewSchema.nullable().optional(),
 });
+export const mealReviewDraftSchema = foodAnalysisSchema.omit({
+  healthFindings: true,
+  serverReview: true,
+});
+export const reviewedMealAnalysisSchema = foodAnalysisSchema.extend({
+  healthFindings: z.array(healthFindingSchema).max(16),
+  serverReview: mealServerReviewSchema.nullable().optional(),
+});
+export const createMealReviewRequestSchema = z.object({
+  analysis: mealReviewDraftSchema,
+}).strict();
 export const analyseFoodRequestSchema = z.discriminatedUnion('mode', [
   z.object({
     mode: z.literal('text'),
@@ -225,19 +262,8 @@ export const savedFoodsResponseSchema = z.object({ savedFoods: z.array(savedFood
 export const deleteSavedFoodRequestSchema = z.object({ idempotencyKey: z.string().uuid() }).strict();
 export const createMealRequestSchema = z.object({
   idempotencyKey: z.string().uuid(),
-  name: z.string().trim().min(1).max(160),
-  mealType: mealTypeSchema,
+  reviewId: z.string().uuid(),
   occurredAt: z.string().datetime({ offset: true }),
-  confidence: z.number().int().min(0).max(100),
-  analysisSource: z.enum([
-    'manual_estimate',
-    'manual_entry',
-    'open_food_facts',
-    'vietnam_institute_nutrition',
-    'usda_fooddata_central',
-  ]),
-  nutritionSnapshot: nutritionSnapshotSchema,
-  healthFindings: z.array(healthFindingSchema).max(16),
 }).strict();
 export const profileLocaleSchema = z.enum(['en', 'vi']);
 export const profileTargetsResponseSchema = z.object({
@@ -761,6 +787,8 @@ export const accountDeletionRequestSchema = z.object({
   confirmation: z.literal('DELETE MY DATA'),
 }).strict();
 export type FoodAnalysis = z.infer<typeof foodAnalysisSchema>;
+export type MealReviewDraft = z.infer<typeof mealReviewDraftSchema>;
+export type ReviewedMealAnalysis = z.infer<typeof reviewedMealAnalysisSchema>;
 export type FoodExtractionProposal = z.infer<typeof foodExtractionProposalSchema>;
 export type SavedFood = z.infer<typeof savedFoodSchema>;
 export type SavePersonalFoodRequest = z.infer<typeof savePersonalFoodRequestSchema>;

@@ -105,6 +105,8 @@
     { "idx": 20, "version": "6", "when": 1788028698065, "tag": "0020_workout_checkin_safety_context", "breakpoints": true
     },
     { "idx": 21, "version": "6", "when": 1788028698066, "tag": "0021_meal_health_findings", "breakpoints": true
+    },
+    { "idx": 22, "version": "6", "when": 1788028698067, "tag": "0022_meal_analysis_reviews", "breakpoints": true
     }
   ]
 }
