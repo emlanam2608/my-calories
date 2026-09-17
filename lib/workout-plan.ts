@@ -1,4 +1,6 @@
 import type { ExerciseCatalogEntry } from './exercise-catalog';
+import type { OnboardingDraft } from './contracts';
+import { eligibleExercises } from './exercise-eligibility';
 
 export type WorkoutPlanSession = {
   id: string;
@@ -28,9 +30,12 @@ export type WorkoutPlanDraft = {
 };
 
 export type WorkoutPlanPreferences = {
-  equipment: string[];
-  clinicianRestrictionFlags: string[];
-  injuryFlags?: string[];
+  equipment: NonNullable<OnboardingDraft['equipment']>;
+  environments?: NonNullable<OnboardingDraft['environments']>;
+  clinicianRestrictionFlags: NonNullable<
+    OnboardingDraft['clinicianRestrictionFlags']
+  >;
+  injuryFlags?: NonNullable<OnboardingDraft['injuryFlags']>;
   availableDays?: string[];
 };
 
@@ -57,7 +62,9 @@ const strengthCooldown = {
 function requireExercises(catalog: ExerciseCatalogEntry[], ids: string[]) {
   const available = new Set(catalog.map((exercise) => exercise.id));
   if (!ids.every((id) => available.has(id)))
-    throw new Error('The starter exercise catalog is incomplete. Please try again later.');
+    throw new Error(
+      'The starter exercise catalog is incomplete. Please try again later.',
+    );
   return ids;
 }
 
@@ -65,37 +72,12 @@ export function selectableWorkoutExercises(
   catalog: ExerciseCatalogEntry[],
   preferences: WorkoutPlanPreferences,
 ) {
-  const equipmentLabels = new Set(
-    preferences.equipment.flatMap((item) =>
-      item === 'exercise_mat'
-        ? ['exercise mat']
-        : item === 'mini_treadmill'
-          ? ['mini treadmill']
-          : item === 'resistance_band'
-            ? ['resistance band']
-            : item === 'bodyweight'
-              ? ['wall']
-              : item === 'gym'
-                ? ['exercise mat', 'chair', 'wall', 'bicycle', 'mini treadmill', 'resistance band', 'dumbbells', 'gym', 'cable machine']
-                : [item],
-    ),
-  );
-  return catalog.filter((exercise) => {
-    const hasEquipment = exercise.equipment.every((item) => equipmentLabels.has(item));
-    const avoidsResistance = preferences.clinicianRestrictionFlags.includes('avoid_resistance');
-    const injuryTags = new Set(
-      (preferences.injuryFlags ?? []).flatMap((flag) =>
-        flag === 'balance_concern'
-          ? ['balance_risk']
-          : flag === 'joint_pain'
-            ? ['knee_pain']
-            : flag === 'back_pain'
-              ? ['back_pain']
-              : [],
-      ),
-    );
-    const hasInjuryContraindication = exercise.contraindicationTags.some((tag) => injuryTags.has(tag));
-    return hasEquipment && !hasInjuryContraindication && !(avoidsResistance && exercise.category === 'strength');
+  return eligibleExercises(catalog, {
+    equipment: preferences.equipment,
+    environments: preferences.environments ?? ['home'],
+    injuryFlags: preferences.injuryFlags ?? [],
+    clinicianRestrictionFlags: preferences.clinicianRestrictionFlags,
+    safetyDecision: { status: 'allowed', reasonCodes: [] },
   });
 }
 
@@ -103,13 +85,25 @@ function firstAvailable(catalog: ExerciseCatalogEntry[], ids: string[]) {
   const available = new Set(catalog.map((exercise) => exercise.id));
   const id = ids.find((candidate) => available.has(candidate));
   if (!id)
-    throw new Error('Your selected equipment cannot support this starter plan yet. Update equipment or use a clinician-approved alternative.');
+    throw new Error(
+      'Your selected equipment cannot support this starter plan yet. Update equipment or use a clinician-approved alternative.',
+    );
   return id;
 }
 
-function scheduledOffsets(periodStart: string, availableDays: string[], count: number) {
+function scheduledOffsets(
+  periodStart: string,
+  availableDays: string[],
+  count: number,
+) {
   const dayIndexes: Record<string, number> = {
-    sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
+    sun: 0,
+    mon: 1,
+    tue: 2,
+    wed: 3,
+    thu: 4,
+    fri: 5,
+    sat: 6,
   };
   const startDay = new Date(`${periodStart}T00:00:00.000Z`).getUTCDay();
   return [...new Set(availableDays)]
@@ -124,7 +118,17 @@ export function createStarterWorkoutPlan(
   catalog: ExerciseCatalogEntry[],
   periodStart: string,
   preferences: WorkoutPlanPreferences = {
-    equipment: ['exercise_mat', 'chair', 'bodyweight', 'bicycle', 'mini_treadmill', 'resistance_band'],
+    equipment: [
+      'exercise_mat',
+      'chair',
+      'bodyweight',
+      'wall',
+      'bicycle',
+      'mini_treadmill',
+      'resistance_band',
+      'band_anchor',
+    ],
+    environments: ['home'],
     clinicianRestrictionFlags: [],
     injuryFlags: [],
     availableDays: ['mon', 'wed', 'fri'],
@@ -132,10 +136,19 @@ export function createStarterWorkoutPlan(
 ): WorkoutPlanDraft {
   const selectedCatalog = selectableWorkoutExercises(catalog, preferences);
   const mobility = firstAvailable(selectedCatalog, ['cat-cow']);
-  const aerobic = firstAvailable(selectedCatalog, ['treadmill-walk', 'bicycle-easy']);
-  const strength = preferences.clinicianRestrictionFlags.includes('avoid_resistance')
+  const aerobic = firstAvailable(selectedCatalog, [
+    'treadmill-walk',
+    'bicycle-easy',
+  ]);
+  const strength = preferences.clinicianRestrictionFlags.includes(
+    'avoid_resistance',
+  )
     ? null
-    : firstAvailable(selectedCatalog, ['sit-to-stand', 'wall-push-up', 'band-row']);
+    : firstAvailable(selectedCatalog, [
+        'sit-to-stand',
+        'wall-push-up',
+        'band-row',
+      ]);
   const note = preferences.clinicianRestrictionFlags.includes('monitor_glucose')
     ? {
         en: 'Follow your clinician’s glucose-monitoring instructions. Stop for concerning symptoms and do not progress before a scheduled check-in.',
@@ -189,7 +202,10 @@ export function createStarterWorkoutPlan(
         {
           id: 'starter-mobility-a',
           dayOffset: 0,
-          title: { en: 'Mobility and easy movement', vi: 'Linh hoạt và vận động nhẹ' },
+          title: {
+            en: 'Mobility and easy movement',
+            vi: 'Linh hoạt và vận động nhẹ',
+          },
           durationMinutes: 18,
           rpe: 2,
           rationale: {
@@ -244,8 +260,11 @@ export function createStarterWorkoutPlan(
     prescriptions: [{ exerciseId: aerobic, durationMinutes: 14 }],
     progressionCriteria: starterProgression,
   };
-  const selectedSessions = [strengthSessions[0], aerobicSession, strengthSessions[1]]
-    .slice(0, Math.min(preferences.availableDays?.length ?? 3, 3));
+  const selectedSessions = [
+    strengthSessions[0],
+    aerobicSession,
+    strengthSessions[1],
+  ].slice(0, Math.min(preferences.availableDays?.length ?? 3, 3));
   const offsets = scheduledOffsets(
     periodStart,
     preferences.availableDays ?? ['mon', 'wed', 'fri'],

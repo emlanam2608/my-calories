@@ -1,182 +1,191 @@
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { getDb } from '@/db';
-import { exerciseCatalog, profileOnboarding, requestDeduplications, workoutPlans } from '@/db/schema';
+import { requestDeduplications, workoutPlanPreviews, workoutPlans } from '@/db/schema';
+import { ACTIVE_EXERCISE_CATALOG_VERSION } from '@/lib/exercise-catalog';
+import { activeExerciseCatalog } from '@/lib/exercise-catalog-server';
 import {
-  confirmWorkoutPlanRequestSchema,
-  onboardingDraftSchema,
-  workoutPlanResponseSchema,
-} from '@/lib/contracts';
-import { exerciseCatalogEntrySchema } from '@/lib/exercise-catalog';
-import { selectableWorkoutExercises } from '@/lib/workout-plan';
-import { resolveEffectiveSafetyContextForOwner } from '@/lib/effective-safety-context-server';
-import { recommendationBlockedResponse } from '@/lib/safety-enforcement';
+  activeWorkoutPlanSchema,
+  confirmPersistedWorkoutPlanRequestSchema,
+  parseStoredWorkoutPlan,
+  workoutPlanMutationResponseSchema,
+} from '@/lib/workout-plan-lifecycle';
+import { workoutPlanningContextSchema, workoutPlanV2Schema } from '@/lib/workout-planning-contracts';
+import { createDeterministicWorkoutPlan } from '@/lib/workout-planner';
+import { resolveWorkoutPlanningContext } from '@/lib/workout-planning-context-server';
+
+type PlanRow = typeof workoutPlans.$inferSelect;
+
+function serializePlan(row: PlanRow) {
+  const plan = parseStoredWorkoutPlan(row.plan);
+  if (!plan) throw new Error(`Unsupported workout plan ${row.id}.`);
+  return activeWorkoutPlanSchema.parse({
+    id: row.id,
+    status: row.status === 'superseded' ? 'superseded' : 'active',
+    plan,
+    planningContext: row.planningContext
+      ? workoutPlanningContextSchema.parse(row.planningContext)
+      : null,
+    confirmedAt: row.confirmedAt.toISOString(),
+    supersededAt: row.supersededAt?.toISOString() ?? null,
+  });
+}
+
+async function planById(ownerId: string, id: string) {
+  const rows = await getDb().select().from(workoutPlans).where(
+    and(eq(workoutPlans.ownerId, ownerId), eq(workoutPlans.id, id)),
+  ).limit(1);
+  return rows[0] ? serializePlan(rows[0]) : null;
+}
 
 async function currentPlanForOwner(ownerId: string) {
-  const row = await getDb()
-    .select()
-    .from(workoutPlans)
-    .where(eq(workoutPlans.ownerId, ownerId))
-    .orderBy(desc(workoutPlans.createdAt))
-    .limit(1);
-  if (!row[0]) return null;
-  return workoutPlanResponseSchema.parse({
-    id: row[0].id,
-    status: 'confirmed',
-    plan: row[0].plan,
-    confirmedAt: row[0].confirmedAt.toISOString(),
-  });
+  const rows = await getDb().select().from(workoutPlans).where(
+    and(
+      eq(workoutPlans.ownerId, ownerId),
+      inArray(workoutPlans.status, ['active', 'confirmed']),
+    ),
+  ).orderBy(desc(workoutPlans.createdAt)).limit(1);
+  return rows[0] ? serializePlan(rows[0]) : null;
+}
+
+function staleResponse() {
+  return Response.json(
+    {
+      error: 'This workout preview is no longer current. Generate a new preview before confirming.',
+      code: 'workout_plan_preview_stale',
+    },
+    { status: 409, headers: { 'Cache-Control': 'no-store' } },
+  );
 }
 
 export async function GET() {
   const user = await getChatGPTUser();
-  if (!user)
-    return Response.json({ error: 'Sign in is required.' }, { status: 401 });
-  return Response.json({ plan: await currentPlanForOwner(user.userId) }, {
-    headers: { 'Cache-Control': 'no-store' },
-  });
+  if (!user) return Response.json({ error: 'Sign in is required.' }, { status: 401 });
+  return Response.json(
+    { plan: await currentPlanForOwner(user.userId) },
+    { headers: { 'Cache-Control': 'no-store' } },
+  );
 }
 
 export async function POST(request: Request) {
   const user = await getChatGPTUser();
-  if (!user)
-    return Response.json({ error: 'Sign in is required.' }, { status: 401 });
-  const parsed = confirmWorkoutPlanRequestSchema.safeParse(
+  if (!user) return Response.json({ error: 'Sign in is required.' }, { status: 401 });
+  const parsed = confirmPersistedWorkoutPlanRequestSchema.safeParse(
     await request.json().catch(() => null),
   );
   if (!parsed.success)
-    return Response.json({ error: 'Review a valid plan before confirming it.' }, { status: 400 });
-  const safetyContext = await resolveEffectiveSafetyContextForOwner(user.userId);
-  if (safetyContext.decisions.workout_plan.status === 'blocked')
-    return recommendationBlockedResponse(safetyContext, 'workout_plan');
-  const onboarding = await getDb()
-    .select({ status: profileOnboarding.status, draft: profileOnboarding.draft })
-    .from(profileOnboarding)
-    .where(eq(profileOnboarding.ownerId, user.userId))
-    .limit(1);
-  const onboardingRecord = onboarding[0];
-  if (onboardingRecord?.status !== 'complete')
-    return Response.json(
-      { error: 'Workout plan confirmation requires completed profile planning basics.' },
-      { status: 422 },
-    );
-  const onboardingDraft = onboardingDraftSchema.safeParse(onboardingRecord.draft);
-  if (!onboardingDraft.success || !onboardingDraft.data.equipment)
-    return Response.json(
-      { error: 'Review your saved equipment before confirming a plan.' },
-      { status: 422 },
-    );
-  const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-  const planStart = new Date(`${parsed.data.plan.periodStart}T00:00:00.000Z`);
-  const usesUnavailableDay = parsed.data.plan.sessions.some((session) => {
-    const date = new Date(planStart);
-    date.setUTCDate(date.getUTCDate() + session.dayOffset);
-    return !onboardingDraft.data.availableDays?.includes(dayNames[date.getUTCDay()] as 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat');
-  });
-  if (usesUnavailableDay)
-    return Response.json(
-      { error: 'This plan no longer matches your saved available training days. Generate a new preview before confirming.' },
-      { status: 422 },
-    );
-  const catalogRows = await getDb()
-    .select({
-      id: exerciseCatalog.id,
-      name: exerciseCatalog.name,
-      category: exerciseCatalog.category,
-      equipment: exerciseCatalog.equipment,
-      muscleGroups: exerciseCatalog.muscleGroups,
-      contraindicationTags: exerciseCatalog.contraindicationTags,
-      technique: exerciseCatalog.technique,
-      regression: exerciseCatalog.regression,
-      progression: exerciseCatalog.progression,
-      substitutionIds: exerciseCatalog.substitutionIds,
-    })
-    .from(exerciseCatalog)
-    .where(eq(exerciseCatalog.catalogVersion, 'starter-1'))
-    .orderBy(asc(exerciseCatalog.category), asc(exerciseCatalog.id));
-  const permittedExerciseIds = new Set(
-    selectableWorkoutExercises(
-      catalogRows.map((row) => exerciseCatalogEntrySchema.parse(row)),
-      {
-        equipment: onboardingDraft.data.equipment,
-        clinicianRestrictionFlags:
-          onboardingDraft.data.clinicianRestrictionFlags ?? [],
-        injuryFlags: onboardingDraft.data.injuryFlags ?? [],
-      },
-    ).map((exercise) => exercise.id),
-  );
-  if (
-    parsed.data.plan.sessions
-      .flatMap((session) => session.exerciseIds)
-      .some((exerciseId) => !permittedExerciseIds.has(exerciseId))
-  )
-    return Response.json(
-      { error: 'This plan no longer matches your saved equipment or clinician exercise restrictions. Generate a new preview before confirming.' },
-      { status: 422 },
-    );
-
+    return Response.json({ error: 'Choose a valid saved preview before confirming.' }, { status: 400 });
   const db = getDb();
-  const existing = await db
-    .select({ resourceType: requestDeduplications.resourceType })
-    .from(requestDeduplications)
-    .where(
-      and(
-        eq(requestDeduplications.ownerId, user.userId),
-        eq(requestDeduplications.idempotencyKey, parsed.data.idempotencyKey),
-      ),
-    )
-    .limit(1);
+  const existing = await db.select().from(requestDeduplications).where(and(
+    eq(requestDeduplications.ownerId, user.userId),
+    eq(requestDeduplications.idempotencyKey, parsed.data.idempotencyKey),
+  )).limit(1);
   if (existing[0]) {
     if (existing[0].resourceType !== 'workout_plan')
-      return Response.json(
-        { error: 'This idempotency key has already been used for a different request.' },
-        { status: 409 },
-      );
+      return Response.json({ error: 'This idempotency key has already been used for a different request.' }, { status: 409 });
+    const replay = await planById(user.userId, existing[0].resourceId);
+    if (!replay) return Response.json({ error: 'The original plan is unavailable.' }, { status: 410 });
     return Response.json(
-      { plan: await currentPlanForOwner(user.userId), replayed: true },
+      workoutPlanMutationResponseSchema.parse({ plan: replay, replayed: true }),
       { headers: { 'Cache-Control': 'no-store' } },
     );
   }
-
+  const previewRows = await db.select().from(workoutPlanPreviews).where(and(
+    eq(workoutPlanPreviews.id, parsed.data.previewId),
+    eq(workoutPlanPreviews.ownerId, user.userId),
+  )).limit(1);
+  const preview = previewRows[0];
+  if (!preview) return Response.json({ error: 'Workout preview not found.' }, { status: 404 });
   const now = new Date();
+  if (preview.status !== 'preview') return staleResponse();
+  if (preview.expiresAt.getTime() <= now.getTime()) {
+    await db.update(workoutPlanPreviews).set({ status: 'expired' }).where(and(
+      eq(workoutPlanPreviews.id, preview.id),
+      eq(workoutPlanPreviews.ownerId, user.userId),
+      eq(workoutPlanPreviews.status, 'preview'),
+    ));
+    return staleResponse();
+  }
+  const storedContext = workoutPlanningContextSchema.safeParse(preview.planningContext);
+  const storedPlan = workoutPlanV2Schema.safeParse(preview.plan);
+  if (!storedContext.success || !storedPlan.success) return staleResponse();
+  if (storedPlan.data.draftStatus !== 'complete')
+    return Response.json({ error: 'Resolve the preview questions before confirming this plan.' }, { status: 422 });
+
+  let verification:
+    | {
+        context: typeof storedContext.data;
+        rebuilt: ReturnType<typeof createDeterministicWorkoutPlan>;
+      }
+    | undefined;
+  try {
+    const resolved = await resolveWorkoutPlanningContext(user.userId, now);
+    if (resolved.status !== 'ready') return staleResponse();
+    verification = {
+      context: resolved.context,
+      rebuilt: createDeterministicWorkoutPlan(
+        resolved.context,
+        await activeExerciseCatalog(),
+      ),
+    };
+  } catch {
+    return staleResponse();
+  }
+  const rebuilt = verification.rebuilt;
+  if (
+    verification.context.inputDigest !== preview.planningContextDigest ||
+    preview.catalogVersion !== ACTIVE_EXERCISE_CATALOG_VERSION ||
+    rebuilt.status !== 'draft' ||
+    JSON.stringify(rebuilt.plan) !== JSON.stringify(storedPlan.data)
+  ) return staleResponse();
+
   const id = crypto.randomUUID();
   try {
     await db.batch([
+      db.update(workoutPlans).set({ status: 'superseded', supersededAt: now }).where(and(
+        eq(workoutPlans.ownerId, user.userId),
+        inArray(workoutPlans.status, ['active', 'confirmed']),
+      )),
       db.insert(workoutPlans).values({
         id,
         ownerId: user.userId,
-        planVersion: parsed.data.plan.planVersion,
-        periodStart: parsed.data.plan.periodStart,
-        status: 'confirmed',
-        plan: parsed.data.plan,
+        planVersion: storedPlan.data.planVersion,
+        periodStart: storedPlan.data.periodStart,
+        status: 'active',
+        plan: storedPlan.data,
+        planningContext: storedContext.data,
+        planningContextDigest: preview.planningContextDigest,
+        catalogVersion: preview.catalogVersion,
+        sourcePreviewId: preview.id,
         createdAt: now,
         confirmedAt: now,
       }),
+      db.update(workoutPlanPreviews).set({ status: 'active', activatedPlanId: id, activatedAt: now }).where(and(
+        eq(workoutPlanPreviews.id, preview.id),
+        eq(workoutPlanPreviews.ownerId, user.userId),
+        eq(workoutPlanPreviews.status, 'preview'),
+      )),
       db.insert(requestDeduplications).values({
-        id: crypto.randomUUID(),
-        ownerId: user.userId,
+        id: crypto.randomUUID(), ownerId: user.userId,
         idempotencyKey: parsed.data.idempotencyKey,
-        resourceType: 'workout_plan',
-        resourceId: id,
-        createdAt: now,
+        resourceType: 'workout_plan', resourceId: id, createdAt: now,
       }),
     ]);
   } catch {
-    return Response.json(
-      { error: 'We could not confirm this workout plan. Please try again.' },
-      { status: 500 },
-    );
+    const dedup = await db.select().from(requestDeduplications).where(and(
+      eq(requestDeduplications.ownerId, user.userId),
+      eq(requestDeduplications.idempotencyKey, parsed.data.idempotencyKey),
+    )).limit(1);
+    if (dedup[0]?.resourceType === 'workout_plan') {
+      const replay = await planById(user.userId, dedup[0].resourceId);
+      if (replay)
+        return Response.json(workoutPlanMutationResponseSchema.parse({ plan: replay, replayed: true }), { headers: { 'Cache-Control': 'no-store' } });
+    }
+    return staleResponse();
   }
+  const activated = await planById(user.userId, id);
   return Response.json(
-    {
-      plan: workoutPlanResponseSchema.parse({
-        id,
-        status: 'confirmed',
-        plan: parsed.data.plan,
-        confirmedAt: now.toISOString(),
-      }),
-      replayed: false,
-    },
+    workoutPlanMutationResponseSchema.parse({ plan: activated, replayed: false }),
     { headers: { 'Cache-Control': 'no-store' } },
   );
 }

@@ -1,4 +1,5 @@
 export const ownerDataInventory = [
+  'authIdentities',
   'profile',
   'healthTargets',
   'onboarding',
@@ -10,10 +11,13 @@ export const ownerDataInventory = [
   'mealAnalysisReviews',
   'meals',
   'measurements',
+  'workoutExerciseResults',
   'workoutSessions',
   'workoutReadiness',
   'workoutPlans',
+  'workoutPlanPreviews',
   'workoutCheckins',
+  'workoutAdaptationProposals',
   'reminders',
   'requestDeduplications',
 ] as const;
@@ -36,10 +40,12 @@ export const publicArchiveOwnerDataInventory = [
   'healthFocuses',
   'meals',
   'measurements',
+  'workoutExerciseResults',
   'workoutSessions',
   'workoutReadiness',
   'workoutPlans',
   'workoutCheckins',
+  'workoutAdaptationProposals',
   'reminders',
 ] as const satisfies readonly OwnerDataKey[];
 
@@ -51,10 +57,16 @@ export function assertPublicArchiveOwnerDataInventory(keys: readonly string[]) {
   assertInventory(keys, publicArchiveOwnerDataInventory, 'Public archive');
 }
 
-function assertInventory(keys: readonly string[], inventory: readonly string[], label: string) {
+function assertInventory(
+  keys: readonly string[],
+  inventory: readonly string[],
+  label: string,
+) {
   const received = new Set(keys);
   const missing = inventory.filter((key) => !received.has(key));
   const unexpected = keys.filter((key) => !inventory.includes(key));
   if (missing.length || unexpected.length)
-    throw new Error(`${label} inventory mismatch. Missing: ${missing.join(', ') || 'none'}. Unexpected: ${unexpected.join(', ') || 'none'}.`);
+    throw new Error(
+      `${label} inventory mismatch. Missing: ${missing.join(', ') || 'none'}. Unexpected: ${unexpected.join(', ') || 'none'}.`,
+    );
 }

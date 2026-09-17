@@ -7,13 +7,16 @@ import type {
   Reminder,
   SavedFood,
   SensitiveNotes,
-  WorkoutCheckin,
-  WorkoutLog,
-  WorkoutPlanResponse,
   WorkoutReadiness,
 } from './contracts';
 import type { Locale } from './copy';
 import type { ExerciseCatalogEntry } from './exercise-catalog';
+import type { ActiveWorkoutPlan } from './workout-plan-lifecycle';
+import type {
+  WorkoutEvidenceCheckin,
+  WorkoutEvidenceLog,
+} from './workout-evidence';
+import type { WorkoutAdaptationProposal } from './workout-adaptation-contracts';
 import type { DashboardMeal, DashboardTargetKey } from './dashboard-model';
 import type { EffectiveTarget } from './targets';
 
@@ -29,9 +32,10 @@ export type DashboardBootstrap = {
   readiness?: WorkoutReadiness;
   safetyContext?: EffectiveSafetyContext;
   exercises?: ExerciseCatalogEntry[];
-  plan?: WorkoutPlanResponse | null;
-  logs?: WorkoutLog[];
-  checkin?: WorkoutCheckin | null;
+  plan?: ActiveWorkoutPlan | null;
+  logs?: WorkoutEvidenceLog[];
+  checkin?: WorkoutEvidenceCheckin | null;
+  proposal?: WorkoutAdaptationProposal | null;
   analytics?: Analytics;
   savedFoods?: SavedFood[];
   reminders?: Reminder[];
@@ -86,6 +90,7 @@ export async function loadDashboardBootstrap(
     plan,
     logs,
     checkin,
+    proposal,
     analytics,
     savedFoods,
     reminders,
@@ -103,9 +108,12 @@ export async function loadDashboardBootstrap(
     read<WorkoutReadiness>('/api/workouts/readiness'),
     read<{ context?: EffectiveSafetyContext }>('/api/safety-context'),
     read<{ exercises?: ExerciseCatalogEntry[] }>('/api/exercises'),
-    read<{ plan?: WorkoutPlanResponse | null }>('/api/workout-plans'),
-    read<{ logs?: WorkoutLog[] }>('/api/workout-logs'),
-    read<{ checkin?: WorkoutCheckin | null }>('/api/workout-checkins'),
+    read<{ plan?: ActiveWorkoutPlan | null }>('/api/workout-plans'),
+    read<{ logs?: WorkoutEvidenceLog[] }>('/api/workout-logs'),
+    read<{ checkin?: WorkoutEvidenceCheckin | null }>('/api/workout-checkins'),
+    read<{ proposal?: WorkoutAdaptationProposal | null }>(
+      '/api/workout-plan-proposals',
+    ),
     read<Analytics>('/api/analytics?days=30'),
     read<{ savedFoods?: SavedFood[] }>('/api/saved-foods'),
     read<{ reminders?: Reminder[] }>('/api/reminders'),
@@ -122,6 +130,7 @@ export async function loadDashboardBootstrap(
     plan,
     logs,
     checkin,
+    proposal,
     analytics,
     savedFoods,
     reminders,
@@ -144,6 +153,7 @@ export async function loadDashboardBootstrap(
     plan,
     logs,
     checkin,
+    proposal,
     analytics,
     savedFoods,
     reminders,
@@ -172,6 +182,7 @@ export async function loadDashboardBootstrap(
     plan: plan.ok ? (plan.body.plan ?? null) : undefined,
     logs: logs.ok ? logs.body.logs : undefined,
     checkin: checkin.ok ? (checkin.body.checkin ?? null) : undefined,
+    proposal: proposal.ok ? (proposal.body.proposal ?? null) : undefined,
     analytics: analytics.ok ? analytics.body : undefined,
     savedFoods: savedFoods.ok ? savedFoods.body.savedFoods : undefined,
     reminders: reminders.ok ? reminders.body.reminders : undefined,

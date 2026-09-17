@@ -86,27 +86,117 @@
       "tag": "0011_workout_performance_details",
       "breakpoints": true
     },
-    { "idx": 12, "version": "6", "when": 1788028698057, "tag": "0012_workout_checkins", "breakpoints": true
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1788028698057,
+      "tag": "0012_workout_checkins",
+      "breakpoints": true
     },
-    { "idx": 13, "version": "6", "when": 1788028698058, "tag": "0013_profile_onboarding", "breakpoints": true
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1788028698058,
+      "tag": "0013_profile_onboarding",
+      "breakpoints": true
     },
-    { "idx": 14, "version": "6", "when": 1788028698059, "tag": "0014_profile_sensitive_notes", "breakpoints": true
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1788028698059,
+      "tag": "0014_profile_sensitive_notes",
+      "breakpoints": true
     },
-    { "idx": 15, "version": "6", "when": 1788028698060, "tag": "0015_uploads", "breakpoints": true
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1788028698060,
+      "tag": "0015_uploads",
+      "breakpoints": true
     },
-    { "idx": 16, "version": "6", "when": 1788028698061, "tag": "0016_ai_executions", "breakpoints": true
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1788028698061,
+      "tag": "0016_ai_executions",
+      "breakpoints": true
     },
-    { "idx": 17, "version": "6", "when": 1788028698062, "tag": "0017_saved_foods", "breakpoints": true
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1788028698062,
+      "tag": "0017_saved_foods",
+      "breakpoints": true
     },
-    { "idx": 18, "version": "6", "when": 1788028698063, "tag": "0018_expand_starter_exercise_catalog", "breakpoints": true
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1788028698063,
+      "tag": "0018_expand_starter_exercise_catalog",
+      "breakpoints": true
     },
-    { "idx": 19, "version": "6", "when": 1788028698064, "tag": "0019_measurement_source_upload", "breakpoints": true
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1788028698064,
+      "tag": "0019_measurement_source_upload",
+      "breakpoints": true
     },
-    { "idx": 20, "version": "6", "when": 1788028698065, "tag": "0020_workout_checkin_safety_context", "breakpoints": true
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1788028698065,
+      "tag": "0020_workout_checkin_safety_context",
+      "breakpoints": true
     },
-    { "idx": 21, "version": "6", "when": 1788028698066, "tag": "0021_meal_health_findings", "breakpoints": true
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1788028698066,
+      "tag": "0021_meal_health_findings",
+      "breakpoints": true
     },
-    { "idx": 22, "version": "6", "when": 1788028698067, "tag": "0022_meal_analysis_reviews", "breakpoints": true
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1788028698067,
+      "tag": "0022_meal_analysis_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1788028698068,
+      "tag": "0023_exercise_catalog_governance",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1788028698069,
+      "tag": "0024_workout_plan_preview_lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1788028698070,
+      "tag": "0025_workout_exercise_evidence",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1788028698071,
+      "tag": "0026_workout_adaptation_proposals",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1788028698072,
+      "tag": "0027_cloudflare_access_identities",
+      "breakpoints": true
     }
   ]
 }

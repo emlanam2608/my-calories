@@ -87,22 +87,29 @@ const englishCopy = {
     storePhoto: 'Store privately',
     uploadingPhoto: 'Storing privately…',
     photoStored: 'Private photo stored',
-    photoProviderNote: 'Photos are kept private for a short time and are never public. Extraction stays review-only.',
-    photoExtractionPending: 'Extract food or label facts, then choose an item for the editable meal review.',
+    photoProviderNote:
+      'Photos are kept private for a short time and are never public. Extraction stays review-only.',
+    photoExtractionPending:
+      'Extract food or label facts, then choose an item for the editable meal review.',
     extractPhoto: 'Extract photo',
     extractingPhoto: 'Extracting…',
     detectedFoods: 'Detected food or label items',
-    extractionReviewNote: 'Select an item to continue to nutrition review. Extraction never saves a meal automatically.',
+    extractionReviewNote:
+      'Select an item to continue to nutrition review. Extraction never saves a meal automatically.',
     deletePhoto: 'Delete photo',
     photoReviewTitle: 'Private photo review',
-    photoReviewDescription: 'Choose a meal or nutrition-label photo. Nothing is analysed or saved as a meal automatically.',
+    photoReviewDescription:
+      'Choose a meal or nutrition-label photo. Nothing is analysed or saved as a meal automatically.',
     mealPlaceholder: 'For example: phở bò with extra herbs, no chili oil',
     barcodePlaceholder: 'Enter an 8–14 digit barcode',
     startScanner: 'Scan with camera',
     stopScanner: 'Stop camera',
-    scannerHelp: 'Point the camera at a package barcode. You can always type it manually.',
-    scannerUnavailable: 'Barcode scanning is not supported in this browser. Enter the barcode manually.',
-    scannerPermissionError: 'We could not use your camera. Allow camera access or enter the barcode manually.',
+    scannerHelp:
+      'Point the camera at a package barcode. You can always type it manually.',
+    scannerUnavailable:
+      'Barcode scanning is not supported in this browser. Enter the barcode manually.',
+    scannerPermissionError:
+      'We could not use your camera. Allow camera access or enter the barcode manually.',
     vietnamDishPlaceholder: 'For example: cơm gà',
     vietnamIngredientPlaceholder: 'For example: thịt gà',
     usdaPlaceholder: 'For example: chicken breast, broccoli',
@@ -113,12 +120,14 @@ const englishCopy = {
     saveFood: 'Save food',
     saveRecipe: 'Save recipe',
     libraryTitle: 'Your saved foods',
-    libraryDescription: 'Choose a previously confirmed food or recipe to start an editable meal review.',
+    libraryDescription:
+      'Choose a previously confirmed food or recipe to start an editable meal review.',
     libraryEmpty: 'Save a reviewed food or recipe to reuse it here.',
     food: 'Food',
     recipe: 'Recipe',
     deleteSavedFood: 'Delete saved food',
-    deleteSavedConfirm: 'Delete this saved food or recipe permanently? This cannot be undone.',
+    deleteSavedConfirm:
+      'Delete this saved food or recipe permanently? This cannot be undone.',
     emptyReviewDescription:
       'Analyse a meal, inspect the ingredients and values, then confirm it yourself.',
     confidence: 'confidence',
@@ -145,11 +154,14 @@ const englishCopy = {
     reviewPlaceholder: 'Your meal will appear here',
     detectedIngredients: 'Detected ingredients',
     ingredientsPlaceholder: 'For example: rice noodles, beef, broth, herbs',
-    ingredientsHelp: 'Separate ingredients with commas. This changes only this review before you confirm.',
+    ingredientsHelp:
+      'Separate ingredients with commas. This changes only this review before you confirm.',
     additionalNutrients: 'Additional nutrients reported by the source',
-    additionalNutrientsSource: 'Only nutrients returned in supported source units can produce rule observations. Missing, unavailable, or unsupported values are not zero and do not produce numeric findings.',
+    additionalNutrientsSource:
+      'Only nutrients returned in supported source units can produce rule observations. Missing, unavailable, or unsupported values are not zero and do not produce numeric findings.',
     provenanceTitle: 'What each part means',
-    provenanceDescription: 'These labels keep confirmed facts, source data, estimates, rules, and AI prose separate before you save.',
+    provenanceDescription:
+      'These labels keep confirmed facts, source data, estimates, rules, and AI prose separate before you save.',
     userConfirmedFacts: 'User-confirmed facts',
     providerDatabaseValues: 'Provider / database values',
     estimatedValues: 'Estimates',
@@ -158,7 +170,8 @@ const englishCopy = {
     provenancePresent: 'Present',
     provenancePending: 'Pending confirmation',
     provenanceAbsent: 'Not in this review',
-    aiExtractionDisclosure: 'AI assisted the image/text extraction, but it did not author the deterministic findings below.',
+    aiExtractionDisclosure:
+      'AI assisted the image/text extraction, but it did not author the deterministic findings below.',
     sourceDetails: 'Nutrition snapshot provenance',
     sourceReference: 'Source reference',
     sourceVersion: 'Source version',
@@ -166,7 +179,8 @@ const englishCopy = {
     confidenceLabel: 'Extraction / match confidence',
     unavailable: 'Unavailable',
     nutrientAvailability: 'Per-nutrient availability',
-    nutrientAvailabilityDescription: 'Expand to inspect whether each value is reported, estimated, or unavailable. Unavailable is not zero.',
+    nutrientAvailabilityDescription:
+      'Expand to inspect whether each value is reported, estimated, or unavailable. Unavailable is not zero.',
     reported: 'Reported',
     estimated: 'Estimated',
     userConfirmed: 'User confirmed',
@@ -178,7 +192,8 @@ const englishCopy = {
     vietnamNutrition: 'Vietnam nutrition portal',
     usdaFoodData: 'USDA FoodData Central',
     deterministicExplanation: 'Deterministic rule explanation',
-    legacyEnglishFinding: 'This historical finding was saved before bilingual finding snapshots were available, so its original English wording is preserved.',
+    legacyEnglishFinding:
+      'This historical finding was saved before bilingual finding snapshots were available, so its original English wording is preserved.',
     providerReviewNote: 'Provider review note',
     estimateReviewNote: 'Estimate review note',
     userLibraryReviewNote: 'Previously confirmed food note',
@@ -203,7 +218,17 @@ const englishCopy = {
     bloodGlucoseFinding: 'Blood glucose',
     uricAcidFinding: 'Uric acid / gout',
     ruleLabel: 'Rule',
-    carbohydrates: 'Carbohydrates', totalSugar: 'Total sugar', addedSugar: 'Added sugar', totalFat: 'Total fat', saturatedFat: 'Saturated fat', cholesterol: 'Cholesterol', potassium: 'Potassium', calcium: 'Calcium', iron: 'Iron', alcohol: 'Alcohol', water: 'Water',
+    carbohydrates: 'Carbohydrates',
+    totalSugar: 'Total sugar',
+    addedSugar: 'Added sugar',
+    totalFat: 'Total fat',
+    saturatedFat: 'Saturated fat',
+    cholesterol: 'Cholesterol',
+    potassium: 'Potassium',
+    calcium: 'Calcium',
+    iron: 'Iron',
+    alcohol: 'Alcohol',
+    water: 'Water',
     serving: 'Serving',
     sourceAndReview: 'Source and review note',
     conditionChecks: 'Condition-specific checks',
@@ -212,9 +237,11 @@ const englishCopy = {
     discard: 'Discard',
     confirmAndSave: 'Confirm & save',
     serverReviewReady: 'Server review ready',
-    serverReviewReadyDescription: 'The facts and deterministic findings shown here are bound to this private server review. Confirming saves this exact review.',
+    serverReviewReadyDescription:
+      'The facts and deterministic findings shown here are bound to this private server review. Confirming saves this exact review.',
     serverReviewRequired: 'Review changes before saving',
-    serverReviewRequiredDescription: 'Your edits invalidated the prior server review. Request a fresh review, inspect the updated findings, then confirm.',
+    serverReviewRequiredDescription:
+      'Your edits invalidated the prior server review. Request a fresh review, inspect the updated findings, then confirm.',
     refreshServerReview: 'Review updated facts',
   },
   measurements: {
@@ -235,13 +262,15 @@ const englishCopy = {
     measuredAt: 'Measured at',
     saveMeasurement: 'Save measurement',
     reportTitle: 'Extract a report photo',
-    reportDescription: 'Upload a report photo privately, then choose and edit an extracted value before saving.',
+    reportDescription:
+      'Upload a report photo privately, then choose and edit an extracted value before saving.',
     extractReport: 'Extract report',
     extractingReport: 'Extracting…',
     reportStored: 'Private report stored temporarily.',
     reportReview: 'Choose a value to fill the editable form',
     retainReportTitle: 'Keep this report image privately',
-    retainReportDescription: 'Off by default. If you save this confirmed value without selecting this, the source image is deleted. You can delete a retained image later; the confirmed measurement stays.',
+    retainReportDescription:
+      'Off by default. If you save this confirmed value without selecting this, the source image is deleted. You can delete a retained image later; the confirmed measurement stays.',
     deleteRetainedReport: 'Delete retained report image',
     emptyTitle: 'No measurements yet',
     emptyDescription: 'Your confirmed measurements will appear here.',
@@ -266,7 +295,8 @@ const englishCopy = {
     faintingOrDizziness: 'Fainting, new severe dizziness, or confusion',
     severeShortnessOfBreath: 'Unusual or severe shortness of breath',
     irregularHeartbeat: 'A fast or irregular heartbeat with activity',
-    clinicianRestriction: 'A clinician has told me to avoid or restrict exercise',
+    clinicianRestriction:
+      'A clinician has told me to avoid or restrict exercise',
     exerciseGlucoseRisk:
       'I use insulin or a medicine that can lower glucose and do not have an exercise plan from my care team',
     confirm: 'Confirm workout readiness',
@@ -282,7 +312,8 @@ const englishCopy = {
     catalogTitle: 'Starter exercise library',
     catalogDescription:
       'These movements are a transparent starter catalog, not a workout prescription. A future plan will choose only compatible options.',
-    catalogEmpty: 'The exercise catalog is temporarily unavailable. Retry loading your private records.',
+    catalogEmpty:
+      'The exercise catalog is temporarily unavailable. Retry loading your private records.',
     technique: 'Technique',
     regression: 'Make it easier',
     progression: 'Progress later',
@@ -319,14 +350,110 @@ const englishCopy = {
     heartRate: 'Average heart rate (optional)',
     checkin: 'Run recovery check-in',
     checkinTitle: 'Weekly check-in',
-    checkinMaintain: 'Maintain the current plan; no automatic progression is applied.',
-    checkinRepeat: 'Repeat the current plan before changing it; adherence is still building.',
-    checkinHold: 'Hold progression and review the reported safety concern with an appropriate clinician.',
+    checkinMaintain:
+      'Maintain the current plan; no automatic progression is applied.',
+    checkinRepeat:
+      'Repeat the current plan before changing it; adherence is still building.',
+    checkinHold:
+      'Hold progression and review the reported safety concern with an appropriate clinician.',
+    workspaceTitle: 'Your weekly movement plan',
+    workspaceDescription:
+      'Review the plan source, complete each prescription, and confirm every proposed change yourself.',
+    activePlan: 'Active plan',
+    draftPlan: 'Plan preview',
+    replacePlan: 'Preview a replacement plan',
+    discardPreview: 'Discard preview',
+    previewExpires: 'Preview expires',
+    previewExpired:
+      'This preview is stale. Generate a new preview before confirming.',
+    unreviewed: 'Unreviewed exercise content',
+    reviewed: 'Professionally reviewed',
+    unreviewedDisclosure:
+      'This catalog and progression policy have not received recorded qualified review. This is transparent planning support, not individualized physical therapy or clinician-approved exercise.',
+    provenance: 'Plan provenance',
+    plannerVersion: 'Planner',
+    catalogVersion: 'Catalog',
+    policyVersion: 'Progression policy',
+    safetyVersion: 'Safety context',
+    inputDigest: 'Input digest',
+    schedule: 'Weekly schedule',
+    rationale: 'Why this is included',
+    substitutions: 'Approved substitutions',
+    noSubstitutions: 'No approved substitution recorded',
+    unresolvedQuestions: 'Needs your review before activation',
+    incompletePlan:
+      'This preview is incomplete and cannot be activated until the missing planning details are resolved.',
+    phases: {
+      warmup: 'Warm-up',
+      strength: 'Strength',
+      aerobic: 'Aerobic',
+      mobility: 'Mobility',
+      cooldown: 'Cooldown',
+    },
+    purposes: {
+      strength: 'Strength session',
+      aerobic: 'Aerobic session',
+      mobility: 'Mobility session',
+    },
+    exerciseResults: 'Exercise results',
+    resultStatus: 'Result',
+    completed: 'Completed as planned',
+    modified: 'Modified',
+    skipped: 'Skipped',
+    actualSets: 'Actual sets',
+    actualReps: 'Actual reps',
+    actualMinutes: 'Actual minutes',
+    substitution: 'Substitution used',
+    noSubstitution: 'No substitution',
+    stopForSafety: 'Stop and prioritize safety',
+    stopForSafetyDescription:
+      'If you had pain or concerning symptoms, stop the session. The log is recorded as a safety stop and future progression is held for review.',
+    recoveryTitle: 'Recovery check-in',
+    recoveryDescription:
+      'Record a bounded recovery status. This creates a proposal only; it never changes your active plan automatically.',
+    recoveryStatus: 'How is recovery?',
+    recoveryGood: 'Good',
+    recoveryFatigue: 'Some fatigue',
+    recoveryPoor: 'Poor',
+    soreness: 'I have notable soreness',
+    recoveryPain: 'I have pain during recovery',
+    createProposal: 'Create adaptation preview',
+    proposalTitle: 'Adaptation preview',
+    evidence: 'Evidence records',
+    confidence: 'Confidence',
+    completeness: 'Data completeness',
+    before: 'Before',
+    after: 'After',
+    noChange: 'No prescription change is proposed.',
+    confirmProposal: 'Confirm this plan change',
+    dismissProposal: 'Dismiss and keep active plan',
+    proposalHeld:
+      'This is a safety hold, not a plan to activate. Review the concern with an appropriate professional.',
+    proposalStatuses: {
+      pending: 'Awaiting your decision',
+      confirmed: 'Confirmed',
+      dismissed: 'Dismissed; active plan preserved',
+      expired: 'Expired; run a new check-in',
+    },
+    actions: {
+      hold_for_review: 'Hold for review',
+      maintain: 'Maintain',
+      progress: 'Progress',
+      deload: 'Deload',
+      substitute: 'Substitute',
+    },
+    offlineTitle: 'Workout records are read-only offline',
+    offlineDescription:
+      'Saved plans remain visible, but previews, logs, check-ins, confirmations, and dismissals require a connection. Sensitive health writes are not queued.',
+    legacyPlan:
+      'This older starter plan remains readable. Generate and explicitly confirm a current plan before exercise-level logging.',
+    noActivePlan: 'No active workout plan yet.',
   },
   progress: {
     eyebrow: 'Progress overview',
     title: 'Your recent records',
-    description: 'A private summary of confirmed records from the last 30 days. Patterns are observations, not proof that one thing caused another.',
+    description:
+      'A private summary of confirmed records from the last 30 days. Patterns are observations, not proof that one thing caused another.',
     coverage: 'Data coverage',
     daysWithData: 'days with data',
     completedWorkouts: 'Completed workouts',
@@ -336,35 +463,49 @@ const englishCopy = {
     meals: 'meals',
     noNutrition: 'No confirmed nutrition records yet.',
     nutritionDays: 'Recent nutrition days',
-    nutritionDaysDescription: 'Confirmed meal totals only; missing days are not treated as zero intake.',
+    nutritionDaysDescription:
+      'Confirmed meal totals only; missing days are not treated as zero intake.',
     measurementTrends: 'Measurement changes',
-    trendWarning: 'Changes are descriptive, non-causal observations. Sample size is shown for context.',
+    trendWarning:
+      'Changes are descriptive, non-causal observations. Sample size is shown for context.',
     noMeasurements: 'No confirmed measurements in this period.',
   },
   coach: {
     eyebrow: 'Daily coach',
     title: 'A calm next step for today.',
-    description: 'Private guidance from your confirmed day totals, active health focuses, and saved plan. It does not diagnose, change records, or replace clinician guidance.',
+    description:
+      'Private guidance from your confirmed day totals, active health focuses, and saved plan. It does not diagnose, change records, or replace clinician guidance.',
     boundaryTitle: 'Facts first, confirmation always',
-    boundaryDescription: 'This starter coach only compares confirmed tracking data with your effective targets. Future chat suggestions must remain reviewable before any record changes.',
+    boundaryDescription:
+      'This starter coach only compares confirmed tracking data with your effective targets. Future chat suggestions must remain reviewable before any record changes.',
     remaining: 'Remaining today',
     prioritiesTitle: 'What to prioritize',
-    prioritiesDescription: 'These are tracking prompts, not medical treatment instructions.',
+    prioritiesDescription:
+      'These are tracking prompts, not medical treatment instructions.',
     planTitle: 'Movement plan',
-    planDescription: 'Your confirmed plan is separate from this guidance and is never changed automatically.',
-    planAvailable: 'Your confirmed plan has {count} scheduled sessions to review when you are ready.',
-    noPlan: 'Complete readiness and confirm a plan before using workout guidance.',
+    planDescription:
+      'Your confirmed plan is separate from this guidance and is never changed automatically.',
+    planAvailable:
+      'Your confirmed plan has {count} scheduled sessions to review when you are ready.',
+    noPlan:
+      'Complete readiness and confirm a plan before using workout guidance.',
     priorities: {
-      protein: 'You still have protein remaining in your personal daily target. If it fits your preferences and plan, consider a protein-containing choice and record the actual serving.',
-      fiber: 'You still have fiber remaining in your personal daily target. Consider a food pattern that includes vegetables, beans, fruit, or whole grains when appropriate for you.',
-      sodium: 'Your confirmed sodium total has reached your personal daily target. For the rest of today, compare sauces, broth, seasoning, and packaged labels before deciding what fits.',
-      healthFocus: 'Keep your selected health focus visible when reviewing meals and measurements. Use clinician-defined targets or restrictions whenever they are available.',
-      balanced: 'No target comparison needs attention yet. Continue logging confirmed meals, measurements, and workouts so your private records stay useful.',
+      protein:
+        'You still have protein remaining in your personal daily target. If it fits your preferences and plan, consider a protein-containing choice and record the actual serving.',
+      fiber:
+        'You still have fiber remaining in your personal daily target. Consider a food pattern that includes vegetables, beans, fruit, or whole grains when appropriate for you.',
+      sodium:
+        'Your confirmed sodium total has reached your personal daily target. For the rest of today, compare sauces, broth, seasoning, and packaged labels before deciding what fits.',
+      healthFocus:
+        'Keep your selected health focus visible when reviewing meals and measurements. Use clinician-defined targets or restrictions whenever they are available.',
+      balanced:
+        'No target comparison needs attention yet. Continue logging confirmed meals, measurements, and workouts so your private records stay useful.',
     },
   },
   reminders: {
     title: 'Private agenda reminders',
-    description: 'Schedules stay in your private agenda. Future lock-screen notifications will use neutral text only.',
+    description:
+      'Schedules stay in your private agenda. Future lock-screen notifications will use neutral text only.',
     kind: 'Reminder type',
     time: 'Time (Asia/Bangkok)',
     days: 'Repeat on',
@@ -402,15 +543,18 @@ const englishCopy = {
     saveHealthFocuses: 'Save health focuses',
     dataPrivacy: 'Privacy and data',
     exportData: 'Export my data',
-    exportDescription: 'Download selected confirmed meal, measurement, and workout records as a private CSV. No sharing link is created.',
+    exportDescription:
+      'Download selected confirmed meal, measurement, and workout records as a private CSV. No sharing link is created.',
     exportStart: 'Start date',
     exportEnd: 'End date',
     exportCsv: 'Download CSV',
     exportPdf: 'Download PDF report',
     exportFullArchive: 'Download full archive',
-    exportFullArchiveDescription: 'Downloads all private structured records and current private uploads in a versioned JSON file. Keep this archive secure; it may contain sensitive health information.',
+    exportFullArchiveDescription:
+      'Downloads all private structured records and current private uploads in a versioned JSON file. Keep this archive secure; it may contain sensitive health information.',
     deleteData: 'Delete my data',
-    deleteDataDescription: 'Permanently deletes every private meal, measurement, workout, reminder, profile record, extraction record, and uploaded image. This cannot be undone.',
+    deleteDataDescription:
+      'Permanently deletes every private meal, measurement, workout, reminder, profile record, extraction record, and uploaded image. This cannot be undone.',
     deleteDataPrompt: 'Type DELETE MY DATA to enable permanent deletion',
     deletingData: 'Deleting private data…',
     deleteDataError: 'We could not permanently delete your private data.',
@@ -467,14 +611,38 @@ const englishCopy = {
     pregnancyPreferNot: 'Prefer not to say',
     medicationRisks: 'Medication-related exercise risks',
     medicationGlucose: 'Glucose-lowering medicine without an exercise plan',
-    medicationDizziness: 'Medicine associated with dizziness or fainting for me',
+    medicationDizziness:
+      'Medicine associated with dizziness or fainting for me',
     medicationOther: 'Another clinician-directed medication restriction',
-    medicationPrivacy: 'Choose only structured safety flags here. Medication names and details remain in encrypted notes and are not included in this safety context.',
-    preferenceOmnivore: 'Omnivore', preferenceVegetarian: 'Vegetarian', preferenceVegan: 'Vegan', preferencePescatarian: 'Pescatarian', preferenceHalal: 'Halal', preferenceLowSodium: 'Lower sodium', preferenceLowPurine: 'Lower purine',
-    allergyMilk: 'Milk', allergyEgg: 'Egg', allergyFish: 'Fish', allergyShellfish: 'Shellfish', allergyPeanut: 'Peanut', allergyTreeNut: 'Tree nuts', allergySoy: 'Soy', allergyWheat: 'Wheat', allergySesame: 'Sesame',
-    contextBloodPressure: 'Blood pressure', contextCholesterol: 'Cholesterol', contextBloodGlucose: 'Blood glucose', contextUricAcid: 'Uric acid',
-    injuryBack: 'Back pain', injuryJoint: 'Joint pain', injuryBalance: 'Balance concern',
-    symptomNone: 'No symptoms', symptomChest: 'Chest discomfort', symptomDizziness: 'Dizziness', symptomBreath: 'Shortness of breath',
+    medicationPrivacy:
+      'Choose only structured safety flags here. Medication names and details remain in encrypted notes and are not included in this safety context.',
+    preferenceOmnivore: 'Omnivore',
+    preferenceVegetarian: 'Vegetarian',
+    preferenceVegan: 'Vegan',
+    preferencePescatarian: 'Pescatarian',
+    preferenceHalal: 'Halal',
+    preferenceLowSodium: 'Lower sodium',
+    preferenceLowPurine: 'Lower purine',
+    allergyMilk: 'Milk',
+    allergyEgg: 'Egg',
+    allergyFish: 'Fish',
+    allergyShellfish: 'Shellfish',
+    allergyPeanut: 'Peanut',
+    allergyTreeNut: 'Tree nuts',
+    allergySoy: 'Soy',
+    allergyWheat: 'Wheat',
+    allergySesame: 'Sesame',
+    contextBloodPressure: 'Blood pressure',
+    contextCholesterol: 'Cholesterol',
+    contextBloodGlucose: 'Blood glucose',
+    contextUricAcid: 'Uric acid',
+    injuryBack: 'Back pain',
+    injuryJoint: 'Joint pain',
+    injuryBalance: 'Balance concern',
+    symptomNone: 'No symptoms',
+    symptomChest: 'Chest discomfort',
+    symptomDizziness: 'Dizziness',
+    symptomBreath: 'Shortness of breath',
     save: 'Save profile setup',
     goalWeightLoss: 'Weight loss',
     goalMaintain: 'Maintain weight',
@@ -492,14 +660,36 @@ const englishCopy = {
     trainingNew: 'New to exercise',
     trainingBeginner: 'Beginner',
     trainingRegular: 'Regular training',
-    dayMon: 'Mon', dayTue: 'Tue', dayWed: 'Wed', dayThu: 'Thu', dayFri: 'Fri', daySat: 'Sat', daySun: 'Sun',
-    equipmentBodyweight: 'Bodyweight', equipmentChair: 'Chair', equipmentMat: 'Exercise mat', equipmentBicycle: 'Bicycle', equipmentTreadmill: 'Mini treadmill', equipmentBand: 'Resistance band', equipmentDumbbells: 'Dumbbells', equipmentGym: 'Gym',
-    environmentHome: 'Home', environmentOutdoors: 'Outdoors', environmentGym: 'Gym',
-    restrictionIntensity: 'Avoid high intensity', restrictionResistance: 'Avoid resistance training', restrictionImpact: 'Avoid impact exercise', restrictionGlucose: 'Monitor glucose',
+    dayMon: 'Mon',
+    dayTue: 'Tue',
+    dayWed: 'Wed',
+    dayThu: 'Thu',
+    dayFri: 'Fri',
+    daySat: 'Sat',
+    daySun: 'Sun',
+    equipmentBodyweight: 'Bodyweight / no handheld equipment',
+    equipmentWall: 'Clear wall',
+    equipmentChair: 'Stable chair',
+    equipmentMat: 'Exercise mat',
+    equipmentBicycle: 'Bicycle',
+    equipmentTreadmill: 'Mini treadmill',
+    equipmentBand: 'Resistance band',
+    equipmentBandAnchor: 'Secure band anchor',
+    equipmentDumbbells: 'Dumbbells',
+    equipmentGym: 'Gym access',
+    equipmentCableMachine: 'Cable machine',
+    environmentHome: 'Home',
+    environmentOutdoors: 'Outdoors',
+    environmentGym: 'Gym',
+    restrictionIntensity: 'Avoid high intensity',
+    restrictionResistance: 'Avoid resistance training',
+    restrictionImpact: 'Avoid impact exercise',
+    restrictionGlucose: 'Monitor glucose',
   },
   safetyContext: {
     title: 'Effective exercise safety context',
-    description: 'Read-only summary that keeps structured exercise-safety facts and decisions visible.',
+    description:
+      'Read-only summary that keeps structured exercise-safety facts and decisions visible.',
     workoutPlan: 'Workout plan',
     workoutProgression: 'Plan progression',
     coachExercise: 'Coach exercise guidance',
@@ -508,60 +698,97 @@ const englishCopy = {
     blocked: 'Paused for review',
     noReasons: 'No structured safety concern is active.',
     reasons: {
-      age_unconfirmed: 'Confirm age before the app generates or progresses exercise guidance.',
-      under_18: 'This release is for adults. Do not use it to generate or progress a workout for someone under 18; involve an appropriate healthcare professional and responsible adult.',
-      pregnancy_review: 'Do not generate or progress a workout until pregnancy-specific activity guidance is reviewed with an appropriate healthcare professional.',
-      postpartum_review: 'Do not generate or progress a workout until postpartum activity guidance is reviewed with an appropriate healthcare professional.',
-      pregnancy_context_unsure: 'Clarify pregnancy-related exercise safety with an appropriate healthcare professional before generating or progressing a workout.',
-      medication_glucose_risk: 'A glucose-lowering medication risk was reported without an exercise plan. Review exercise safety with the prescribing care team.',
-      medication_dizziness_risk: 'A medication-related dizziness or fainting risk was reported. Review exercise safety with an appropriate healthcare professional.',
-      medication_other_restriction: 'A medication-related exercise restriction was reported. Follow the clinician-provided restriction before using exercise guidance.',
-      readiness_missing: 'Complete the workout-readiness screen before using exercise recommendations.',
-      readiness_invalid: 'The saved workout-readiness date is invalid. Complete the screen again before using exercise recommendations.',
-      readiness_stale: 'The workout-readiness screen is older than 90 days. Review it again before using exercise recommendations.',
-      readiness_chest_pain: 'Do not start activity with reported chest pain, pressure, or tightness. Seek urgent medical care for severe, persistent, or emergency symptoms.',
-      readiness_fainting_or_dizziness: 'Do not start activity with fainting or significant dizziness. Seek urgent medical care for severe or emergency symptoms.',
-      readiness_severe_shortness_of_breath: 'Do not start activity with severe or unusual shortness of breath. Seek urgent medical care for severe or emergency symptoms.',
-      readiness_irregular_heartbeat: 'Do not start activity with a concerning irregular heartbeat. Seek urgent medical care for severe or emergency symptoms.',
-      readiness_clinician_restriction: 'A clinician restriction requires review before the app provides exercise recommendations.',
-      readiness_exercise_glucose_risk: 'A glucose-related exercise risk requires a clinician-provided safety plan before exercise recommendations.',
-      reported_chest_discomfort: 'Current chest discomfort pauses exercise recommendations. Seek urgent medical care for severe, persistent, or emergency symptoms.',
-      reported_dizziness: 'Current dizziness pauses exercise recommendations. Seek urgent medical care for severe or emergency symptoms.',
-      reported_shortness_of_breath: 'Current shortness of breath pauses exercise recommendations. Seek urgent medical care for severe or emergency symptoms.',
-      clinician_avoid_high_intensity: 'Keep intensity within the recorded clinician restriction.',
-      clinician_avoid_resistance: 'Exclude resistance training under the recorded clinician restriction.',
-      clinician_avoid_impact: 'Exclude impact exercise under the recorded clinician restriction.',
-      clinician_monitor_glucose: 'Follow the recorded clinician glucose-monitoring instructions; this app does not set glucose thresholds in P1.1.',
-      recent_workout_pain: 'Recent workout pain pauses progression and requires review before increasing the plan.',
-      recent_workout_symptoms: 'Recent concerning workout symptoms pause progression and require appropriate professional review.',
-      glucose_value_invalid: 'A recent exercise glucose value is invalid. Review or correct the record before progressing the plan.',
-      pre_glucose_below_review_range: 'The latest pre-exercise glucose was below the reviewed starting range. Pause exercise guidance and follow your personal care-team plan; this app does not prescribe carbohydrate or medication changes.',
-      pre_glucose_above_review_range: 'The latest pre-exercise glucose was above the reviewed starting range. Pause exercise guidance and follow your personal care-team plan, including ketone instructions when applicable.',
-      post_glucose_recovery_review: 'The latest post-exercise glucose needs recovery review before more exercise guidance. Follow your personal care-team plan and recheck as instructed.',
-      post_glucose_above_review_range: 'The latest post-exercise glucose was above the reviewed range. Pause progression and review the pattern with your care team.',
+      age_unconfirmed:
+        'Confirm age before the app generates or progresses exercise guidance.',
+      under_18:
+        'This release is for adults. Do not use it to generate or progress a workout for someone under 18; involve an appropriate healthcare professional and responsible adult.',
+      pregnancy_review:
+        'Do not generate or progress a workout until pregnancy-specific activity guidance is reviewed with an appropriate healthcare professional.',
+      postpartum_review:
+        'Do not generate or progress a workout until postpartum activity guidance is reviewed with an appropriate healthcare professional.',
+      pregnancy_context_unsure:
+        'Clarify pregnancy-related exercise safety with an appropriate healthcare professional before generating or progressing a workout.',
+      medication_glucose_risk:
+        'A glucose-lowering medication risk was reported without an exercise plan. Review exercise safety with the prescribing care team.',
+      medication_dizziness_risk:
+        'A medication-related dizziness or fainting risk was reported. Review exercise safety with an appropriate healthcare professional.',
+      medication_other_restriction:
+        'A medication-related exercise restriction was reported. Follow the clinician-provided restriction before using exercise guidance.',
+      readiness_missing:
+        'Complete the workout-readiness screen before using exercise recommendations.',
+      readiness_invalid:
+        'The saved workout-readiness date is invalid. Complete the screen again before using exercise recommendations.',
+      readiness_stale:
+        'The workout-readiness screen is older than 90 days. Review it again before using exercise recommendations.',
+      readiness_chest_pain:
+        'Do not start activity with reported chest pain, pressure, or tightness. Seek urgent medical care for severe, persistent, or emergency symptoms.',
+      readiness_fainting_or_dizziness:
+        'Do not start activity with fainting or significant dizziness. Seek urgent medical care for severe or emergency symptoms.',
+      readiness_severe_shortness_of_breath:
+        'Do not start activity with severe or unusual shortness of breath. Seek urgent medical care for severe or emergency symptoms.',
+      readiness_irregular_heartbeat:
+        'Do not start activity with a concerning irregular heartbeat. Seek urgent medical care for severe or emergency symptoms.',
+      readiness_clinician_restriction:
+        'A clinician restriction requires review before the app provides exercise recommendations.',
+      readiness_exercise_glucose_risk:
+        'A glucose-related exercise risk requires a clinician-provided safety plan before exercise recommendations.',
+      reported_chest_discomfort:
+        'Current chest discomfort pauses exercise recommendations. Seek urgent medical care for severe, persistent, or emergency symptoms.',
+      reported_dizziness:
+        'Current dizziness pauses exercise recommendations. Seek urgent medical care for severe or emergency symptoms.',
+      reported_shortness_of_breath:
+        'Current shortness of breath pauses exercise recommendations. Seek urgent medical care for severe or emergency symptoms.',
+      clinician_avoid_high_intensity:
+        'Keep intensity within the recorded clinician restriction.',
+      clinician_avoid_resistance:
+        'Exclude resistance training under the recorded clinician restriction.',
+      clinician_avoid_impact:
+        'Exclude impact exercise under the recorded clinician restriction.',
+      clinician_monitor_glucose:
+        'Follow the recorded clinician glucose-monitoring instructions; this app does not set glucose thresholds in P1.1.',
+      recent_workout_pain:
+        'Recent workout pain pauses progression and requires review before increasing the plan.',
+      recent_workout_symptoms:
+        'Recent concerning workout symptoms pause progression and require appropriate professional review.',
+      glucose_value_invalid:
+        'A recent exercise glucose value is invalid. Review or correct the record before progressing the plan.',
+      pre_glucose_below_review_range:
+        'The latest pre-exercise glucose was below the reviewed starting range. Pause exercise guidance and follow your personal care-team plan; this app does not prescribe carbohydrate or medication changes.',
+      pre_glucose_above_review_range:
+        'The latest pre-exercise glucose was above the reviewed starting range. Pause exercise guidance and follow your personal care-team plan, including ketone instructions when applicable.',
+      post_glucose_recovery_review:
+        'The latest post-exercise glucose needs recovery review before more exercise guidance. Follow your personal care-team plan and recheck as instructed.',
+      post_glucose_above_review_range:
+        'The latest post-exercise glucose was above the reviewed range. Pause progression and review the pattern with your care team.',
     },
   },
   sensitiveNotes: {
     eyebrow: 'Encrypted health notes',
     title: 'Private notes for your plan',
-    description: 'These notes are encrypted before storage. They are not shown in reminders or used to diagnose or change medication.',
+    description:
+      'These notes are encrypted before storage. They are not shown in reminders or used to diagnose or change medication.',
     medication: 'Medication or exercise-safety notes',
     clinician: 'Clinician instructions',
     symptoms: 'Additional symptom notes',
     save: 'Save encrypted notes',
-    unavailable: 'Encrypted health notes are unavailable until the server-side encryption key is configured.',
+    unavailable:
+      'Encrypted health notes are unavailable until the server-side encryption key is configured.',
   },
   feedback: {
     targetsSaveError: 'We could not save your targets.',
     targetsReplayed: 'Your earlier target change was already saved.',
-    targetsSaved: 'Personal targets saved. Clinician-defined targets remain in effect where present.',
+    targetsSaved:
+      'Personal targets saved. Clinician-defined targets remain in effect where present.',
     focusesSaveError: 'We could not save your health focuses.',
     focusesReplayed: 'Your earlier health-focus change was already saved.',
-    focusesSaved: 'Health focuses saved. Future meal reviews will prioritize the selected checks.',
+    focusesSaved:
+      'Health focuses saved. Future meal reviews will prioritize the selected checks.',
     onboardingSaveError: 'We could not save your profile setup.',
     onboardingReplayed: 'Your earlier profile setup was already saved.',
-    onboardingComplete: 'Profile setup saved. Review workout readiness before starting a plan.',
-    onboardingSaved: 'Profile setup saved. You can finish the remaining planning basics anytime.',
+    onboardingComplete:
+      'Profile setup saved. Review workout readiness before starting a plan.',
+    onboardingSaved:
+      'Profile setup saved. You can finish the remaining planning basics anytime.',
     notesSaveError: 'We could not save encrypted health notes.',
     notesSaved: 'Encrypted health notes saved to your private profile.',
     reportStoreError: 'The report could not be stored privately.',
@@ -574,33 +801,44 @@ const englishCopy = {
     measurementSaved: 'Confirmed measurement saved to your private history.',
     measurementDeleteImageError: 'We could not delete this source image.',
     readinessSaveError: 'We could not save workout readiness.',
-    readinessCleared: 'Workout readiness confirmed. A plan can be considered after you choose your equipment and availability.',
-    readinessPaused: 'Workout-plan generation is paused until you review the reported safety concern with an appropriate clinician.',
+    readinessCleared:
+      'Workout readiness confirmed. A plan can be considered after you choose your equipment and availability.',
+    readinessPaused:
+      'Workout-plan generation is paused until you review the reported safety concern with an appropriate clinician.',
     planPreviewError: 'We could not generate a workout-plan preview.',
     planConfirmError: 'We could not confirm this workout plan.',
-    planReplayed: 'Your earlier workout-plan confirmation was already recorded.',
-    planConfirmed: 'Workout plan confirmed. Keep the intensity easy and stop for concerning symptoms.',
+    planReplayed:
+      'Your earlier workout-plan confirmation was already recorded.',
+    planConfirmed:
+      'Workout plan confirmed. Keep the intensity easy and stop for concerning symptoms.',
     checkinError: 'We could not complete the recovery check-in.',
-    workoutLogValidation: 'Enter valid duration, effort, enjoyment, and optional glucose values.',
+    workoutLogValidation:
+      'Enter valid duration, effort, enjoyment, and optional glucose values.',
     workoutLogSaveError: 'We could not save this workout log.',
-    workoutLogReview: 'Workout log saved. Do not progress your plan; review the reported pain or symptoms with an appropriate clinician.',
+    workoutLogReview:
+      'Workout log saved. Do not progress your plan; review the reported pain or symptoms with an appropriate clinician.',
     workoutLogSaved: 'Workout completion saved to your private history.',
     mealReviewError: 'We could not prepare a review.',
     mealReviewIncomplete: 'The meal review was incomplete. Please try again.',
-    mealReviewRefreshRequired: 'Review the updated meal facts on the server before confirming.',
-    mealServerReviewReady: 'The updated meal facts are ready for your confirmation.',
+    mealReviewRefreshRequired:
+      'Review the updated meal facts on the server before confirming.',
+    mealServerReviewReady:
+      'The updated meal facts are ready for your confirmation.',
     mealSaveError: 'We could not save this meal.',
     mealReplayed: 'Your earlier save was already recorded.',
-    mealSaved: 'Meal saved. Today’s totals are now based on your confirmed entry.',
+    mealSaved:
+      'Meal saved. Today’s totals are now based on your confirmed entry.',
     savedFoodSaveError: 'We could not save this personal food.',
     savedFoodReplayed: 'Your personal food was already saved.',
     recipeSaved: 'Recipe saved to your private food library.',
     foodSaved: 'Food saved to your private food library.',
     savedFoodDeleted: 'Saved food deleted from your private library.',
     savedFoodDeleteError: 'We could not delete this saved food.',
-    personalFoodReview: 'Using your previously confirmed food. Review it again before saving this meal.',
+    personalFoodReview:
+      'Using your previously confirmed food. Review it again before saving this meal.',
     photoStoreError: 'The photo could not be stored privately.',
-    photoDeleteError: 'The private upload could not be deleted. Please try again.',
+    photoDeleteError:
+      'The private upload could not be deleted. Please try again.',
     photoExtractError: 'The image could not be extracted.',
     reminderDaysRequired: 'Choose at least one day.',
     reminderSaveError: 'We could not save this reminder.',
@@ -612,12 +850,16 @@ const englishCopy = {
     reminderResumed: 'Reminder resumed.',
     reminderSnoozed: 'Reminder snoozed.',
     reminderRescheduled: 'Reminder rescheduled.',
-    reportImageDeleted: 'Private report image deleted. The confirmed measurement remains.',
+    reportImageDeleted:
+      'Private report image deleted. The confirmed measurement remains.',
     accountDeleteError: 'We could not permanently delete your private data.',
-    accountDeleted: 'Your private Nourishwell data has been permanently deleted.',
+    accountDeleted:
+      'Your private Nourishwell data has been permanently deleted.',
     localeSaveError: 'We could not save your language preference.',
-    dashboardOffline: 'You are offline. Previously loaded information stays visible, but health records cannot be changed until you reconnect.',
-    dashboardPermissionDenied: 'Your private records could not be opened. Sign in again, then retry.',
+    dashboardOffline:
+      'You are offline. Previously loaded information stays visible, but health records cannot be changed until you reconnect.',
+    dashboardPermissionDenied:
+      'Your private records could not be opened. Sign in again, then retry.',
     dashboardRetry: 'Retry loading private records',
     exportDateRange: 'Choose a valid date range.',
     exportCreateError: 'We could not create this export.',
@@ -725,22 +967,29 @@ const vietnameseCopy: ProductCopy = {
     storePhoto: 'Lưu riêng tư',
     uploadingPhoto: 'Đang lưu riêng tư…',
     photoStored: 'Đã lưu ảnh riêng tư',
-    photoProviderNote: 'Ảnh được giữ riêng tư trong thời gian ngắn và không bao giờ công khai. Trích xuất luôn cần được xem lại.',
-    photoExtractionPending: 'Trích xuất thông tin món ăn hoặc nhãn, sau đó chọn một mục để xem lại bữa ăn có thể chỉnh sửa.',
+    photoProviderNote:
+      'Ảnh được giữ riêng tư trong thời gian ngắn và không bao giờ công khai. Trích xuất luôn cần được xem lại.',
+    photoExtractionPending:
+      'Trích xuất thông tin món ăn hoặc nhãn, sau đó chọn một mục để xem lại bữa ăn có thể chỉnh sửa.',
     extractPhoto: 'Trích xuất từ ảnh',
     extractingPhoto: 'Đang trích xuất…',
     detectedFoods: 'Món ăn hoặc mục nhãn đã nhận diện',
-    extractionReviewNote: 'Chọn một mục để tiếp tục xem lại dinh dưỡng. Trích xuất không tự động lưu bữa ăn.',
+    extractionReviewNote:
+      'Chọn một mục để tiếp tục xem lại dinh dưỡng. Trích xuất không tự động lưu bữa ăn.',
     deletePhoto: 'Xóa ảnh',
     photoReviewTitle: 'Xem lại ảnh riêng tư',
-    photoReviewDescription: 'Chọn ảnh bữa ăn hoặc nhãn dinh dưỡng. Không có gì được phân tích hay lưu thành bữa ăn tự động.',
+    photoReviewDescription:
+      'Chọn ảnh bữa ăn hoặc nhãn dinh dưỡng. Không có gì được phân tích hay lưu thành bữa ăn tự động.',
     mealPlaceholder: 'Ví dụ: phở bò thêm rau thơm, không dầu ớt',
     barcodePlaceholder: 'Nhập mã vạch gồm 8–14 chữ số',
     startScanner: 'Quét bằng camera',
     stopScanner: 'Dừng camera',
-    scannerHelp: 'Hướng camera vào mã vạch trên bao bì. Bạn luôn có thể nhập thủ công.',
-    scannerUnavailable: 'Trình duyệt này không hỗ trợ quét mã vạch. Hãy nhập mã vạch thủ công.',
-    scannerPermissionError: 'Không thể dùng camera. Hãy cho phép dùng camera hoặc nhập mã vạch thủ công.',
+    scannerHelp:
+      'Hướng camera vào mã vạch trên bao bì. Bạn luôn có thể nhập thủ công.',
+    scannerUnavailable:
+      'Trình duyệt này không hỗ trợ quét mã vạch. Hãy nhập mã vạch thủ công.',
+    scannerPermissionError:
+      'Không thể dùng camera. Hãy cho phép dùng camera hoặc nhập mã vạch thủ công.',
     vietnamDishPlaceholder: 'Ví dụ: cơm gà',
     vietnamIngredientPlaceholder: 'Ví dụ: thịt gà',
     usdaPlaceholder: 'Ví dụ: ức gà, bông cải xanh',
@@ -751,12 +1000,14 @@ const vietnameseCopy: ProductCopy = {
     saveFood: 'Lưu món ăn',
     saveRecipe: 'Lưu công thức',
     libraryTitle: 'Món ăn đã lưu',
-    libraryDescription: 'Chọn món ăn hoặc công thức đã xác nhận trước đó để bắt đầu xem lại bữa ăn có thể chỉnh sửa.',
+    libraryDescription:
+      'Chọn món ăn hoặc công thức đã xác nhận trước đó để bắt đầu xem lại bữa ăn có thể chỉnh sửa.',
     libraryEmpty: 'Lưu món ăn hoặc công thức đã xem lại để dùng lại ở đây.',
     food: 'Món ăn',
     recipe: 'Công thức',
     deleteSavedFood: 'Xóa món ăn đã lưu',
-    deleteSavedConfirm: 'Xóa vĩnh viễn món ăn hoặc công thức này? Không thể hoàn tác.',
+    deleteSavedConfirm:
+      'Xóa vĩnh viễn món ăn hoặc công thức này? Không thể hoàn tác.',
     emptyReviewDescription:
       'Phân tích bữa ăn, kiểm tra nguyên liệu và các giá trị, rồi tự bạn xác nhận.',
     confidence: 'độ tin cậy',
@@ -783,11 +1034,14 @@ const vietnameseCopy: ProductCopy = {
     reviewPlaceholder: 'Bữa ăn của bạn sẽ xuất hiện ở đây',
     detectedIngredients: 'Nguyên liệu được nhận diện',
     ingredientsPlaceholder: 'Ví dụ: bún gạo, thịt bò, nước dùng, rau thơm',
-    ingredientsHelp: 'Ngăn cách nguyên liệu bằng dấu phẩy. Thay đổi này chỉ áp dụng cho bản xem lại trước khi bạn xác nhận.',
+    ingredientsHelp:
+      'Ngăn cách nguyên liệu bằng dấu phẩy. Thay đổi này chỉ áp dụng cho bản xem lại trước khi bạn xác nhận.',
     additionalNutrients: 'Dưỡng chất bổ sung do nguồn cung cấp',
-    additionalNutrientsSource: 'Chỉ dưỡng chất được nguồn trả về với đơn vị được hỗ trợ mới tạo nhận xét theo quy tắc. Giá trị thiếu, chưa có hoặc sai đơn vị không phải bằng 0 và không tạo nhận xét dạng số.',
+    additionalNutrientsSource:
+      'Chỉ dưỡng chất được nguồn trả về với đơn vị được hỗ trợ mới tạo nhận xét theo quy tắc. Giá trị thiếu, chưa có hoặc sai đơn vị không phải bằng 0 và không tạo nhận xét dạng số.',
     provenanceTitle: 'Ý nghĩa của từng phần',
-    provenanceDescription: 'Các nhãn này tách biệt dữ kiện đã xác nhận, dữ liệu nguồn, ước tính, quy tắc và nội dung do AI viết trước khi bạn lưu.',
+    provenanceDescription:
+      'Các nhãn này tách biệt dữ kiện đã xác nhận, dữ liệu nguồn, ước tính, quy tắc và nội dung do AI viết trước khi bạn lưu.',
     userConfirmedFacts: 'Dữ kiện do người dùng xác nhận',
     providerDatabaseValues: 'Giá trị từ nhà cung cấp / cơ sở dữ liệu',
     estimatedValues: 'Giá trị ước tính',
@@ -796,7 +1050,8 @@ const vietnameseCopy: ProductCopy = {
     provenancePresent: 'Có trong bản xem lại',
     provenancePending: 'Đang chờ xác nhận',
     provenanceAbsent: 'Không có trong bản xem lại này',
-    aiExtractionDisclosure: 'AI hỗ trợ trích xuất ảnh/văn bản nhưng không viết các kết quả quy tắc xác định bên dưới.',
+    aiExtractionDisclosure:
+      'AI hỗ trợ trích xuất ảnh/văn bản nhưng không viết các kết quả quy tắc xác định bên dưới.',
     sourceDetails: 'Nguồn gốc ảnh chụp dữ liệu dinh dưỡng',
     sourceReference: 'Tham chiếu nguồn',
     sourceVersion: 'Phiên bản nguồn',
@@ -804,7 +1059,8 @@ const vietnameseCopy: ProductCopy = {
     confidenceLabel: 'Độ tin cậy của trích xuất / đối sánh',
     unavailable: 'Chưa có dữ liệu',
     nutrientAvailability: 'Tình trạng dữ liệu theo từng dưỡng chất',
-    nutrientAvailabilityDescription: 'Mở rộng để xem từng giá trị là do nguồn báo cáo, được ước tính hay chưa có. Chưa có dữ liệu không phải bằng 0.',
+    nutrientAvailabilityDescription:
+      'Mở rộng để xem từng giá trị là do nguồn báo cáo, được ước tính hay chưa có. Chưa có dữ liệu không phải bằng 0.',
     reported: 'Do nguồn báo cáo',
     estimated: 'Ước tính',
     userConfirmed: 'Người dùng đã xác nhận',
@@ -816,7 +1072,8 @@ const vietnameseCopy: ProductCopy = {
     vietnamNutrition: 'Cổng dinh dưỡng Việt Nam',
     usdaFoodData: 'USDA FoodData Central',
     deterministicExplanation: 'Giải thích từ quy tắc xác định',
-    legacyEnglishFinding: 'Nhận xét lịch sử này được lưu trước khi có bản ghi song ngữ, nên nội dung tiếng Anh gốc được giữ nguyên.',
+    legacyEnglishFinding:
+      'Nhận xét lịch sử này được lưu trước khi có bản ghi song ngữ, nên nội dung tiếng Anh gốc được giữ nguyên.',
     providerReviewNote: 'Ghi chú xem lại từ nhà cung cấp',
     estimateReviewNote: 'Ghi chú xem lại ước tính',
     userLibraryReviewNote: 'Ghi chú món ăn đã xác nhận trước đó',
@@ -841,7 +1098,17 @@ const vietnameseCopy: ProductCopy = {
     bloodGlucoseFinding: 'Đường huyết',
     uricAcidFinding: 'Axit uric / gout',
     ruleLabel: 'Quy tắc',
-    carbohydrates: 'Carbohydrate', totalSugar: 'Tổng đường', addedSugar: 'Đường bổ sung', totalFat: 'Tổng chất béo', saturatedFat: 'Chất béo bão hòa', cholesterol: 'Cholesterol', potassium: 'Kali', calcium: 'Canxi', iron: 'Sắt', alcohol: 'Cồn', water: 'Nước',
+    carbohydrates: 'Carbohydrate',
+    totalSugar: 'Tổng đường',
+    addedSugar: 'Đường bổ sung',
+    totalFat: 'Tổng chất béo',
+    saturatedFat: 'Chất béo bão hòa',
+    cholesterol: 'Cholesterol',
+    potassium: 'Kali',
+    calcium: 'Canxi',
+    iron: 'Sắt',
+    alcohol: 'Cồn',
+    water: 'Nước',
     serving: 'Khẩu phần',
     sourceAndReview: 'Nguồn và ghi chú xem lại',
     conditionChecks: 'Kiểm tra theo tình trạng',
@@ -850,9 +1117,11 @@ const vietnameseCopy: ProductCopy = {
     discard: 'Bỏ',
     confirmAndSave: 'Xác nhận và lưu',
     serverReviewReady: 'Đã sẵn sàng bản xem xét từ máy chủ',
-    serverReviewReadyDescription: 'Các dữ kiện và nhận xét xác định đang hiển thị được gắn với bản xem xét riêng tư này. Khi xác nhận, ứng dụng sẽ lưu đúng bản xem xét đó.',
+    serverReviewReadyDescription:
+      'Các dữ kiện và nhận xét xác định đang hiển thị được gắn với bản xem xét riêng tư này. Khi xác nhận, ứng dụng sẽ lưu đúng bản xem xét đó.',
     serverReviewRequired: 'Xem xét thay đổi trước khi lưu',
-    serverReviewRequiredDescription: 'Các chỉnh sửa đã làm bản xem xét trước đó không còn hiệu lực. Hãy yêu cầu bản mới, kiểm tra nhận xét đã cập nhật rồi xác nhận.',
+    serverReviewRequiredDescription:
+      'Các chỉnh sửa đã làm bản xem xét trước đó không còn hiệu lực. Hãy yêu cầu bản mới, kiểm tra nhận xét đã cập nhật rồi xác nhận.',
     refreshServerReview: 'Xem xét dữ kiện đã cập nhật',
   },
   measurements: {
@@ -872,13 +1141,15 @@ const vietnameseCopy: ProductCopy = {
     measuredAt: 'Thời điểm đo',
     saveMeasurement: 'Lưu chỉ số',
     reportTitle: 'Trích xuất ảnh báo cáo',
-    reportDescription: 'Tải riêng tư ảnh báo cáo, sau đó chọn và chỉnh sửa giá trị trước khi lưu.',
+    reportDescription:
+      'Tải riêng tư ảnh báo cáo, sau đó chọn và chỉnh sửa giá trị trước khi lưu.',
     extractReport: 'Trích xuất báo cáo',
     extractingReport: 'Đang trích xuất…',
     reportStored: 'Ảnh báo cáo riêng tư được lưu tạm thời.',
     reportReview: 'Chọn một giá trị để điền vào biểu mẫu có thể chỉnh sửa',
     retainReportTitle: 'Giữ riêng tư ảnh báo cáo này',
-    retainReportDescription: 'Mặc định tắt. Nếu lưu giá trị đã xác nhận mà không chọn mục này, ảnh nguồn sẽ bị xóa. Bạn có thể xóa ảnh đã giữ sau; chỉ số đã xác nhận vẫn được giữ.',
+    retainReportDescription:
+      'Mặc định tắt. Nếu lưu giá trị đã xác nhận mà không chọn mục này, ảnh nguồn sẽ bị xóa. Bạn có thể xóa ảnh đã giữ sau; chỉ số đã xác nhận vẫn được giữ.',
     deleteRetainedReport: 'Xóa ảnh báo cáo đã giữ',
     emptyTitle: 'Chưa có chỉ số nào',
     emptyDescription: 'Các chỉ số bạn xác nhận sẽ xuất hiện ở đây.',
@@ -919,7 +1190,8 @@ const vietnameseCopy: ProductCopy = {
     catalogTitle: 'Thư viện bài tập khởi đầu',
     catalogDescription:
       'Các động tác này là danh mục khởi đầu minh bạch, không phải đơn tập. Kế hoạch trong tương lai chỉ chọn các lựa chọn phù hợp.',
-    catalogEmpty: 'Danh mục bài tập tạm thời không khả dụng. Hãy tải lại hồ sơ riêng tư của bạn.',
+    catalogEmpty:
+      'Danh mục bài tập tạm thời không khả dụng. Hãy tải lại hồ sơ riêng tư của bạn.',
     technique: 'Kỹ thuật',
     regression: 'Giảm độ khó',
     progression: 'Tiến triển sau',
@@ -957,51 +1229,161 @@ const vietnameseCopy: ProductCopy = {
     checkin: 'Thực hiện đánh giá hồi phục',
     checkinTitle: 'Đánh giá hằng tuần',
     checkinMaintain: 'Duy trì kế hoạch hiện tại; không tự động tăng tiến.',
-    checkinRepeat: 'Lặp lại kế hoạch hiện tại trước khi thay đổi; mức tuân thủ vẫn đang xây dựng.',
-    checkinHold: 'Tạm dừng tăng tiến và trao đổi vấn đề an toàn đã báo cáo với chuyên gia phù hợp.',
+    checkinRepeat:
+      'Lặp lại kế hoạch hiện tại trước khi thay đổi; mức tuân thủ vẫn đang xây dựng.',
+    checkinHold:
+      'Tạm dừng tăng tiến và trao đổi vấn đề an toàn đã báo cáo với chuyên gia phù hợp.',
+    workspaceTitle: 'Kế hoạch vận động hằng tuần',
+    workspaceDescription:
+      'Xem nguồn kế hoạch, hoàn thành từng chỉ định và tự xác nhận mọi thay đổi được đề xuất.',
+    activePlan: 'Kế hoạch đang áp dụng',
+    draftPlan: 'Bản xem trước kế hoạch',
+    replacePlan: 'Xem trước kế hoạch thay thế',
+    discardPreview: 'Bỏ bản xem trước',
+    previewExpires: 'Bản xem trước hết hạn',
+    previewExpired:
+      'Bản xem trước này đã cũ. Hãy tạo bản mới trước khi xác nhận.',
+    unreviewed: 'Nội dung bài tập chưa được thẩm định',
+    reviewed: 'Đã được chuyên gia thẩm định',
+    unreviewedDisclosure:
+      'Danh mục và chính sách tăng tiến này chưa có hồ sơ thẩm định đủ chuyên môn. Đây là công cụ hỗ trợ lập kế hoạch minh bạch, không phải vật lý trị liệu cá nhân hóa hay bài tập được bác sĩ phê duyệt.',
+    provenance: 'Nguồn gốc kế hoạch',
+    plannerVersion: 'Bộ lập kế hoạch',
+    catalogVersion: 'Danh mục',
+    policyVersion: 'Chính sách tăng tiến',
+    safetyVersion: 'Bối cảnh an toàn',
+    inputDigest: 'Mã đầu vào',
+    schedule: 'Lịch trong tuần',
+    rationale: 'Lý do được đưa vào',
+    substitutions: 'Bài thay thế được chấp thuận',
+    noSubstitutions: 'Chưa ghi nhận bài thay thế được chấp thuận',
+    unresolvedQuestions: 'Cần bạn xem lại trước khi kích hoạt',
+    incompletePlan:
+      'Bản xem trước này chưa hoàn chỉnh và không thể kích hoạt cho đến khi bổ sung đủ thông tin lập kế hoạch.',
+    phases: {
+      warmup: 'Khởi động',
+      strength: 'Sức mạnh',
+      aerobic: 'Tim mạch',
+      mobility: 'Linh hoạt',
+      cooldown: 'Thả lỏng',
+    },
+    purposes: {
+      strength: 'Buổi sức mạnh',
+      aerobic: 'Buổi tim mạch',
+      mobility: 'Buổi linh hoạt',
+    },
+    exerciseResults: 'Kết quả từng bài',
+    resultStatus: 'Kết quả',
+    completed: 'Hoàn thành theo kế hoạch',
+    modified: 'Đã điều chỉnh',
+    skipped: 'Bỏ qua',
+    actualSets: 'Số hiệp thực tế',
+    actualReps: 'Số lần thực tế',
+    actualMinutes: 'Số phút thực tế',
+    substitution: 'Bài thay thế đã dùng',
+    noSubstitution: 'Không thay thế',
+    stopForSafety: 'Dừng lại và ưu tiên an toàn',
+    stopForSafetyDescription:
+      'Nếu bạn bị đau hoặc có triệu chứng đáng lo, hãy dừng buổi tập. Nhật ký sẽ được ghi là dừng vì an toàn và mọi tăng tiến sau đó sẽ chờ xem xét.',
+    recoveryTitle: 'Đánh giá hồi phục',
+    recoveryDescription:
+      'Ghi nhận mức hồi phục giới hạn. Thao tác này chỉ tạo đề xuất và không bao giờ tự đổi kế hoạch đang áp dụng.',
+    recoveryStatus: 'Mức hồi phục thế nào?',
+    recoveryGood: 'Tốt',
+    recoveryFatigue: 'Hơi mệt',
+    recoveryPoor: 'Kém',
+    soreness: 'Tôi bị đau mỏi đáng kể',
+    recoveryPain: 'Tôi bị đau trong thời gian hồi phục',
+    createProposal: 'Tạo bản xem trước điều chỉnh',
+    proposalTitle: 'Bản xem trước điều chỉnh',
+    evidence: 'Hồ sơ bằng chứng',
+    confidence: 'Độ tin cậy',
+    completeness: 'Mức đầy đủ dữ liệu',
+    before: 'Trước',
+    after: 'Sau',
+    noChange: 'Không đề xuất thay đổi chỉ định.',
+    confirmProposal: 'Xác nhận thay đổi kế hoạch này',
+    dismissProposal: 'Bỏ đề xuất và giữ kế hoạch hiện tại',
+    proposalHeld:
+      'Đây là tạm dừng vì an toàn, không phải kế hoạch để kích hoạt. Hãy trao đổi vấn đề với chuyên gia phù hợp.',
+    proposalStatuses: {
+      pending: 'Đang chờ bạn quyết định',
+      confirmed: 'Đã xác nhận',
+      dismissed: 'Đã bỏ; giữ nguyên kế hoạch hiện tại',
+      expired: 'Đã hết hạn; hãy đánh giá lại',
+    },
+    actions: {
+      hold_for_review: 'Tạm dừng để xem xét',
+      maintain: 'Duy trì',
+      progress: 'Tăng tiến',
+      deload: 'Giảm tải',
+      substitute: 'Thay bài',
+    },
+    offlineTitle: 'Hồ sơ tập luyện chỉ đọc khi ngoại tuyến',
+    offlineDescription:
+      'Kế hoạch đã lưu vẫn hiển thị, nhưng bản xem trước, nhật ký, đánh giá, xác nhận và bỏ đề xuất cần kết nối. Dữ liệu sức khỏe nhạy cảm không được xếp hàng để gửi sau.',
+    legacyPlan:
+      'Kế hoạch khởi đầu cũ vẫn có thể xem. Hãy tạo và xác nhận rõ ràng một kế hoạch hiện tại trước khi ghi kết quả từng bài.',
+    noActivePlan: 'Chưa có kế hoạch tập đang áp dụng.',
   },
   progress: {
     eyebrow: 'Tổng quan tiến độ',
     title: 'Các ghi nhận gần đây',
-    description: 'Tóm tắt riêng tư các dữ liệu đã xác nhận trong 30 ngày qua. Mối liên hệ chỉ là quan sát, không chứng minh điều này gây ra điều kia.',
+    description:
+      'Tóm tắt riêng tư các dữ liệu đã xác nhận trong 30 ngày qua. Mối liên hệ chỉ là quan sát, không chứng minh điều này gây ra điều kia.',
     coverage: 'Mức độ có dữ liệu',
     daysWithData: 'ngày có dữ liệu',
     completedWorkouts: 'Buổi tập hoàn thành',
     safetyStopped: 'Dừng vì an toàn',
-    safetyStoppedNote: 'Xem lại đau hoặc triệu chứng đáng lo trước khi tăng tiến.',
+    safetyStoppedNote:
+      'Xem lại đau hoặc triệu chứng đáng lo trước khi tăng tiến.',
     latestNutrition: 'Ngày dinh dưỡng gần nhất',
     meals: 'bữa ăn',
     noNutrition: 'Chưa có dữ liệu dinh dưỡng đã xác nhận.',
     nutritionDays: 'Các ngày dinh dưỡng gần đây',
-    nutritionDaysDescription: 'Chỉ tổng các bữa ăn đã xác nhận; ngày thiếu dữ liệu không được coi là ăn bằng không.',
+    nutritionDaysDescription:
+      'Chỉ tổng các bữa ăn đã xác nhận; ngày thiếu dữ liệu không được coi là ăn bằng không.',
     measurementTrends: 'Thay đổi chỉ số',
-    trendWarning: 'Các thay đổi chỉ có tính mô tả, không cho thấy quan hệ nhân quả. Cỡ mẫu được hiển thị để tham khảo.',
+    trendWarning:
+      'Các thay đổi chỉ có tính mô tả, không cho thấy quan hệ nhân quả. Cỡ mẫu được hiển thị để tham khảo.',
     noMeasurements: 'Chưa có chỉ số đã xác nhận trong giai đoạn này.',
   },
   coach: {
     eyebrow: 'Hướng dẫn hằng ngày',
     title: 'Một bước tiếp theo nhẹ nhàng cho hôm nay.',
-    description: 'Hướng dẫn riêng tư từ tổng dữ liệu đã xác nhận trong ngày, các mối quan tâm sức khỏe đang chọn và kế hoạch đã lưu. Công cụ không chẩn đoán, không tự thay đổi dữ liệu và không thay thế hướng dẫn của chuyên gia.',
+    description:
+      'Hướng dẫn riêng tư từ tổng dữ liệu đã xác nhận trong ngày, các mối quan tâm sức khỏe đang chọn và kế hoạch đã lưu. Công cụ không chẩn đoán, không tự thay đổi dữ liệu và không thay thế hướng dẫn của chuyên gia.',
     boundaryTitle: 'Ưu tiên dữ liệu, luôn cần xác nhận',
-    boundaryDescription: 'Phiên bản hướng dẫn ban đầu này chỉ so sánh dữ liệu theo dõi đã xác nhận với mục tiêu đang áp dụng. Các gợi ý trò chuyện sau này vẫn phải được xem lại trước khi thay đổi bất kỳ dữ liệu nào.',
+    boundaryDescription:
+      'Phiên bản hướng dẫn ban đầu này chỉ so sánh dữ liệu theo dõi đã xác nhận với mục tiêu đang áp dụng. Các gợi ý trò chuyện sau này vẫn phải được xem lại trước khi thay đổi bất kỳ dữ liệu nào.',
     remaining: 'Còn lại hôm nay',
     prioritiesTitle: 'Điều nên ưu tiên',
-    prioritiesDescription: 'Đây là gợi ý theo dõi, không phải chỉ dẫn điều trị y tế.',
+    prioritiesDescription:
+      'Đây là gợi ý theo dõi, không phải chỉ dẫn điều trị y tế.',
     planTitle: 'Kế hoạch vận động',
-    planDescription: 'Kế hoạch đã xác nhận tách biệt với hướng dẫn này và không bao giờ tự thay đổi.',
-    planAvailable: 'Kế hoạch đã xác nhận của bạn có {count} buổi đã lên lịch để xem lại khi sẵn sàng.',
-    noPlan: 'Hoàn thành đánh giá sẵn sàng và xác nhận kế hoạch trước khi dùng hướng dẫn tập luyện.',
+    planDescription:
+      'Kế hoạch đã xác nhận tách biệt với hướng dẫn này và không bao giờ tự thay đổi.',
+    planAvailable:
+      'Kế hoạch đã xác nhận của bạn có {count} buổi đã lên lịch để xem lại khi sẵn sàng.',
+    noPlan:
+      'Hoàn thành đánh giá sẵn sàng và xác nhận kế hoạch trước khi dùng hướng dẫn tập luyện.',
     priorities: {
-      protein: 'Bạn vẫn còn mục tiêu chất đạm trong ngày. Nếu phù hợp với sở thích và kế hoạch của bạn, hãy cân nhắc món có chất đạm và ghi lại khẩu phần thực tế.',
-      fiber: 'Bạn vẫn còn mục tiêu chất xơ trong ngày. Khi phù hợp với bạn, hãy cân nhắc cách ăn có rau, đậu, trái cây hoặc ngũ cốc nguyên hạt.',
-      sodium: 'Tổng natri đã xác nhận đã chạm mục tiêu trong ngày. Trong phần còn lại của ngày, hãy so sánh nước sốt, nước dùng, gia vị và nhãn thực phẩm đóng gói trước khi quyết định món phù hợp.',
-      healthFocus: 'Giữ các mối quan tâm sức khỏe đã chọn trong đầu khi xem lại bữa ăn và chỉ số. Luôn dùng mục tiêu hoặc hạn chế do chuyên gia đặt ra khi có.',
-      balanced: 'Chưa có so sánh mục tiêu nào cần chú ý. Hãy tiếp tục ghi bữa ăn, chỉ số và buổi tập đã xác nhận để dữ liệu riêng tư của bạn luôn hữu ích.',
+      protein:
+        'Bạn vẫn còn mục tiêu chất đạm trong ngày. Nếu phù hợp với sở thích và kế hoạch của bạn, hãy cân nhắc món có chất đạm và ghi lại khẩu phần thực tế.',
+      fiber:
+        'Bạn vẫn còn mục tiêu chất xơ trong ngày. Khi phù hợp với bạn, hãy cân nhắc cách ăn có rau, đậu, trái cây hoặc ngũ cốc nguyên hạt.',
+      sodium:
+        'Tổng natri đã xác nhận đã chạm mục tiêu trong ngày. Trong phần còn lại của ngày, hãy so sánh nước sốt, nước dùng, gia vị và nhãn thực phẩm đóng gói trước khi quyết định món phù hợp.',
+      healthFocus:
+        'Giữ các mối quan tâm sức khỏe đã chọn trong đầu khi xem lại bữa ăn và chỉ số. Luôn dùng mục tiêu hoặc hạn chế do chuyên gia đặt ra khi có.',
+      balanced:
+        'Chưa có so sánh mục tiêu nào cần chú ý. Hãy tiếp tục ghi bữa ăn, chỉ số và buổi tập đã xác nhận để dữ liệu riêng tư của bạn luôn hữu ích.',
     },
   },
   reminders: {
     title: 'Nhắc việc riêng tư',
-    description: 'Lịch nhắc chỉ nằm trong chương trình nghị sự riêng tư của bạn. Thông báo trên màn hình khóa trong tương lai chỉ dùng nội dung trung tính.',
+    description:
+      'Lịch nhắc chỉ nằm trong chương trình nghị sự riêng tư của bạn. Thông báo trên màn hình khóa trong tương lai chỉ dùng nội dung trung tính.',
     kind: 'Loại nhắc việc',
     time: 'Thời gian (Asia/Bangkok)',
     days: 'Lặp lại vào',
@@ -1039,15 +1421,18 @@ const vietnameseCopy: ProductCopy = {
     saveHealthFocuses: 'Lưu mối quan tâm sức khỏe',
     dataPrivacy: 'Quyền riêng tư và dữ liệu',
     exportData: 'Xuất dữ liệu của tôi',
-    exportDescription: 'Tải các dữ liệu bữa ăn, chỉ số và tập luyện đã xác nhận theo khoảng thời gian dưới dạng CSV riêng tư. Không tạo liên kết chia sẻ.',
+    exportDescription:
+      'Tải các dữ liệu bữa ăn, chỉ số và tập luyện đã xác nhận theo khoảng thời gian dưới dạng CSV riêng tư. Không tạo liên kết chia sẻ.',
     exportStart: 'Ngày bắt đầu',
     exportEnd: 'Ngày kết thúc',
     exportCsv: 'Tải CSV',
     exportPdf: 'Tải báo cáo PDF',
     exportFullArchive: 'Tải toàn bộ kho lưu trữ',
-    exportFullArchiveDescription: 'Tải toàn bộ dữ liệu riêng tư có cấu trúc và các tệp tải lên riêng tư hiện có trong tệp JSON có phiên bản. Hãy giữ kho lưu trữ này an toàn vì có thể chứa thông tin sức khỏe nhạy cảm.',
+    exportFullArchiveDescription:
+      'Tải toàn bộ dữ liệu riêng tư có cấu trúc và các tệp tải lên riêng tư hiện có trong tệp JSON có phiên bản. Hãy giữ kho lưu trữ này an toàn vì có thể chứa thông tin sức khỏe nhạy cảm.',
     deleteData: 'Xóa dữ liệu của tôi',
-    deleteDataDescription: 'Xóa vĩnh viễn mọi bữa ăn, chỉ số, buổi tập, nhắc việc, hồ sơ, dữ liệu trích xuất và ảnh đã tải lên riêng tư. Không thể hoàn tác.',
+    deleteDataDescription:
+      'Xóa vĩnh viễn mọi bữa ăn, chỉ số, buổi tập, nhắc việc, hồ sơ, dữ liệu trích xuất và ảnh đã tải lên riêng tư. Không thể hoàn tác.',
     deleteDataPrompt: 'Nhập DELETE MY DATA để bật xóa vĩnh viễn',
     deletingData: 'Đang xóa dữ liệu riêng tư…',
     deleteDataError: 'Không thể xóa vĩnh viễn dữ liệu riêng tư của bạn.',
@@ -1103,32 +1488,86 @@ const vietnameseCopy: ProductCopy = {
     pregnancyUnsure: 'Chưa chắc chắn',
     pregnancyPreferNot: 'Không muốn nêu',
     medicationRisks: 'Nguy cơ khi tập liên quan đến thuốc',
-    medicationGlucose: 'Dùng thuốc hạ đường huyết nhưng chưa có kế hoạch tập luyện',
+    medicationGlucose:
+      'Dùng thuốc hạ đường huyết nhưng chưa có kế hoạch tập luyện',
     medicationDizziness: 'Thuốc gây chóng mặt hoặc ngất đối với tôi',
     medicationOther: 'Hạn chế khác liên quan đến thuốc do bác sĩ chỉ định',
-    medicationPrivacy: 'Chỉ chọn các cờ an toàn có cấu trúc tại đây. Tên và chi tiết thuốc vẫn nằm trong ghi chú mã hóa và không được đưa vào bối cảnh an toàn này.',
-    preferenceOmnivore: 'Ăn đa dạng', preferenceVegetarian: 'Ăn chay', preferenceVegan: 'Thuần chay', preferencePescatarian: 'Ăn cá', preferenceHalal: 'Halal', preferenceLowSodium: 'Ít natri', preferenceLowPurine: 'Ít purin',
-    allergyMilk: 'Sữa', allergyEgg: 'Trứng', allergyFish: 'Cá', allergyShellfish: 'Hải sản có vỏ', allergyPeanut: 'Đậu phộng', allergyTreeNut: 'Các loại hạt cây', allergySoy: 'Đậu nành', allergyWheat: 'Lúa mì', allergySesame: 'Mè',
-    contextBloodPressure: 'Huyết áp', contextCholesterol: 'Cholesterol', contextBloodGlucose: 'Đường huyết', contextUricAcid: 'Axit uric',
-    injuryBack: 'Đau lưng', injuryJoint: 'Đau khớp', injuryBalance: 'Lo ngại thăng bằng',
-    symptomNone: 'Không có triệu chứng', symptomChest: 'Khó chịu ở ngực', symptomDizziness: 'Chóng mặt', symptomBreath: 'Khó thở',
+    medicationPrivacy:
+      'Chỉ chọn các cờ an toàn có cấu trúc tại đây. Tên và chi tiết thuốc vẫn nằm trong ghi chú mã hóa và không được đưa vào bối cảnh an toàn này.',
+    preferenceOmnivore: 'Ăn đa dạng',
+    preferenceVegetarian: 'Ăn chay',
+    preferenceVegan: 'Thuần chay',
+    preferencePescatarian: 'Ăn cá',
+    preferenceHalal: 'Halal',
+    preferenceLowSodium: 'Ít natri',
+    preferenceLowPurine: 'Ít purin',
+    allergyMilk: 'Sữa',
+    allergyEgg: 'Trứng',
+    allergyFish: 'Cá',
+    allergyShellfish: 'Hải sản có vỏ',
+    allergyPeanut: 'Đậu phộng',
+    allergyTreeNut: 'Các loại hạt cây',
+    allergySoy: 'Đậu nành',
+    allergyWheat: 'Lúa mì',
+    allergySesame: 'Mè',
+    contextBloodPressure: 'Huyết áp',
+    contextCholesterol: 'Cholesterol',
+    contextBloodGlucose: 'Đường huyết',
+    contextUricAcid: 'Axit uric',
+    injuryBack: 'Đau lưng',
+    injuryJoint: 'Đau khớp',
+    injuryBalance: 'Lo ngại thăng bằng',
+    symptomNone: 'Không có triệu chứng',
+    symptomChest: 'Khó chịu ở ngực',
+    symptomDizziness: 'Chóng mặt',
+    symptomBreath: 'Khó thở',
     save: 'Lưu thiết lập hồ sơ',
     goalWeightLoss: 'Giảm cân',
     goalMaintain: 'Duy trì cân nặng',
     goalMuscleGain: 'Tăng cơ',
     goalFitness: 'Thể lực',
     goalHealthTracking: 'Theo dõi sức khỏe',
-    sexFemale: 'Nữ', sexMale: 'Nam', sexNotSpecified: 'Không muốn nêu',
-    activitySedentary: 'Ít vận động', activityLight: 'Hoạt động nhẹ', activityModerate: 'Hoạt động vừa', activityActive: 'Hoạt động nhiều', activityVeryActive: 'Hoạt động rất nhiều',
-    trainingNew: 'Mới bắt đầu tập', trainingBeginner: 'Cơ bản', trainingRegular: 'Tập thường xuyên',
-    dayMon: 'T2', dayTue: 'T3', dayWed: 'T4', dayThu: 'T5', dayFri: 'T6', daySat: 'T7', daySun: 'CN',
-    equipmentBodyweight: 'Trọng lượng cơ thể', equipmentChair: 'Ghế', equipmentMat: 'Thảm tập', equipmentBicycle: 'Xe đạp', equipmentTreadmill: 'Máy chạy mini', equipmentBand: 'Dây kháng lực', equipmentDumbbells: 'Tạ tay', equipmentGym: 'Phòng gym',
-    environmentHome: 'Tại nhà', environmentOutdoors: 'Ngoài trời', environmentGym: 'Phòng gym',
-    restrictionIntensity: 'Tránh cường độ cao', restrictionResistance: 'Tránh tập kháng lực', restrictionImpact: 'Tránh bài tập va chạm', restrictionGlucose: 'Theo dõi đường huyết',
+    sexFemale: 'Nữ',
+    sexMale: 'Nam',
+    sexNotSpecified: 'Không muốn nêu',
+    activitySedentary: 'Ít vận động',
+    activityLight: 'Hoạt động nhẹ',
+    activityModerate: 'Hoạt động vừa',
+    activityActive: 'Hoạt động nhiều',
+    activityVeryActive: 'Hoạt động rất nhiều',
+    trainingNew: 'Mới bắt đầu tập',
+    trainingBeginner: 'Cơ bản',
+    trainingRegular: 'Tập thường xuyên',
+    dayMon: 'T2',
+    dayTue: 'T3',
+    dayWed: 'T4',
+    dayThu: 'T5',
+    dayFri: 'T6',
+    daySat: 'T7',
+    daySun: 'CN',
+    equipmentBodyweight: 'Trọng lượng cơ thể / không dụng cụ cầm tay',
+    equipmentWall: 'Tường trống',
+    equipmentChair: 'Ghế vững',
+    equipmentMat: 'Thảm tập',
+    equipmentBicycle: 'Xe đạp',
+    equipmentTreadmill: 'Máy chạy mini',
+    equipmentBand: 'Dây kháng lực',
+    equipmentBandAnchor: 'Điểm neo dây chắc chắn',
+    equipmentDumbbells: 'Tạ tay',
+    equipmentGym: 'Quyền sử dụng phòng gym',
+    equipmentCableMachine: 'Máy kéo cáp',
+    environmentHome: 'Tại nhà',
+    environmentOutdoors: 'Ngoài trời',
+    environmentGym: 'Phòng gym',
+    restrictionIntensity: 'Tránh cường độ cao',
+    restrictionResistance: 'Tránh tập kháng lực',
+    restrictionImpact: 'Tránh bài tập va chạm',
+    restrictionGlucose: 'Theo dõi đường huyết',
   },
   safetyContext: {
     title: 'Bối cảnh an toàn tập luyện hiện hành',
-    description: 'Tóm tắt chỉ đọc giúp hiển thị rõ các dữ kiện và quyết định an toàn tập luyện có cấu trúc.',
+    description:
+      'Tóm tắt chỉ đọc giúp hiển thị rõ các dữ kiện và quyết định an toàn tập luyện có cấu trúc.',
     workoutPlan: 'Kế hoạch tập',
     workoutProgression: 'Tăng tiến kế hoạch',
     coachExercise: 'Hướng dẫn tập từ Coach',
@@ -1137,62 +1576,101 @@ const vietnameseCopy: ProductCopy = {
     blocked: 'Tạm dừng để xem xét',
     noReasons: 'Không có vấn đề an toàn có cấu trúc nào đang hoạt động.',
     reasons: {
-      age_unconfirmed: 'Hãy xác nhận tuổi trước khi ứng dụng tạo hoặc tăng tiến hướng dẫn tập.',
-      under_18: 'Bản phát hành này dành cho người lớn. Không dùng để tạo hoặc tăng tiến bài tập cho người dưới 18 tuổi; hãy có chuyên gia y tế phù hợp và người lớn chịu trách nhiệm tham gia.',
-      pregnancy_review: 'Không tạo hoặc tăng tiến bài tập cho đến khi hướng dẫn vận động trong thai kỳ được xem xét với chuyên gia y tế phù hợp.',
-      postpartum_review: 'Không tạo hoặc tăng tiến bài tập cho đến khi hướng dẫn vận động sau sinh được xem xét với chuyên gia y tế phù hợp.',
-      pregnancy_context_unsure: 'Hãy làm rõ an toàn tập luyện liên quan đến thai kỳ với chuyên gia y tế phù hợp trước khi tạo hoặc tăng tiến bài tập.',
-      medication_glucose_risk: 'Đã báo cáo nguy cơ do thuốc hạ đường huyết nhưng chưa có kế hoạch tập. Hãy xem xét an toàn tập luyện với nhóm chăm sóc kê đơn.',
-      medication_dizziness_risk: 'Đã báo cáo nguy cơ chóng mặt hoặc ngất liên quan đến thuốc. Hãy xem xét an toàn tập luyện với chuyên gia y tế phù hợp.',
-      medication_other_restriction: 'Đã báo cáo hạn chế tập luyện liên quan đến thuốc. Hãy tuân theo hạn chế của bác sĩ trước khi dùng hướng dẫn tập.',
-      readiness_missing: 'Hãy hoàn tất sàng lọc mức sẵn sàng trước khi dùng khuyến nghị tập luyện.',
-      readiness_invalid: 'Ngày sàng lọc mức sẵn sàng đã lưu không hợp lệ. Hãy hoàn tất lại trước khi dùng khuyến nghị tập luyện.',
-      readiness_stale: 'Sàng lọc mức sẵn sàng đã quá 90 ngày. Hãy xem lại trước khi dùng khuyến nghị tập luyện.',
-      readiness_chest_pain: 'Không bắt đầu vận động khi đã báo cáo đau, tức hoặc thắt ngực. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng, kéo dài hoặc là tình trạng cấp cứu.',
-      readiness_fainting_or_dizziness: 'Không bắt đầu vận động khi bị ngất hoặc chóng mặt đáng kể. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng hoặc là tình trạng cấp cứu.',
-      readiness_severe_shortness_of_breath: 'Không bắt đầu vận động khi khó thở nặng hoặc bất thường. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng hoặc là tình trạng cấp cứu.',
-      readiness_irregular_heartbeat: 'Không bắt đầu vận động khi nhịp tim không đều đáng lo ngại. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng hoặc là tình trạng cấp cứu.',
-      readiness_clinician_restriction: 'Hạn chế do bác sĩ chỉ định cần được xem xét trước khi ứng dụng đưa ra khuyến nghị tập.',
-      readiness_exercise_glucose_risk: 'Nguy cơ đường huyết khi tập cần kế hoạch an toàn do bác sĩ cung cấp trước khi có khuyến nghị tập.',
-      reported_chest_discomfort: 'Khó chịu ở ngực hiện tại làm tạm dừng khuyến nghị tập. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng, kéo dài hoặc là tình trạng cấp cứu.',
-      reported_dizziness: 'Chóng mặt hiện tại làm tạm dừng khuyến nghị tập. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng hoặc là tình trạng cấp cứu.',
-      reported_shortness_of_breath: 'Khó thở hiện tại làm tạm dừng khuyến nghị tập. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng hoặc là tình trạng cấp cứu.',
-      clinician_avoid_high_intensity: 'Giữ cường độ trong giới hạn mà bác sĩ đã ghi nhận.',
-      clinician_avoid_resistance: 'Loại bài tập kháng lực theo hạn chế đã ghi nhận của bác sĩ.',
-      clinician_avoid_impact: 'Loại bài tập va chạm theo hạn chế đã ghi nhận của bác sĩ.',
-      clinician_monitor_glucose: 'Tuân theo hướng dẫn theo dõi đường huyết đã ghi nhận của bác sĩ; ứng dụng chưa đặt ngưỡng đường huyết trong P1.1.',
-      recent_workout_pain: 'Đau trong buổi tập gần đây làm tạm dừng tăng tiến và cần được xem xét trước khi tăng kế hoạch.',
-      recent_workout_symptoms: 'Triệu chứng đáng lo ngại trong buổi tập gần đây làm tạm dừng tăng tiến và cần được chuyên gia phù hợp xem xét.',
-      glucose_value_invalid: 'Một giá trị đường huyết khi tập gần đây không hợp lệ. Hãy xem lại hoặc sửa bản ghi trước khi tăng tiến kế hoạch.',
-      pre_glucose_below_review_range: 'Đường huyết trước tập gần nhất thấp hơn khoảng khởi đầu đã xem xét. Hãy tạm dừng hướng dẫn tập và làm theo kế hoạch của nhóm chăm sóc; ứng dụng không chỉ định thay đổi carbohydrate hoặc thuốc.',
-      pre_glucose_above_review_range: 'Đường huyết trước tập gần nhất cao hơn khoảng khởi đầu đã xem xét. Hãy tạm dừng hướng dẫn tập và làm theo kế hoạch của nhóm chăm sóc, gồm hướng dẫn về ketone khi áp dụng.',
-      post_glucose_recovery_review: 'Đường huyết sau tập gần nhất cần được xem xét hồi phục trước khi có thêm hướng dẫn tập. Hãy làm theo kế hoạch của nhóm chăm sóc và đo lại theo hướng dẫn.',
-      post_glucose_above_review_range: 'Đường huyết sau tập gần nhất cao hơn khoảng đã xem xét. Hãy tạm dừng tăng tiến và trao đổi xu hướng này với nhóm chăm sóc.',
+      age_unconfirmed:
+        'Hãy xác nhận tuổi trước khi ứng dụng tạo hoặc tăng tiến hướng dẫn tập.',
+      under_18:
+        'Bản phát hành này dành cho người lớn. Không dùng để tạo hoặc tăng tiến bài tập cho người dưới 18 tuổi; hãy có chuyên gia y tế phù hợp và người lớn chịu trách nhiệm tham gia.',
+      pregnancy_review:
+        'Không tạo hoặc tăng tiến bài tập cho đến khi hướng dẫn vận động trong thai kỳ được xem xét với chuyên gia y tế phù hợp.',
+      postpartum_review:
+        'Không tạo hoặc tăng tiến bài tập cho đến khi hướng dẫn vận động sau sinh được xem xét với chuyên gia y tế phù hợp.',
+      pregnancy_context_unsure:
+        'Hãy làm rõ an toàn tập luyện liên quan đến thai kỳ với chuyên gia y tế phù hợp trước khi tạo hoặc tăng tiến bài tập.',
+      medication_glucose_risk:
+        'Đã báo cáo nguy cơ do thuốc hạ đường huyết nhưng chưa có kế hoạch tập. Hãy xem xét an toàn tập luyện với nhóm chăm sóc kê đơn.',
+      medication_dizziness_risk:
+        'Đã báo cáo nguy cơ chóng mặt hoặc ngất liên quan đến thuốc. Hãy xem xét an toàn tập luyện với chuyên gia y tế phù hợp.',
+      medication_other_restriction:
+        'Đã báo cáo hạn chế tập luyện liên quan đến thuốc. Hãy tuân theo hạn chế của bác sĩ trước khi dùng hướng dẫn tập.',
+      readiness_missing:
+        'Hãy hoàn tất sàng lọc mức sẵn sàng trước khi dùng khuyến nghị tập luyện.',
+      readiness_invalid:
+        'Ngày sàng lọc mức sẵn sàng đã lưu không hợp lệ. Hãy hoàn tất lại trước khi dùng khuyến nghị tập luyện.',
+      readiness_stale:
+        'Sàng lọc mức sẵn sàng đã quá 90 ngày. Hãy xem lại trước khi dùng khuyến nghị tập luyện.',
+      readiness_chest_pain:
+        'Không bắt đầu vận động khi đã báo cáo đau, tức hoặc thắt ngực. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng, kéo dài hoặc là tình trạng cấp cứu.',
+      readiness_fainting_or_dizziness:
+        'Không bắt đầu vận động khi bị ngất hoặc chóng mặt đáng kể. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng hoặc là tình trạng cấp cứu.',
+      readiness_severe_shortness_of_breath:
+        'Không bắt đầu vận động khi khó thở nặng hoặc bất thường. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng hoặc là tình trạng cấp cứu.',
+      readiness_irregular_heartbeat:
+        'Không bắt đầu vận động khi nhịp tim không đều đáng lo ngại. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng hoặc là tình trạng cấp cứu.',
+      readiness_clinician_restriction:
+        'Hạn chế do bác sĩ chỉ định cần được xem xét trước khi ứng dụng đưa ra khuyến nghị tập.',
+      readiness_exercise_glucose_risk:
+        'Nguy cơ đường huyết khi tập cần kế hoạch an toàn do bác sĩ cung cấp trước khi có khuyến nghị tập.',
+      reported_chest_discomfort:
+        'Khó chịu ở ngực hiện tại làm tạm dừng khuyến nghị tập. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng, kéo dài hoặc là tình trạng cấp cứu.',
+      reported_dizziness:
+        'Chóng mặt hiện tại làm tạm dừng khuyến nghị tập. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng hoặc là tình trạng cấp cứu.',
+      reported_shortness_of_breath:
+        'Khó thở hiện tại làm tạm dừng khuyến nghị tập. Hãy tìm trợ giúp y tế khẩn cấp nếu triệu chứng nặng hoặc là tình trạng cấp cứu.',
+      clinician_avoid_high_intensity:
+        'Giữ cường độ trong giới hạn mà bác sĩ đã ghi nhận.',
+      clinician_avoid_resistance:
+        'Loại bài tập kháng lực theo hạn chế đã ghi nhận của bác sĩ.',
+      clinician_avoid_impact:
+        'Loại bài tập va chạm theo hạn chế đã ghi nhận của bác sĩ.',
+      clinician_monitor_glucose:
+        'Tuân theo hướng dẫn theo dõi đường huyết đã ghi nhận của bác sĩ; ứng dụng chưa đặt ngưỡng đường huyết trong P1.1.',
+      recent_workout_pain:
+        'Đau trong buổi tập gần đây làm tạm dừng tăng tiến và cần được xem xét trước khi tăng kế hoạch.',
+      recent_workout_symptoms:
+        'Triệu chứng đáng lo ngại trong buổi tập gần đây làm tạm dừng tăng tiến và cần được chuyên gia phù hợp xem xét.',
+      glucose_value_invalid:
+        'Một giá trị đường huyết khi tập gần đây không hợp lệ. Hãy xem lại hoặc sửa bản ghi trước khi tăng tiến kế hoạch.',
+      pre_glucose_below_review_range:
+        'Đường huyết trước tập gần nhất thấp hơn khoảng khởi đầu đã xem xét. Hãy tạm dừng hướng dẫn tập và làm theo kế hoạch của nhóm chăm sóc; ứng dụng không chỉ định thay đổi carbohydrate hoặc thuốc.',
+      pre_glucose_above_review_range:
+        'Đường huyết trước tập gần nhất cao hơn khoảng khởi đầu đã xem xét. Hãy tạm dừng hướng dẫn tập và làm theo kế hoạch của nhóm chăm sóc, gồm hướng dẫn về ketone khi áp dụng.',
+      post_glucose_recovery_review:
+        'Đường huyết sau tập gần nhất cần được xem xét hồi phục trước khi có thêm hướng dẫn tập. Hãy làm theo kế hoạch của nhóm chăm sóc và đo lại theo hướng dẫn.',
+      post_glucose_above_review_range:
+        'Đường huyết sau tập gần nhất cao hơn khoảng đã xem xét. Hãy tạm dừng tăng tiến và trao đổi xu hướng này với nhóm chăm sóc.',
     },
   },
   sensitiveNotes: {
     eyebrow: 'Ghi chú sức khỏe được mã hóa',
     title: 'Ghi chú riêng tư cho kế hoạch của bạn',
-    description: 'Các ghi chú này được mã hóa trước khi lưu. Chúng không xuất hiện trong lời nhắc và không dùng để chẩn đoán hoặc thay đổi thuốc.',
+    description:
+      'Các ghi chú này được mã hóa trước khi lưu. Chúng không xuất hiện trong lời nhắc và không dùng để chẩn đoán hoặc thay đổi thuốc.',
     medication: 'Ghi chú về thuốc hoặc an toàn khi tập',
     clinician: 'Hướng dẫn của bác sĩ',
     symptoms: 'Ghi chú bổ sung về triệu chứng',
     save: 'Lưu ghi chú đã mã hóa',
-    unavailable: 'Ghi chú sức khỏe được mã hóa chưa khả dụng cho đến khi khóa mã hóa phía máy chủ được cấu hình.',
+    unavailable:
+      'Ghi chú sức khỏe được mã hóa chưa khả dụng cho đến khi khóa mã hóa phía máy chủ được cấu hình.',
   },
   feedback: {
     targetsSaveError: 'Không thể lưu mục tiêu của bạn.',
     targetsReplayed: 'Thay đổi mục tiêu trước đó của bạn đã được lưu.',
-    targetsSaved: 'Đã lưu mục tiêu cá nhân. Mục tiêu do bác sĩ chỉ định vẫn được ưu tiên khi có.',
+    targetsSaved:
+      'Đã lưu mục tiêu cá nhân. Mục tiêu do bác sĩ chỉ định vẫn được ưu tiên khi có.',
     focusesSaveError: 'Không thể lưu các mối quan tâm sức khỏe của bạn.',
-    focusesReplayed: 'Thay đổi mối quan tâm sức khỏe trước đó của bạn đã được lưu.',
-    focusesSaved: 'Đã lưu các mối quan tâm sức khỏe. Những lần xem lại bữa ăn sau sẽ ưu tiên các kiểm tra đã chọn.',
+    focusesReplayed:
+      'Thay đổi mối quan tâm sức khỏe trước đó của bạn đã được lưu.',
+    focusesSaved:
+      'Đã lưu các mối quan tâm sức khỏe. Những lần xem lại bữa ăn sau sẽ ưu tiên các kiểm tra đã chọn.',
     onboardingSaveError: 'Không thể lưu thiết lập hồ sơ của bạn.',
     onboardingReplayed: 'Thiết lập hồ sơ trước đó của bạn đã được lưu.',
-    onboardingComplete: 'Đã lưu thiết lập hồ sơ. Hãy xem lại mức sẵn sàng tập luyện trước khi bắt đầu kế hoạch.',
-    onboardingSaved: 'Đã lưu thiết lập hồ sơ. Bạn có thể hoàn thành các thông tin cơ bản còn lại bất cứ lúc nào.',
+    onboardingComplete:
+      'Đã lưu thiết lập hồ sơ. Hãy xem lại mức sẵn sàng tập luyện trước khi bắt đầu kế hoạch.',
+    onboardingSaved:
+      'Đã lưu thiết lập hồ sơ. Bạn có thể hoàn thành các thông tin cơ bản còn lại bất cứ lúc nào.',
     notesSaveError: 'Không thể lưu ghi chú sức khỏe được mã hóa.',
-    notesSaved: 'Đã lưu ghi chú sức khỏe được mã hóa vào hồ sơ riêng tư của bạn.',
+    notesSaved:
+      'Đã lưu ghi chú sức khỏe được mã hóa vào hồ sơ riêng tư của bạn.',
     reportStoreError: 'Không thể lưu riêng tư báo cáo này.',
     reportExtractError: 'Không thể trích xuất báo cáo này.',
     measurementBloodPressureError: 'Hãy nhập cả hai giá trị huyết áp dương.',
@@ -1200,24 +1678,34 @@ const vietnameseCopy: ProductCopy = {
     measurementValueError: 'Hãy nhập giá trị đo dương.',
     measurementSaveError: 'Không thể lưu chỉ số này.',
     measurementReplayed: 'Chỉ số trước đó của bạn đã được ghi nhận.',
-    measurementSaved: 'Chỉ số đã xác nhận được lưu vào lịch sử riêng tư của bạn.',
+    measurementSaved:
+      'Chỉ số đã xác nhận được lưu vào lịch sử riêng tư của bạn.',
     measurementDeleteImageError: 'Không thể xóa ảnh nguồn này.',
     readinessSaveError: 'Không thể lưu mức sẵn sàng tập luyện.',
-    readinessCleared: 'Đã xác nhận sẵn sàng tập luyện. Kế hoạch có thể được xem xét sau khi bạn chọn thiết bị và lịch tập.',
-    readinessPaused: 'Tạm dừng tạo kế hoạch tập luyện cho đến khi bạn trao đổi vấn đề an toàn đã báo cáo với chuyên gia phù hợp.',
+    readinessCleared:
+      'Đã xác nhận sẵn sàng tập luyện. Kế hoạch có thể được xem xét sau khi bạn chọn thiết bị và lịch tập.',
+    readinessPaused:
+      'Tạm dừng tạo kế hoạch tập luyện cho đến khi bạn trao đổi vấn đề an toàn đã báo cáo với chuyên gia phù hợp.',
     planPreviewError: 'Không thể tạo bản xem trước kế hoạch tập.',
     planConfirmError: 'Không thể xác nhận kế hoạch tập này.',
-    planReplayed: 'Xác nhận kế hoạch tập luyện trước đó của bạn đã được ghi nhận.',
-    planConfirmed: 'Đã xác nhận kế hoạch tập luyện. Hãy giữ cường độ nhẹ và dừng lại nếu có triệu chứng đáng lo ngại.',
+    planReplayed:
+      'Xác nhận kế hoạch tập luyện trước đó của bạn đã được ghi nhận.',
+    planConfirmed:
+      'Đã xác nhận kế hoạch tập luyện. Hãy giữ cường độ nhẹ và dừng lại nếu có triệu chứng đáng lo ngại.',
     checkinError: 'Không thể hoàn tất đánh giá hồi phục.',
-    workoutLogValidation: 'Hãy nhập thời lượng, cường độ, mức yêu thích và đường huyết tùy chọn hợp lệ.',
+    workoutLogValidation:
+      'Hãy nhập thời lượng, cường độ, mức yêu thích và đường huyết tùy chọn hợp lệ.',
     workoutLogSaveError: 'Không thể lưu nhật ký tập này.',
-    workoutLogReview: 'Đã lưu nhật ký tập luyện. Không tăng tiến kế hoạch; hãy trao đổi về cơn đau hoặc triệu chứng đã báo cáo với chuyên gia phù hợp.',
-    workoutLogSaved: 'Buổi tập đã hoàn thành được lưu vào lịch sử riêng tư của bạn.',
+    workoutLogReview:
+      'Đã lưu nhật ký tập luyện. Không tăng tiến kế hoạch; hãy trao đổi về cơn đau hoặc triệu chứng đã báo cáo với chuyên gia phù hợp.',
+    workoutLogSaved:
+      'Buổi tập đã hoàn thành được lưu vào lịch sử riêng tư của bạn.',
     mealReviewError: 'Không thể chuẩn bị bản xem lại.',
     mealReviewIncomplete: 'Bản xem lại bữa ăn chưa đầy đủ. Hãy thử lại.',
-    mealReviewRefreshRequired: 'Hãy xem xét dữ kiện bữa ăn đã cập nhật trên máy chủ trước khi xác nhận.',
-    mealServerReviewReady: 'Dữ kiện bữa ăn đã cập nhật đã sẵn sàng để bạn xác nhận.',
+    mealReviewRefreshRequired:
+      'Hãy xem xét dữ kiện bữa ăn đã cập nhật trên máy chủ trước khi xác nhận.',
+    mealServerReviewReady:
+      'Dữ kiện bữa ăn đã cập nhật đã sẵn sàng để bạn xác nhận.',
     mealSaveError: 'Không thể lưu bữa ăn này.',
     mealReplayed: 'Lần lưu trước của bạn đã được ghi nhận.',
     mealSaved: 'Đã lưu bữa ăn. Tổng hôm nay hiện dựa trên mục bạn đã xác nhận.',
@@ -1227,7 +1715,8 @@ const vietnameseCopy: ProductCopy = {
     foodSaved: 'Đã lưu món ăn vào thư viện thực phẩm riêng tư của bạn.',
     savedFoodDeleted: 'Đã xóa món ăn đã lưu khỏi thư viện riêng tư.',
     savedFoodDeleteError: 'Không thể xóa món ăn đã lưu này.',
-    personalFoodReview: 'Đang dùng món ăn bạn đã xác nhận trước đó. Hãy xem lại trước khi lưu bữa ăn này.',
+    personalFoodReview:
+      'Đang dùng món ăn bạn đã xác nhận trước đó. Hãy xem lại trước khi lưu bữa ăn này.',
     photoStoreError: 'Không thể lưu riêng tư ảnh này.',
     photoDeleteError: 'Không thể xóa tệp tải lên riêng tư. Hãy thử lại.',
     photoExtractError: 'Không thể trích xuất ảnh này.',
@@ -1241,12 +1730,16 @@ const vietnameseCopy: ProductCopy = {
     reminderResumed: 'Đã tiếp tục nhắc việc.',
     reminderSnoozed: 'Đã hoãn nhắc việc.',
     reminderRescheduled: 'Đã đổi lịch nhắc việc.',
-    reportImageDeleted: 'Đã xóa ảnh báo cáo riêng tư. Chỉ số đã xác nhận vẫn được giữ lại.',
+    reportImageDeleted:
+      'Đã xóa ảnh báo cáo riêng tư. Chỉ số đã xác nhận vẫn được giữ lại.',
     accountDeleteError: 'Không thể xóa vĩnh viễn dữ liệu riêng tư của bạn.',
-    accountDeleted: 'Dữ liệu Nourishwell riêng tư của bạn đã được xóa vĩnh viễn.',
+    accountDeleted:
+      'Dữ liệu Nourishwell riêng tư của bạn đã được xóa vĩnh viễn.',
     localeSaveError: 'Không thể lưu lựa chọn ngôn ngữ của bạn.',
-    dashboardOffline: 'Bạn đang ngoại tuyến. Thông tin đã tải vẫn hiển thị, nhưng không thể thay đổi hồ sơ sức khỏe cho đến khi kết nối lại.',
-    dashboardPermissionDenied: 'Không thể mở hồ sơ riêng tư của bạn. Hãy đăng nhập lại rồi thử lại.',
+    dashboardOffline:
+      'Bạn đang ngoại tuyến. Thông tin đã tải vẫn hiển thị, nhưng không thể thay đổi hồ sơ sức khỏe cho đến khi kết nối lại.',
+    dashboardPermissionDenied:
+      'Không thể mở hồ sơ riêng tư của bạn. Hãy đăng nhập lại rồi thử lại.',
     dashboardRetry: 'Tải lại hồ sơ riêng tư',
     exportDateRange: 'Hãy chọn khoảng ngày hợp lệ.',
     exportCreateError: 'Không thể tạo tệp xuất này.',

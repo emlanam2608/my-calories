@@ -72,6 +72,7 @@ describe('owner-isolation route matrix on migrated D1', () => {
   }), 60_000);
 
   it('resolves safety facts only from the authenticated owner records', async () => withDatabase(async ({ database }) => {
+    const now = Date.now() - 60_000;
     const onboardingDraft = JSON.stringify({ ageYears: 15, pregnancyContext: 'pregnant', medicationExerciseRiskFlags: ['glucose_lowering_without_plan'] });
     await database.prepare('insert into profile_onboarding (id, owner_id, draft, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?)').bind('onboarding-owner-b', routeTestUsers.ownerB.userId, onboardingDraft, 'complete', now, now).run();
     await database.prepare('insert into profile_onboarding (id, owner_id, draft, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?)').bind('onboarding-owner-a', routeTestUsers.ownerA.userId, JSON.stringify({ ageYears: 34, pregnancyContext: 'not_applicable' }), 'complete', now, now).run();

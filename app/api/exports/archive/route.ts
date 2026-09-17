@@ -15,6 +15,8 @@ import {
   savedFoods,
   uploads,
   workoutCheckins,
+  workoutAdaptationProposals,
+  workoutExerciseResults,
   workoutPlans,
   workoutReadiness,
   workoutSessions,
@@ -40,7 +42,7 @@ export async function GET() {
   const db = getDb();
   const [
     profile, targets, onboarding, encryptedNotes, ownerUploads, executions,
-    foods, focuses, meals, values, sessions, readiness, plans, checkins,
+    foods, focuses, meals, values, exerciseResults, sessions, readiness, plans, checkins, proposals,
     ownerReminders,
   ] = await Promise.all([
     db.select().from(profiles).where(eq(profiles.ownerId, user.userId)),
@@ -53,10 +55,12 @@ export async function GET() {
     db.select().from(healthFocuses).where(eq(healthFocuses.ownerId, user.userId)),
     db.select().from(mealEntries).where(eq(mealEntries.ownerId, user.userId)),
     db.select().from(measurements).where(eq(measurements.ownerId, user.userId)),
+    db.select().from(workoutExerciseResults).where(eq(workoutExerciseResults.ownerId, user.userId)),
     db.select().from(workoutSessions).where(eq(workoutSessions.ownerId, user.userId)),
     db.select().from(workoutReadiness).where(eq(workoutReadiness.ownerId, user.userId)),
     db.select().from(workoutPlans).where(eq(workoutPlans.ownerId, user.userId)),
     db.select().from(workoutCheckins).where(eq(workoutCheckins.ownerId, user.userId)),
+    db.select().from(workoutAdaptationProposals).where(eq(workoutAdaptationProposals.ownerId, user.userId)),
     db.select().from(reminders).where(eq(reminders.ownerId, user.userId)),
   ]);
 
@@ -102,13 +106,14 @@ export async function GET() {
   const records = {
     profile, healthTargets: targets, onboarding, uploads: archiveUploads,
     aiExecutions: executions, savedFoods: foods, healthFocuses: focuses,
-    meals: portableMeals, measurements: values, workoutSessions: sessions, workoutReadiness: readiness,
-    workoutPlans: plans, workoutCheckins: checkins, reminders: ownerReminders,
+    meals: portableMeals, measurements: values, workoutExerciseResults: exerciseResults,
+    workoutSessions: sessions, workoutReadiness: readiness,
+    workoutPlans: plans, workoutCheckins: checkins, workoutAdaptationProposals: proposals, reminders: ownerReminders,
   };
   assertPublicArchiveOwnerDataInventory([
     'profile', 'healthTargets', 'onboarding', 'sensitiveNotes', 'uploads', 'aiExecutions',
-    'savedFoods', 'healthFocuses', 'meals', 'measurements', 'workoutSessions',
-    'workoutReadiness', 'workoutPlans', 'workoutCheckins', 'reminders',
+    'savedFoods', 'healthFocuses', 'meals', 'measurements', 'workoutExerciseResults', 'workoutSessions',
+    'workoutReadiness', 'workoutPlans', 'workoutCheckins', 'workoutAdaptationProposals', 'reminders',
   ]);
   const archive = {
     format: accountArchiveFormat,

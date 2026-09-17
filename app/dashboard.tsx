@@ -10,9 +10,6 @@ import type {
   OnboardingDraft,
   SensitiveNotes,
   WorkoutReadiness,
-  WorkoutPlanResponse,
-  WorkoutLog,
-  WorkoutCheckin,
   Analytics,
   SavedFood,
   Reminder,
@@ -43,6 +40,12 @@ import {
   type DashboardTargetKey as TargetKey,
 } from '@/lib/dashboard-model';
 import type { ExerciseCatalogEntry } from '@/lib/exercise-catalog';
+import type { ActiveWorkoutPlan } from '@/lib/workout-plan-lifecycle';
+import type {
+  WorkoutEvidenceCheckin,
+  WorkoutEvidenceLog,
+} from '@/lib/workout-evidence';
+import type { WorkoutAdaptationProposal } from '@/lib/workout-adaptation-contracts';
 import type { DashboardBootstrap } from '@/lib/dashboard-bootstrap';
 import { defaultEffectiveTargets, type EffectiveTarget } from '@/lib/targets';
 
@@ -64,13 +67,14 @@ export function Dashboard({ displayName }: { displayName: string }) {
   const [safetyContext, setSafetyContext] =
     useState<EffectiveSafetyContext | null>(null);
   const [exercises, setExercises] = useState<ExerciseCatalogEntry[]>([]);
-  const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlanResponse | null>(
+  const [workoutPlan, setWorkoutPlan] = useState<ActiveWorkoutPlan | null>(
     null,
   );
-  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
-  const [workoutCheckin, setWorkoutCheckin] = useState<WorkoutCheckin | null>(
-    null,
-  );
+  const [workoutLogs, setWorkoutLogs] = useState<WorkoutEvidenceLog[]>([]);
+  const [workoutCheckin, setWorkoutCheckin] =
+    useState<WorkoutEvidenceCheckin | null>(null);
+  const [workoutProposal, setWorkoutProposal] =
+    useState<WorkoutAdaptationProposal | null>(null);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [savedFoods, setSavedFoods] = useState<SavedFood[]>([]);
   const [deletingSavedFoodId, setDeletingSavedFoodId] = useState<string | null>(
@@ -148,6 +152,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
     if (data.plan !== undefined) setWorkoutPlan(data.plan);
     if (data.logs) setWorkoutLogs(data.logs);
     if (data.checkin !== undefined) setWorkoutCheckin(data.checkin);
+    if (data.proposal !== undefined) setWorkoutProposal(data.proposal);
     if (data.analytics) setAnalytics(data.analytics);
     if (data.savedFoods) setSavedFoods(data.savedFoods);
     if (data.reminders) setReminders(data.reminders);
@@ -167,6 +172,7 @@ export function Dashboard({ displayName }: { displayName: string }) {
     setWorkoutPlan(null);
     setWorkoutLogs([]);
     setWorkoutCheckin(null);
+    setWorkoutProposal(null);
     setAnalytics(null);
     setSavedFoods([]);
     setReminders([]);
@@ -219,12 +225,15 @@ export function Dashboard({ displayName }: { displayName: string }) {
     confirmWorkoutPlan,
     saveWorkoutLog,
     runWorkoutCheckin,
+    confirmWorkoutProposal,
+    dismissWorkoutProposal,
   } = useWorkoutActions({
     locale,
     setReadiness: setWorkoutReadiness,
     setPlan: setWorkoutPlan,
     setLogs: setWorkoutLogs,
     setCheckin: setWorkoutCheckin,
+    setProposal: setWorkoutProposal,
     setError,
     setNotice,
     reload: loadMeals,
@@ -473,11 +482,15 @@ export function Dashboard({ displayName }: { displayName: string }) {
               confirmedPlan={workoutPlan}
               logs={workoutLogs}
               checkin={workoutCheckin}
+              proposal={workoutProposal}
+              online={online}
               onSave={saveWorkoutReadiness}
               onPreview={previewWorkoutPlan}
               onConfirmPlan={confirmWorkoutPlan}
               onSaveLog={saveWorkoutLog}
               onRunCheckin={runWorkoutCheckin}
+              onConfirmProposal={confirmWorkoutProposal}
+              onDismissProposal={dismissWorkoutProposal}
               locale={locale}
             />
           ) : page === 'progress' ? (

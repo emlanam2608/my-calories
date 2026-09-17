@@ -141,15 +141,15 @@ Required harness capabilities:
 
 Minimum route matrix:
 
-| Area | Anonymous | Wrong owner | Valid owner | Replay |
-|---|---:|---:|---:|---:|
-| uploads | 401 | 404 | yes | n/a |
-| saved foods | 401 | 404 | yes | yes |
-| measurements | 401 | reject source upload | yes | yes |
-| workout plans/logs | 401 | 404 | yes | yes |
-| reminders | 401 | 404 | yes | yes |
-| analytics/exports | 401 | owner-only result | yes | n/a |
-| account deletion | 401 | n/a | exact phrase | documented exception |
+| Area               | Anonymous |          Wrong owner |  Valid owner |               Replay |
+| ------------------ | --------: | -------------------: | -----------: | -------------------: |
+| uploads            |       401 |                  404 |          yes |                  n/a |
+| saved foods        |       401 |                  404 |          yes |                  yes |
+| measurements       |       401 | reject source upload |          yes |                  yes |
+| workout plans/logs |       401 |                  404 |          yes |                  yes |
+| reminders          |       401 |                  404 |          yes |                  yes |
+| analytics/exports  |       401 |    owner-only result |          yes |                  n/a |
+| account deletion   |       401 |                  n/a | exact phrase | documented exception |
 
 Never weaken production auth to make tests easy.
 
@@ -340,6 +340,8 @@ P2 replaces `starter-plan-1` in six dependency-ordered slices. The selection and
 
 #### Slice P2.1 — Catalog governance and deterministic eligibility
 
+Completed 2026-09-06. `exercise-catalog-contract-2` and catalog `starter-2` use bounded canonical capabilities, environment compatibility, contraindication tags, and explicit review evidence. Migration `0023` keeps every seed row `unreviewed`, canonicalizes legacy equipment labels, and adds version/category lookup support. The pure `exercise-eligibility-1` resolver evaluates equipment, environment, injury flags, clinician restrictions, and effective-safety decisions with stable exclusion/modification reasons and terminating substitution traversal. Bodyweight and gym access grant only themselves; wall, chair, band anchor, cable machine, and other capabilities must be declared independently. The existing `starter-plan-1` route/UI remain active but now consume the typed filter. No plan was generated, persisted, activated, superseded, or professionally approved by this slice.
+
 Outcome: a versioned catalog can answer whether an exercise is eligible and why, without pretending draft content has professional approval.
 
 Required behavior:
@@ -371,6 +373,8 @@ Acceptance tests:
 Stop condition: no new weekly plan is generated or persisted. Do not mark professional review complete without real evidence.
 
 #### Slice P2.2 — Versioned planning context and pure weekly planner
+
+Completed 2026-09-06. The strict `workout-planning-context-1` builder selects only planning-safe onboarding, effective-safety, current-plan, and bounded recovery/adherence facts, retains source record IDs/timestamps, excludes account identity and encrypted notes, canonicalizes set-like inputs, and issues a stable SHA-256 digest. The pure `deterministic-weekly-planner-1` produces `workout-plan-v2` drafts with date-derived session IDs, catalog/safety/policy versions, review status, phased prescriptions, rationale keys, progression criteria, compatible substitutions, and explicit unresolved questions. Blocked safety returns no plan; restrictions and `allowed_with_modifications` filter or cap before goal selection; unavailable equipment/environment or unresolved substitutions produce an incomplete draft. Prescription and scheduling constants live in `conservative-prescription-policy-1`, which remains explicitly `unreviewed` with no fabricated evidence. This slice added no route, UI, persistence, migration, active-plan mutation, AI call, clock call, or random ID; `starter-plan-1` stays live until P2.3.
 
 Outcome: identical reviewed inputs produce an identical, inspectable weekly draft.
 
@@ -415,6 +419,8 @@ Acceptance tests:
 
 Stop condition: only user-confirmed initial/replacement activation exists. No automatic substitution or progression yet.
 
+Completed 2026-09-06. `workout_plan_previews` stores the owner-scoped V2 plan, canonical planning context/digest, catalog version, expiry, and activation state. Confirmation accepts no editable plan payload, re-resolves and rebuilds all material inputs, returns a stable stale conflict, and atomically supersedes/activates/deduplicates. Partial unique indexes enforce one active owner plan and one plan per preview; replay resolves the original resource even after supersession. Migration `0024` deterministically preserves the newest legacy confirmation as active and older confirmations as history.
+
 #### Slice P2.4 — Exercise-level completion and recovery evidence
 
 Outcome: adaptation uses actual prescription-level evidence instead of one aggregate sets/reps pair for the whole session.
@@ -435,6 +441,8 @@ Acceptance tests:
 - legacy aggregate log reads, replay isolation, wrong-owner access, archive/delete, and migration drift.
 
 Stop condition: saving evidence never changes a prescription, proposal, or active plan.
+
+Completed 2026-09-06. `workout-exercise-evidence-1` adds strict per-prescription completed/modified/skipped results with bounded set, repetition, duration, kg/lb load, and plan-linked substitution evidence. V2 writes validate the immutable active plan and persist normalized rows in the same batch as the session and dedup record; safety stops are never successful adherence, while glucose and session safety facts remain unchanged. Scheduled check-ins persist bounded recovery status and optional boolean soreness/pain flags. Migration `0025` labels legacy aggregates explicitly, archive/delete inventories cover portable evidence and operational previews, and exact replay returns the original log.
 
 #### Slice P2.5 — Versioned adaptation and substitution proposals
 
@@ -458,6 +466,8 @@ Acceptance tests:
 
 Stop condition: deterministic proposal lifecycle is complete; AI is absent.
 
+Completed 2026-09-07. `conservative-adaptation-policy-1` centralizes minimum evidence/adherence, effort boundaries, deload bounds, and progression increments. The pure engine implements all five actions with hard precedence and retains evidence provenance plus prescription-level before/after changes. The production policy remains honestly `unreviewed`, so progression is gated until P2.6 receives real external evidence; a synthetic reviewed test policy verifies the gated branch and exact boundaries. Migration `0026` adds owner-scoped proposal snapshots and indexes. Check-ins create inert proposals, dismissal is plan-neutral, and explicit confirmation re-resolves every material input before a transactional base-plan supersession and exact-plan activation. Replay is resource-specific, concurrent confirmation leaves one active plan, and proposals are included in archive/deletion coverage. No AI dependency was introduced.
+
 #### Slice P2.6 — Workouts surface and external review gate
 
 Outcome: the mobile user can understand, perform, review, and explicitly accept every plan change.
@@ -471,6 +481,10 @@ Required behavior:
 5. Qualified review is external, not a code checkbox. Record the exact catalog and progression-policy versions, review date/reference, and resulting approved scope only after real review is supplied. Until then, disclose `unreviewed` and do not claim professional or clinician-approved PT.
 
 Stop condition: P2 engineering is complete when P2.1-P2.6 validation passes. The product milestone remains externally gated until professional review evidence exists.
+
+Engineering completed 2026-09-07. The Workouts surface now presents bilingual plan provenance and honest review status, responsive weekly sessions with phased prescriptions and compatible substitutions, explicit incomplete-plan questions, exercise-level completion/modification/skip evidence, structured recovery, and evidence-backed before/after adaptation proposals. Initial activation, replacement, substitution, progression, and deload remain preview-and-confirm operations; dismissal is plan-neutral. Offline mode is read-only and never queues sensitive workout writes, while expired previews/proposals and safety holds cannot be confirmed. The exact catalog and progression-policy review item remains open because no real qualified review evidence has been supplied; both remain visibly `unreviewed`, and the product makes no individualized physical-therapy claim.
+
+Corrective review completed 2026-09-08. Adaptation now evaluates the `workout_progression` decision independently while retaining `workout_plan` constraints for exercise compatibility, and that progression decision participates in the proposal digest. Plan replacement remounts plan-bound logging and recovery forms, while preview expiry advances from a live timer. Load and glucose inputs must be positive one-decimal values that are exactly representable by scaled D1 integers. Concurrent identical check-ins catch the unique-key race and replay the committed check-in/proposal. P2.6 coverage now server-renders the real empty, offline active-plan, and safety-blocked components and uses DOM interaction tests for offline mutation disabling, keyboard preview, live expiry, safety gating, and plan-replacement state reset. The external professional-review gate remains open.
 
 ### P3 — Coach chat
 

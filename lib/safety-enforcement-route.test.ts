@@ -16,7 +16,7 @@ const adultDraft = {
   sexForMetabolicCalculation: 'not_specified', pregnancyContext: 'not_applicable',
   activityLevel: 'light', trainingHistory: 'beginner',
   availableDays: ['mon', 'wed', 'fri'],
-  equipment: ['chair', 'exercise_mat', 'bicycle'], environments: ['home'],
+  equipment: ['chair', 'exercise_mat', 'bicycle', 'mini_treadmill'], environments: ['home'],
   clinicianRestrictionFlags: [], medicationExerciseRiskFlags: [], symptomFlags: ['none'],
 };
 
@@ -53,14 +53,14 @@ describe('effective safety enforcement routes', () => {
   it('re-resolves safety at confirmation so a stale preview cannot bypass a new block', async () => withDatabase(async ({ database }) => {
     await seedClearedOwner(database);
     const preview = await previewPlan();
-    const plan = (await preview.json()) as { plan: unknown };
+    const plan = (await preview.json()) as { previewId: string };
     await database.prepare('update profile_onboarding set draft = ?, updated_at = ? where owner_id = ?').bind(JSON.stringify({ ...adultDraft, pregnancyContext: 'pregnant' }), Date.now(), routeTestUsers.ownerA.userId).run();
     const response = await confirmPlan(privateRouteRequest('/api/workout-plans', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idempotencyKey: '018e2aaa-6a86-4d9d-b36a-a3d96fd00d91', plan: plan.plan }),
+      body: JSON.stringify({ idempotencyKey: '018e2aaa-6a86-4d9d-b36a-a3d96fd00d91', previewId: plan.previewId }),
     }));
-    expect(response.status).toBe(422);
-    await expect(response.json()).resolves.toMatchObject({ reasons: [{ code: 'pregnancy_review' }] });
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toMatchObject({ code: 'workout_plan_preview_stale' });
     const stored = await database.prepare('select count(*) as count from workout_plans where owner_id = ?').bind(routeTestUsers.ownerA.userId).first<{ count: number }>();
     expect(stored?.count).toBe(0);
   }), 60_000);
@@ -68,14 +68,19 @@ describe('effective safety enforcement routes', () => {
   it('stores the resolved progression decision and reason codes with an idempotent check-in', async () => withDatabase(async ({ database }) => {
     await seedClearedOwner(database);
     const preview = await previewPlan();
-    const body = (await preview.json()) as { plan: { sessions: Array<{ id: string }> } };
-    const planId = '018e2aaa-6a86-4d9d-b36a-a3d96fd00d92';
+    const body = (await preview.json()) as { previewId: string; plan: { sessions: Array<{ id: string }> } };
+    const confirmation = await confirmPlan(privateRouteRequest('/api/workout-plans', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idempotencyKey: '018e2aaa-6a86-4d9d-b36a-a3d96fd00d92', previewId: body.previewId }),
+    }));
+    expect(confirmation.status).toBe(200);
+    const confirmed = await confirmation.json() as { plan: { id: string } };
+    const planId = confirmed.plan.id;
     const now = Date.now();
-    await database.prepare('insert into workout_plans (id, owner_id, plan_version, period_start, status, plan, created_at, confirmed_at) values (?, ?, ?, ?, ?, ?, ?, ?)').bind(planId, routeTestUsers.ownerA.userId, 'starter-plan-1', '2026-09-02', 'confirmed', JSON.stringify(body.plan), now, now).run();
-    await database.prepare('insert into workout_sessions (id, owner_id, plan_id, session_id, plan_version, status, duration_minutes, rpe, pain, concerning_symptoms, pre_glucose_scaled, glucose_scale, completed_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind('log-owner-a', routeTestUsers.ownerA.userId, planId, body.plan.sessions[0].id, 'starter-plan-1', 'completed', 20, 4, 0, 0, 49, 10, now).run();
+    await database.prepare('insert into workout_sessions (id, owner_id, plan_id, session_id, plan_version, status, duration_minutes, rpe, pain, concerning_symptoms, pre_glucose_scaled, glucose_scale, completed_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind('log-owner-a', routeTestUsers.ownerA.userId, planId, body.plan.sessions[0].id, 'workout-plan-v2', 'completed', 20, 4, 0, 0, 49, 10, now).run();
     const checkinRequest = () => privateRouteRequest('/api/workout-checkins', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idempotencyKey: '018e2aaa-6a86-4d9d-b36a-a3d96fd00d93', planId }),
+      body: JSON.stringify({ idempotencyKey: '018e2aaa-6a86-4d9d-b36a-a3d96fd00d93', planId, recovery: { status: 'good', soreness: false, pain: false } }),
     });
     const request = checkinRequest();
     const response = await postCheckin(request);

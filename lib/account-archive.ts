@@ -1,4 +1,4 @@
-export const accountArchiveFormat = 'nourishwell-private-archive-v2';
+export const accountArchiveFormat = 'nourishwell-private-archive-v4';
 export const archiveUploadLimitBytes = 5_000_000;
 export const archiveUploadLimitCount = 25;
 

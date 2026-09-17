@@ -4,7 +4,7 @@ import { assertOwnerDataInventory, assertPublicArchiveOwnerDataInventory, ownerD
 
 describe('account archive helpers', () => {
   it('uses a versioned private archive format', () => {
-    expect(accountArchiveFormat).toBe('nourishwell-private-archive-v2');
+    expect(accountArchiveFormat).toBe('nourishwell-private-archive-v4');
     expect(accountArchiveFilename('2026-09-01')).toBe('nourishwell-private-archive-2026-09-01.json');
   });
 

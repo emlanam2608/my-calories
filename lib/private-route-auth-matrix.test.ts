@@ -10,9 +10,11 @@ vi.mock('@/db', () => ({ getDb: () => { throw new Error('database must not be ac
 vi.mock('cloudflare:workers', () => ({ env: { FILES: {} } }));
 vi.mock('@/lib/upload-expiry-cleanup', () => ({ cleanExpiredPrivateUploads: async () => undefined }));
 
-const [{ GET: getMeasurements }, { GET: getWorkoutPlans }, { GET: getWorkoutLogs }, { GET: getWorkoutCheckins }, { GET: getReminders }, { GET: getAnalytics }, { GET: getCsv }, { GET: getArchive }, { GET: getSafetyContext }, { DELETE: deleteAccount }] = await Promise.all([
+const [{ GET: getMeasurements }, { GET: getWorkoutPlans }, { POST: previewWorkoutPlan }, { GET: getWorkoutProposals }, { GET: getWorkoutLogs }, { GET: getWorkoutCheckins }, { GET: getReminders }, { GET: getAnalytics }, { GET: getCsv }, { GET: getArchive }, { GET: getSafetyContext }, { DELETE: deleteAccount }] = await Promise.all([
   import('@/app/api/measurements/route'),
   import('@/app/api/workout-plans/route'),
+  import('@/app/api/workout-plans/preview/route'),
+  import('@/app/api/workout-plan-proposals/route'),
   import('@/app/api/workout-logs/route'),
   import('@/app/api/workout-checkins/route'),
   import('@/app/api/reminders/route'),
@@ -29,6 +31,8 @@ describe('private route authentication matrix', () => {
   it.each([
     ['measurements', () => getMeasurements(privateRouteRequest('/api/measurements', {}, null))],
     ['workout plans', () => getWorkoutPlans()],
+    ['workout plan previews', () => previewWorkoutPlan()],
+    ['workout plan proposals', () => getWorkoutProposals()],
     ['workout logs', () => getWorkoutLogs()],
     ['workout check-ins', () => getWorkoutCheckins()],
     ['reminders', () => getReminders()],

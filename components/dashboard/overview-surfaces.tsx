@@ -21,7 +21,6 @@ import type {
   EffectiveSafetyContext,
   HealthFocus,
   Reminder,
-  WorkoutPlanResponse,
 } from '@/lib/contracts';
 import {
   createDailyCoachGuidance,
@@ -33,6 +32,7 @@ import {
   type DashboardTargetKey,
 } from '@/lib/dashboard-model';
 import { getCopy, type Locale } from '@/lib/copy';
+import type { ActiveWorkoutPlan } from '@/lib/workout-plan-lifecycle';
 
 type Totals = Record<DashboardTargetKey, number>;
 
@@ -47,7 +47,7 @@ export function CoachSurface({
   totals: Totals;
   targets: Totals;
   healthFocuses: HealthFocus[];
-  workoutPlan: WorkoutPlanResponse | null;
+  workoutPlan: ActiveWorkoutPlan | null;
   safetyContext: EffectiveSafetyContext | null;
   locale: Locale;
 }) {

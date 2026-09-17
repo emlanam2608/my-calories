@@ -1,22 +1,30 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type {
-  WorkoutCheckin,
-  WorkoutLog,
-  WorkoutLogRequest,
-  WorkoutPlanResponse,
   WorkoutReadiness,
   WorkoutReadinessRequest,
   SafetyReasonCode,
 } from '@/lib/contracts';
 import { getCopy, type Locale } from '@/lib/copy';
 import { createDashboardRequestId } from '@/lib/dashboard-client';
+import type {
+  ActiveWorkoutPlan,
+  WorkoutPlanPreviewResponse,
+} from '@/lib/workout-plan-lifecycle';
+import type {
+  WorkoutEvidenceCheckin,
+  WorkoutEvidenceLog,
+  WorkoutEvidenceRequest,
+  WorkoutRecoveryInput,
+} from '@/lib/workout-evidence';
+import type { WorkoutAdaptationProposal } from '@/lib/workout-adaptation-contracts';
 
 type Options = {
   locale: Locale;
   setReadiness: Dispatch<SetStateAction<WorkoutReadiness | null>>;
-  setPlan: Dispatch<SetStateAction<WorkoutPlanResponse | null>>;
-  setLogs: Dispatch<SetStateAction<WorkoutLog[]>>;
-  setCheckin: Dispatch<SetStateAction<WorkoutCheckin | null>>;
+  setPlan: Dispatch<SetStateAction<ActiveWorkoutPlan | null>>;
+  setLogs: Dispatch<SetStateAction<WorkoutEvidenceLog[]>>;
+  setCheckin: Dispatch<SetStateAction<WorkoutEvidenceCheckin | null>>;
+  setProposal: Dispatch<SetStateAction<WorkoutAdaptationProposal | null>>;
   setError: (message: string) => void;
   setNotice: (message: string) => void;
   reload: () => Promise<void>;
@@ -30,20 +38,30 @@ export function useWorkoutActions(options: Options) {
     setPlan,
     setLogs,
     setCheckin,
+    setProposal,
     setError,
     setNotice,
     reload,
   } = options;
   const c = getCopy(locale);
   const safetyError = useCallback(
-    (body: {
-      error?: string;
-      errorCode?: string;
-      reasons?: Array<{ code: SafetyReasonCode }>;
-    }, fallback: string) => {
-      if (body.errorCode !== 'exercise_recommendation_blocked' || !body.reasons?.length)
+    (
+      body: {
+        error?: string;
+        errorCode?: string;
+        reasons?: Array<{ code: SafetyReasonCode }>;
+      },
+      fallback: string,
+    ) => {
+      if (
+        body.errorCode !== 'exercise_recommendation_blocked' ||
+        !body.reasons?.length
+      )
         return body.error || fallback;
-      const labels = c.safetyContext.reasons as Record<SafetyReasonCode, string>;
+      const labels = c.safetyContext.reasons as Record<
+        SafetyReasonCode,
+        string
+      >;
       return body.reasons.map((reason) => labels[reason.code]).join(' ');
     },
     [c.safetyContext.reasons],
@@ -79,7 +97,7 @@ export function useWorkoutActions(options: Options) {
     const response = await fetch('/api/workout-plans/preview', {
       method: 'POST',
     });
-    const body = (await response.json()) as WorkoutPlanResponse & {
+    const body = (await response.json()) as WorkoutPlanPreviewResponse & {
       error?: string;
       errorCode?: string;
       reasons?: Array<{ code: SafetyReasonCode }>;
@@ -90,20 +108,20 @@ export function useWorkoutActions(options: Options) {
   }, [c.feedback.planPreviewError, safetyError]);
 
   const confirmWorkoutPlan = useCallback(
-    async (plan: WorkoutPlanResponse['plan']) => {
+    async (previewId: string) => {
       const response = await fetch('/api/workout-plans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           idempotencyKey: createDashboardRequestId(),
-          plan,
+          previewId,
         }),
       });
       const body = (await response.json()) as {
         error?: string;
         errorCode?: string;
         reasons?: Array<{ code: SafetyReasonCode }>;
-        plan?: WorkoutPlanResponse;
+        plan?: ActiveWorkoutPlan;
         replayed?: boolean;
       };
       if (!response.ok || !body.plan)
@@ -117,7 +135,7 @@ export function useWorkoutActions(options: Options) {
   );
 
   const saveWorkoutLog = useCallback(
-    async (log: WorkoutLogRequest) => {
+    async (log: WorkoutEvidenceRequest) => {
       const response = await fetch('/api/workout-logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -125,7 +143,7 @@ export function useWorkoutActions(options: Options) {
       });
       const body = (await response.json()) as {
         error?: string;
-        log?: WorkoutLog;
+        log?: WorkoutEvidenceLog;
         replayed?: boolean;
       };
       if (!response.ok || !body.log)
@@ -142,24 +160,78 @@ export function useWorkoutActions(options: Options) {
   );
 
   const runWorkoutCheckin = useCallback(
-    async (planId: string) => {
+    async (planId: string, recovery: WorkoutRecoveryInput) => {
       const response = await fetch('/api/workout-checkins', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           idempotencyKey: createDashboardRequestId(),
           planId,
+          recovery,
         }),
       });
       const body = (await response.json()) as {
         error?: string;
-        checkin?: WorkoutCheckin;
+        checkin?: WorkoutEvidenceCheckin;
+        proposal?: WorkoutAdaptationProposal | null;
       };
       if (!response.ok || !body.checkin)
         throw new Error(body.error || c.feedback.checkinError);
       setCheckin(body.checkin);
+      setProposal(body.proposal ?? null);
     },
-    [c.feedback.checkinError, setCheckin],
+    [c.feedback.checkinError, setCheckin, setProposal],
+  );
+
+  const confirmWorkoutProposal = useCallback(
+    async (proposalId: string) => {
+      const response = await fetch('/api/workout-plan-proposals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idempotencyKey: createDashboardRequestId(),
+          proposalId,
+        }),
+      });
+      const body = (await response.json()) as {
+        error?: string;
+        plan?: ActiveWorkoutPlan;
+        proposal?: WorkoutAdaptationProposal;
+      };
+      if (!response.ok || !body.plan || !body.proposal)
+        throw new Error(body.error || c.feedback.planConfirmError);
+      setPlan(body.plan);
+      setProposal(body.proposal);
+      setNotice(c.feedback.planConfirmed);
+    },
+    [
+      c.feedback.planConfirmError,
+      c.feedback.planConfirmed,
+      setNotice,
+      setPlan,
+      setProposal,
+    ],
+  );
+
+  const dismissWorkoutProposal = useCallback(
+    async (proposalId: string) => {
+      const response = await fetch('/api/workout-plan-proposals', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idempotencyKey: createDashboardRequestId(),
+          proposalId,
+        }),
+      });
+      const body = (await response.json()) as {
+        error?: string;
+        proposal?: WorkoutAdaptationProposal;
+      };
+      if (!response.ok || !body.proposal)
+        throw new Error(body.error || c.feedback.planConfirmError);
+      setProposal(body.proposal);
+    },
+    [c.feedback.planConfirmError, setProposal],
   );
 
   return {
@@ -168,5 +240,7 @@ export function useWorkoutActions(options: Options) {
     confirmWorkoutPlan,
     saveWorkoutLog,
     runWorkoutCheckin,
+    confirmWorkoutProposal,
+    dismissWorkoutProposal,
   };
 }
